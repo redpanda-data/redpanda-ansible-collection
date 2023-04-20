@@ -22,6 +22,9 @@
       ansible.builtin.package:
         name: python3-jmespath
         state: present
+    - name: Node dependencies - include geerlingguy nodeexporter
+      ansible.builtin.include_role:
+        name: geerlingguy.node_exporter
 
 - hosts: monitor
   roles:
