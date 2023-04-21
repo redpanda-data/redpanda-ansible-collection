@@ -1,10 +1,4 @@
 ---
-- name: Node dependencies - include geerlingguy nodeexporter
-  ansible.builtin.include_role:
-    name: geerlingguy.node_exporter
-  tags:
-    - node_deps
-
 - name: Node dependencies - fedora setup
   when: ansible_os_family == 'RedHat'
   tags:
