@@ -10,6 +10,13 @@
   when:
     - prep_data_dir | default(true) | bool
 
+# Copies certs set in ca_cert_file and node_cert_file into the redpanda nodes. see defaults for the default values
+# only necessary when TLS is enabled
+- name: Install certs
+  ansible.builtin.include_tasks: install-certs.yml
+  when:
+    - handle_cert_install | default(false) | bool
+
 - name: Install Redpanda
   ansible.builtin.include_tasks: install-redpanda.yml
 

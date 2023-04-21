@@ -17,10 +17,3 @@
   ansible.builtin.include_tasks: issue-certs.yml
   when:
     - create_demo_certs | default(false) | bool
-
-# Copies certs that follow this directory structure into their respective node
-# tls/certs/{{ansible_hostname}}/node.crt
-- name: Install certs
-  ansible.builtin.include_tasks: install-certs.yml
-  when:
-    - handle_cert_install | default(false) | bool

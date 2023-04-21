@@ -3,7 +3,7 @@
   tags:
     - install_certs
   ansible.builtin.copy:
-    src: tls/ca/ca.crt
+    src: "{{ ca_cert_file }}"
     dest: "{{ redpanda_truststore_file }}"
     owner: redpanda
     group: redpanda
@@ -14,7 +14,7 @@
   tags:
     - install_certs
   ansible.builtin.copy:
-    src: tls/certs/{{ansible_hostname}}/node.crt
+    src: "{{ node_cert_file }}"
     dest: "{{ redpanda_cert_file }}"
     owner: redpanda
     group: redpanda
