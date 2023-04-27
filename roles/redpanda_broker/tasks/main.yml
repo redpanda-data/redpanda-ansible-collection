@@ -4,6 +4,20 @@
     msg: "A valid value must be provided for redpanda_version ex: '22.2.2-1' or 'latest'"
   when: redpanda_version is not defined
 
+- name: Check if ca_cert_file is defined
+  fail:
+    msg: "A valid path must be provided for ca_cert_file ex: tls/certs/ca.crt"
+  when:
+    - handle_cert_install | default(false) | bool
+    - ca_cert_file is not defined
+
+- name: Check if node_cert_file is defined
+  fail:
+    msg: "A valid path must be provided for node_cert_file ex: tls/certs/node.crt"
+  when:
+    - handle_cert_install | default(false) | bool
+    - node_cert_file is not defined
+
 # installs necessary dependencies for running redpanda
 - name: Install dependencies
   ansible.builtin.include_tasks: install-node-deps.yml

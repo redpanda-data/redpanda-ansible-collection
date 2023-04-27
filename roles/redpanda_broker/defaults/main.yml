@@ -23,7 +23,3 @@ redpanda_key_file: "{{ redpanda_certs_dir }}/node.key"
 redpanda_cert_file: "{{ redpanda_certs_dir }}/node.crt"
 redpanda_truststore_file: "{{ redpanda_certs_dir }}/truststore.pem"
 node_exporter_version: "{{ node_exporter_custom_version | default('1.5.0') }}"
-
-# copied into the nodes as part of tls
-ca_cert_file: "tls/ca/ca.crt"
-node_cert_file: "tls/certs/{{ansible_hostname}}/node.crt"
