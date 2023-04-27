@@ -2,6 +2,26 @@
 
 Redpanda Ansible Collection that enables provisioning and managing a [Redpanda](https://www.redpanda.com/) cluster.
 
+## Prereqs
+
+* Install Ansible: https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
+* Depending on your system, you might need to install some python packages (e.g. `selinux` or `jmespath`). Ansible will
+  throw an error with the expected python packages, both on local and remote machines.
+* `ansible-galaxy install -r requirements.yml` to gather ansible requirements
+* Create a hosts file containing your hosts
+
+```
+[redpanda]
+<<PUBLIC_IP>> ansible_user=ubuntu ansible_become=True private_ip=<<PRIVATE_IP>>
+<<PUBLIC_IP>> ansible_user=ubuntu ansible_become=True private_ip=<<PRIVATE_IP>>
+<<PUBLIC_IP>> ansible_user=ubuntu ansible_become=True private_ip=<<PRIVATE_IP>>
+
+[monitor]
+<<PUBLIC_IP>> ansible_user=ubuntu ansible_become=True private_ip=<<PRIVATE_IP>>
+```
+
+<<PUBLIC_IP>> can be either a public or private IP address, but must be routable from the machine where ansible is being run.
+
 ## Usage
 
 ### Required Steps: Deploying Redpanda
