@@ -1,4 +1,12 @@
 ---
+- name: Ensure redpanda_version is provided
+  hosts: redpanda
+  tasks:
+    - name: Check if redpanda_version is defined
+      fail:
+        msg: "A valid value must be provided for redpanda_version ex: '22.2.2-1' or 'latest'"
+      when: redpanda_version is not defined
+
 # installs necessary dependencies for running redpanda
 - name: Install dependencies
   ansible.builtin.include_tasks: install-node-deps.yml
