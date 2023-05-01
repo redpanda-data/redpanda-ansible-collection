@@ -16,7 +16,6 @@ Redpanda Ansible Collection that enables provisioning and managing a [Redpanda](
 <<PUBLIC_IP>> ansible_user=ubuntu ansible_become=True private_ip=<<PRIVATE_IP>>
 <<PUBLIC_IP>> ansible_user=ubuntu ansible_become=True private_ip=<<PRIVATE_IP>>
 
-
 [monitor]
 <<PUBLIC_IP>> ansible_user=ubuntu ansible_become=True private_ip=<<PRIVATE_IP>>
 ```
@@ -211,7 +210,6 @@ cd ansible/redpanda
 ansible-galaxy collection build
 ansible-galaxy collection publish redpanda-cluster-*.tar.gz --token <YOUR_API_KEY> -s https://galaxy.ansible.com/api/
 ```
-
 
 ## Troubleshooting
 
