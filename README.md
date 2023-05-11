@@ -60,19 +60,11 @@ There are two sub-dictionaries that you can specify, `redpanda.cluster` and `red
 the available [Cluster configuration properties](https://docs.redpanda.com/docs/platform/reference/cluster-properties/)
 and [Node configuration properties](https://docs.redpanda.com/docs/platform/reference/node-properties/).
 
-An example overriding specific properties would be as follows:
+Example below, note that adding whitespace breaks configuration merging. Please ensure you do not add whitespace!
 
-```commandline
-ansible-playbook ansible/provision-node.yml -i hosts.ini --extra-vars '{
-  "redpanda": {
-    "cluster": {
-      "auto_create_topics_enabled": "true"
-    },
-    "node": {
-      "developer_mode": "false"
-    }
-  }
-}'
+```shell
+export JSONDATA='{"cluster":{"auto_create_topics_enabled":"true"},"node":{"developer_mode":"false"}}'
+ansible-playbook ansible/provision-node.yml --private-key artifacts/testkey -e redpanda="${JSONDATA}"
 ```
 
 2. Use `rpk` & standard Kafka tools to produce/consume from the Redpanda cluster & access the Grafana installation on
