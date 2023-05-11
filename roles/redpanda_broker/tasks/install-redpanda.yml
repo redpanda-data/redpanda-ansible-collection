@@ -1,17 +1,47 @@
 ---
-- name: Download the Redpanda repo script
-  ansible.builtin.get_url:
-    url: "{{ redpanda_repo_script }}"
-    dest: "/tmp/redpanda_repo_script.sh"
-    mode: '0755'
+- name: Download GPG key (Debian)
+  get_url:
+    url: "{{ rp_key_deb }}"
+    dest: /etc/apt/trusted.gpg.d/redpanda-redpanda-archive-keyring.gpg
+  become: true
+  when: ansible_os_family == 'Debian'
 
-- name: Execute the Redpanda repo script
-  ansible.builtin.command:
-    cmd: sudo -E /tmp/redpanda_repo_script.sh
-  changed_when: false
+- name: Install Debian prerequisites
+  package:
+    name: "{{ debian_prerequisite_packages }}"
+    state: present
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Install GPG key (RedHat)
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ rp_key_rpm }}"
+  when: ansible_os_family == 'RedHat'
+
+- name: Install prerequisite packages
+  package:
+    name: "{{ rpm_prerequisite_packages }}"
+    state: present
+    update_cache: yes
+  when: ansible_os_family == 'RedHat'
+
+
+- name: Set fact based on OS family
+  set_fact:
+    conf_url: "{{ rp_config_url_deb if ansible_os_family == 'Debian' else rp_config_url_rpm }}"
+
+- name: Fetch Redpanda configuration
+  uri:
+    url: "{{ conf_url }}?distro={{ ansible_distribution }}&codename={{ ansible_distribution_release }}&version={{ ansible_distribution_version }}&arch={{ ansible_architecture }}"
+    dest: /etc/yum.repos.d/redpanda-redpanda.repo
+    return_content: yes
+    follow_redirects: all
+    force: yes
+  register: redpanda_config_result
 
 - name: Install redpanda from repository
-  ansible.builtin.apt:
+  ansible.builtin.package:
     name:
       - redpanda{{ '' if redpanda_version=='latest' else '=' + redpanda_version }}
     state: "{{ redpanda_install_status }}"
@@ -20,7 +50,7 @@
   when: ansible_os_family == 'Debian'
 
 - name: Install redpanda from repository
-  ansible.builtin.yum:
+  ansible.builtin.package:
     name:
       - redpanda{{ '' if redpanda_version=='latest' else '-' + redpanda_version }}
     state: "{{ redpanda_install_status }}"

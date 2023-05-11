@@ -1,8 +1,10 @@
-cluster:
-  cloud_storage_bucket: {{ tiered_storage_bucket_name if tiered_storage_bucket_name is defined }}
-  cloud_storage_enable_remote_read: {{ cloud_storage_enable_remote_read }}
-  cloud_storage_enable_remote_write: {{ cloud_storage_enable_remote_write }}
-  cloud_storage_region: {{ cloud_storage_region if cloud_storage_region is defined }}
-  cloud_storage_credentials_source: {{ cloud_storage_credentials_source }}
-  # cloud_storage_enabled must be after other cloud_storage parameters
-  cloud_storage_enabled: {{ true if tiered_storage_bucket_name is defined and tiered_storage_bucket_name|d('')|length > 0 else false }}
+{
+"cluster": {
+"cloud_storage_bucket": "{{ tiered_storage_bucket_name if tiered_storage_bucket_name is defined }}",
+"cloud_storage_enable_remote_read": "{{ cloud_storage_enable_remote_read }}",
+"cloud_storage_enable_remote_write": "{{ cloud_storage_enable_remote_write }}",
+"cloud_storage_region": "{{ cloud_storage_region if cloud_storage_region is defined }}",
+"cloud_storage_credentials_source": "{{ cloud_storage_credentials_source }}",
+"cloud_storage_enabled": "{{ true if tiered_storage_bucket_name is defined and tiered_storage_bucket_name|d('')|length > 0 else false }}"
+}
+}
