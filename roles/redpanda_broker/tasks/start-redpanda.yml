@@ -149,6 +149,16 @@
   run_once: true
   no_log: true
 
+# Set Redpanda license
+#
+# Sets the redpanda license when redpanda_license is defined
+#
+- name: Set Redpanda license
+  ansible.builtin.command: rpk cluster license set {{ redpanda_license }}
+  run_once: true
+  when:
+    - redpanda_license is defined
+
 # see if a cluster config operation should trigger ansible to restart each
 # redpanda instance in the cluster
 #
