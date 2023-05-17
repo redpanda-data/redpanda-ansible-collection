@@ -1,9 +1,25 @@
 ---
-- name: Download GPG key (Debian)
-  get_url:
+- name: Download GPG key
+  uri:
     url: "{{ rp_key_deb }}"
-    dest: /etc/apt/trusted.gpg.d/redpanda-redpanda-archive-keyring.gpg
-  become: true
+    return_content: yes
+    dest: "/usr/share/keyrings/redpanda-redpanda-archive-keyring.asc"
+  when: ansible_os_family == 'Debian'
+
+- name:  Add Redpanda repository
+  apt_repository:
+    filename: "redpanda-redpanda"
+    mode: 0644
+    repo:  "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.asc] https://dl.redpanda.com/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Add Redpanda repository (source)
+  apt_repository:
+    filename: "redpanda-redpanda-src"
+    mode: 0644
+    repo: "deb-src [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.asc] https://dl.redpanda.com/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
+    update_cache: yes
   when: ansible_os_family == 'Debian'
 
 - name: Install Debian prerequisites
@@ -31,10 +47,14 @@
   set_fact:
     conf_url: "{{ rp_config_url_deb if ansible_os_family == 'Debian' else rp_config_url_rpm }}"
 
+- name: Set conf location based on OS family
+  set_fact:
+    conf_dest: "{{ rp_conf_loc_deb if ansible_os_family == 'Debian' else rp_conf_loc_rpm }}"
+
 - name: Fetch Redpanda configuration
   uri:
-    url: "{{ conf_url }}?distro={{ ansible_distribution }}&codename={{ ansible_distribution_release }}&version={{ ansible_distribution_version }}&arch={{ ansible_architecture }}"
-    dest: /etc/yum.repos.d/redpanda-redpanda.repo
+    url: "{{ (conf_url ~ '?distro=' ~ ansible_distribution ~ '&codename=' ~ ansible_distribution_release ~ '&version=' ~ ansible_distribution_version ~ '&arch=' ~ ansible_architecture) | replace(' ', '%20') | lower }}"
+    dest: "{{ conf_dest }}"
     return_content: yes
     follow_redirects: all
     force: yes

@@ -28,8 +28,10 @@ cloud_storage_enable_remote_write: "true"
 cloud_storage_enable_remote_read: "true"
 rp_key_rpm: "https://dl.redpanda.com/public/redpanda/gpg.988A7B0A4918BC85.key"
 rp_config_url_rpm: "https://dl.redpanda.com/public/redpanda/config.rpm.txt"
+rp_conf_loc_rpm: "/etc/yum.repos.d/redpanda-redpanda.repo"
 rp_key_deb: "https://dl.redpanda.com/sMIXnoa7DK12JW4A/redpanda/gpg.988A7B0A4918BC85.key"
 rp_config_url_deb: "https://dl.redpanda.com/sMIXnoa7DK12JW4A/redpanda/config.deb.txt"
+rp_conf_loc_deb: "/etc/apt/sources.list.d/redpanda.list"
 rpm_prerequisite_packages:
   - curl
   - yum-utils
