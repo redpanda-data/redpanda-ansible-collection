@@ -65,19 +65,8 @@
 
 - name: Prep Data Dir - Create data path
   ansible.builtin.file:
-    path: /mnt/vectorized/redpanda
+    path: "{{ repdanda_mount_dir }}"
     state: directory
-    owner: root
-    group: root
-    mode: "0775"
-  tags:
-    - prep_data_dir
-
-- name: Prep Data Dir - Set permissions
-  ansible.builtin.file:
-    dest: /var/lib/redpanda
-    src: /mnt/vectorized/redpanda
-    state: link
     owner: root
     group: root
     mode: "0775"

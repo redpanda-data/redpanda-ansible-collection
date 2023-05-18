@@ -2,78 +2,88 @@
 - name: Download and import Redpanda GPG Key
   shell: |
     curl -1sLf "{{ rp_key_deb }}" | gpg --dearmor > {{ rp_key_path_deb }}
+  when: ansible_os_family == 'Debian'
 
-- name:  Add Redpanda repository
+- name:  Add Redpanda DEB repository
   apt_repository:
     filename: "redpanda-redpanda"
     mode: 0644
-    repo:  "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] https://dl.redpanda.com/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
+    repo:  "{{ rp_repo_signing_deb }}"
     update_cache: yes
   when: ansible_os_family == 'Debian'
 
-- name: Add Redpanda repository (source)
+- name: Add Redpanda DEB repository (source)
   apt_repository:
     filename: "redpanda-redpanda-src"
     mode: 0644
-    repo: "deb-src [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] https://dl.redpanda.com/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
+    repo: "{{ rp_repo_signing_src_deb }}"
     update_cache: yes
   when: ansible_os_family == 'Debian'
 
-- name: Install Debian prerequisites
-  package:
-    name: "{{ debian_prerequisite_packages }}"
-    state: present
-    update_cache: yes
-  when: ansible_os_family == 'Debian'
 
-- name: Install GPG key (RedHat)
+- name: Add redpanda-redpanda RPM repository
+  ansible.builtin.yum_repository:
+    name: 'redpanda-redpanda'
+    description: 'redpanda-redpanda'
+    baseurl: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ ansible_distribution | lower }}/{{ ansible_distribution_major_version }}/$basearch"
+    gpgkey: "{{ rp_key_rpm }}"
+    repo_gpgcheck: yes
+    gpgcheck: yes
+    enabled: yes
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: yes
+    metadata_expire: 300
+    skip_if_unavailable: yes
+  when: ansible_os_family == 'RedHat'
+
+- name: Add redpanda-redpanda-noarch RPM repository
+  ansible.builtin.yum_repository:
+    name: 'redpanda-redpanda-noarch'
+    description: 'redpanda-redpanda-noarch'
+    baseurl: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ ansible_distribution | lower }}/{{ ansible_distribution_major_version }}/$basearch"
+    gpgkey: "{{ rp_key_rpm }}"
+    repo_gpgcheck: yes
+    gpgcheck: yes
+    enabled: yes
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: yes
+    metadata_expire: 300
+    skip_if_unavailable: yes
+  when: ansible_os_family == 'RedHat'
+
+- name: Add redpanda-redpanda-source RPM repository
+  ansible.builtin.yum_repository:
+    name: 'redpanda-redpanda-source'
+    description: 'redpanda-redpanda-source'
+    baseurl: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ ansible_distribution | lower }}/{{ ansible_distribution_major_version }}/$basearch"
+    gpgkey: "{{ rp_key_rpm }}"
+    repo_gpgcheck: yes
+    gpgcheck: yes
+    enabled: yes
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: yes
+    metadata_expire: 300
+    skip_if_unavailable: yes
+  when: ansible_os_family == 'RedHat'
+
+- name: Install GPG key (RPM)
   ansible.builtin.rpm_key:
     state: present
     key: "{{ rp_key_rpm }}"
   when: ansible_os_family == 'RedHat'
 
-- name: Install prerequisite packages
-  package:
-    name: "{{ rpm_prerequisite_packages }}"
-    state: present
-    update_cache: yes
-  when: ansible_os_family == 'RedHat'
-
-
-- name: Set fact based on OS family
+- name: Set fact for package name
   set_fact:
-    conf_url: "{{ rp_config_url_deb if ansible_os_family == 'Debian' else rp_config_url_rpm }}"
-
-- name: Set conf location based on OS family
-  set_fact:
-    conf_dest: "{{ rp_conf_loc_deb if ansible_os_family == 'Debian' else rp_conf_loc_rpm }}"
-
-- name: Fetch Redpanda configuration
-  uri:
-    url: "{{ (conf_url ~ '?distro=' ~ ansible_distribution ~ '&codename=' ~ ansible_distribution_release ~ '&version=' ~ ansible_distribution_version ~ '&arch=' ~ ansible_architecture) | replace(' ', '%20') | lower }}"
-    dest: "{{ conf_dest }}"
-    return_content: yes
-    follow_redirects: all
-    force: yes
-  register: redpanda_config_result
+    redpanda_package_name: "redpanda{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}"
 
 - name: Install redpanda from repository
   ansible.builtin.package:
     name:
-      - redpanda{{ '' if redpanda_version=='latest' else '=' + redpanda_version }}
+      - "{{ redpanda_package_name }}"
     state: "{{ redpanda_install_status }}"
     update_cache: true
   register: package_result
-  when: ansible_os_family == 'Debian'
 
-- name: Install redpanda from repository
-  ansible.builtin.package:
-    name:
-      - redpanda{{ '' if redpanda_version=='latest' else '-' + redpanda_version }}
-    state: "{{ redpanda_install_status }}"
-    update_cache: true
-  register: package_result
-  when: ansible_os_family == 'RedHat'
 
 - name: Set data dir file perms
   ansible.builtin.file:

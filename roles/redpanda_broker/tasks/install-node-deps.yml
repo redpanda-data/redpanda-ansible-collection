@@ -35,14 +35,16 @@
     force_apt_get: true
   when: ansible_os_family == 'Debian'
 
-- name: Node dependencies - install base deps - debian
-  tags:
-    - node_deps
-  ansible.builtin.apt:
-    name:
-      - iotop
-      - mdadm
-      - xfsprogs
+- name: Install Debian prerequisites
+  package:
+    name: "{{ debian_prerequisite_packages }}"
     state: present
-    update_cache: true
+    update_cache: yes
   when: ansible_os_family == 'Debian'
+
+- name: Install RPM packages
+  package:
+    name: "{{ rpm_prerequisite_packages }}"
+    state: present
+    update_cache: yes
+  when: ansible_os_family == 'RedHat'

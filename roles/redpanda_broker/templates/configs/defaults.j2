@@ -36,30 +36,30 @@
         }
       ],
       "seed_servers": [
-        "{% for host in groups['redpanda'] %}",
+        {% for host in groups['redpanda'] %}
         {
           "host": {
             "address": "{{ hostvars[host]['private_ip'] }}",
             "port": "{{ redpanda_rpc_port }}"
           }
-        },
-        "{% endfor %}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
       ],
       "rack": "{% if rack is defined %}{{ rack | default('null') }}{% endif %}"
     },
     "rpk": {
       "kafka_api": {
         "brokers": [
-          "{% for host in groups['redpanda'] %}",
-          "{{ hostvars[host]['private_ip'] }}:{{ redpanda_kafka_port }}",
-          "{% endfor %}"
+        {% for host in groups['redpanda'] %}
+        "{{ hostvars[host]['private_ip'] }}:{{ redpanda_kafka_port }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
         ]
       },
       "admin_api": {
         "addresses": [
-          "{% for host in groups['redpanda'] %}",
-          "{{ hostvars[host]['private_ip'] }}:{{ redpanda_admin_api_port }}",
-          "{% endfor %}"
+          {% for host in groups['redpanda'] %}
+          "{{ hostvars[host]['private_ip'] }}:{{ redpanda_admin_api_port }}"{% if not loop.last %},{% endif %}
+          {% endfor %}
         ]
       },
       "tune_network": true,
