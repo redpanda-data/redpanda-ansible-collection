@@ -22,7 +22,7 @@
 #
 - name: Generate configurations
   ansible.builtin.set_fact:
-    configuration: "{{ configuration | combine(lookup('template', custom_config_template.template) | from_json, recursive=True) }}"
+    configuration: "{{ configuration | combine(lookup('template', custom_config_template.template), recursive=True) }}"
   loop: "{{ custom_config_templates }}"
   loop_control:
     loop_var: custom_config_template

@@ -1,16 +1,13 @@
 ---
-- name: Download GPG key
-  uri:
-    url: "{{ rp_key_deb }}"
-    return_content: yes
-    dest: "/usr/share/keyrings/redpanda-redpanda-archive-keyring.asc"
-  when: ansible_os_family == 'Debian'
+- name: Download and import Redpanda GPG Key
+  shell: |
+    curl -1sLf "{{ rp_key_deb }}" | gpg --dearmor > {{ rp_key_path_deb }}
 
 - name:  Add Redpanda repository
   apt_repository:
     filename: "redpanda-redpanda"
     mode: 0644
-    repo:  "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.asc] https://dl.redpanda.com/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
+    repo:  "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] https://dl.redpanda.com/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
     update_cache: yes
   when: ansible_os_family == 'Debian'
 
@@ -18,7 +15,7 @@
   apt_repository:
     filename: "redpanda-redpanda-src"
     mode: 0644
-    repo: "deb-src [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.asc] https://dl.redpanda.com/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
+    repo: "deb-src [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] https://dl.redpanda.com/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
     update_cache: yes
   when: ansible_os_family == 'Debian'
 

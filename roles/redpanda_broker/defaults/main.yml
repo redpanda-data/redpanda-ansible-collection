@@ -32,6 +32,7 @@ rp_conf_loc_rpm: "/etc/yum.repos.d/redpanda-redpanda.repo"
 rp_key_deb: "https://dl.redpanda.com/sMIXnoa7DK12JW4A/redpanda/gpg.988A7B0A4918BC85.key"
 rp_config_url_deb: "https://dl.redpanda.com/sMIXnoa7DK12JW4A/redpanda/config.deb.txt"
 rp_conf_loc_deb: "/etc/apt/sources.list.d/redpanda.list"
+rp_key_path_deb: "/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg"
 rpm_prerequisite_packages:
   - curl
   - yum-utils
