@@ -36,6 +36,12 @@
   when:
     - handle_cert_install | default(false) | bool
 
+# sets permissions on the data directory -- separate from creating for increased flexibility
+- name: Set data dir perms
+  ansible.builtin.include_tasks: data-dir-perms.yml
+  when:
+    - data_dir_perms | default(true) | bool
+
 - name: Install Redpanda
   ansible.builtin.include_tasks: install-redpanda.yml
 

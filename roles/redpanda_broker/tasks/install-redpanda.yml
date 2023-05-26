@@ -1,32 +1,89 @@
 ---
-- name: Download the Redpanda repo script
-  ansible.builtin.get_url:
-    url: "{{ redpanda_repo_script }}"
-    dest: "/tmp/redpanda_repo_script.sh"
-    mode: '0755'
-
-- name: Execute the Redpanda repo script
-  ansible.builtin.command:
-    cmd: sudo -E /tmp/redpanda_repo_script.sh
-  changed_when: false
-
-- name: Install redpanda from repository
-  ansible.builtin.apt:
-    name:
-      - redpanda{{ '' if redpanda_version=='latest' else '=' + redpanda_version }}
-    state: "{{ redpanda_install_status }}"
-    update_cache: true
-  register: package_result
+- name: Download and import Redpanda GPG Key
+  shell: |
+    curl -1sLf "{{ rp_key_deb }}" | gpg --dearmor > {{ rp_key_path_deb }}
   when: ansible_os_family == 'Debian'
 
+- name:  Add Redpanda DEB repository
+  apt_repository:
+    filename: "redpanda-redpanda"
+    mode: 0644
+    repo:  "{{ rp_repo_signing_deb }}"
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Add Redpanda DEB repository (source)
+  apt_repository:
+    filename: "redpanda-redpanda-src"
+    mode: 0644
+    repo: "{{ rp_repo_signing_src_deb }}"
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+
+- name: Add redpanda-redpanda RPM repository
+  ansible.builtin.yum_repository:
+    name: 'redpanda-redpanda'
+    description: 'redpanda-redpanda'
+    baseurl: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ ansible_distribution | lower }}/{{ ansible_distribution_major_version }}/$basearch"
+    gpgkey: "{{ rp_key_rpm }}"
+    repo_gpgcheck: yes
+    gpgcheck: yes
+    enabled: yes
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: yes
+    metadata_expire: 300
+    skip_if_unavailable: yes
+  when: ansible_os_family == 'RedHat'
+
+- name: Add redpanda-redpanda-noarch RPM repository
+  ansible.builtin.yum_repository:
+    name: 'redpanda-redpanda-noarch'
+    description: 'redpanda-redpanda-noarch'
+    baseurl: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ ansible_distribution | lower }}/{{ ansible_distribution_major_version }}/$basearch"
+    gpgkey: "{{ rp_key_rpm }}"
+    repo_gpgcheck: yes
+    gpgcheck: yes
+    enabled: yes
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: yes
+    metadata_expire: 300
+    skip_if_unavailable: yes
+  when: ansible_os_family == 'RedHat'
+
+- name: Add redpanda-redpanda-source RPM repository
+  ansible.builtin.yum_repository:
+    name: 'redpanda-redpanda-source'
+    description: 'redpanda-redpanda-source'
+    baseurl: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ ansible_distribution | lower }}/{{ ansible_distribution_major_version }}/$basearch"
+    gpgkey: "{{ rp_key_rpm }}"
+    repo_gpgcheck: yes
+    gpgcheck: yes
+    enabled: yes
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: yes
+    metadata_expire: 300
+    skip_if_unavailable: yes
+  when: ansible_os_family == 'RedHat'
+
+- name: Install GPG key (RPM)
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ rp_key_rpm }}"
+  when: ansible_os_family == 'RedHat'
+
+- name: Set fact for package name
+  set_fact:
+    redpanda_package_name: "redpanda{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}"
+
 - name: Install redpanda from repository
-  ansible.builtin.yum:
+  ansible.builtin.package:
     name:
-      - redpanda{{ '' if redpanda_version=='latest' else '-' + redpanda_version }}
+      - "{{ redpanda_package_name }}"
     state: "{{ redpanda_install_status }}"
     update_cache: true
   register: package_result
-  when: ansible_os_family == 'RedHat'
+
 
 - name: Set data dir file perms
   ansible.builtin.file:
