@@ -65,7 +65,7 @@
 
 - name: Prep Data Dir - Create data path
   ansible.builtin.file:
-    path: "{{ repdanda_mount_dir }}"
+    path: "{{ redpanda_mount_dir }}"
     state: directory
     owner: root
     group: root

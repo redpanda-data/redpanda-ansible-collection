@@ -22,6 +22,24 @@
         "cert_file": "{{ redpanda_cert_file }}",
         "truststore_file": "{{ redpanda_truststore_file }}"
       }
+      "pandaproxy_api_tls":[
+        {
+            "enabled": true,
+            "require_client_auth": false,
+            "key_file":"{{ redpanda_key_file }}",
+            "cert_file":"{{ redpanda_cert_file }}",
+            "truststore_file": "{{ redpanda_truststore_file }}"
+        }
+      ],
+      "schema_registry_api_tls": [
+        {
+            "enabled": true,
+            "require_client_auth": false,
+            "key_file":"{{ redpanda_key_file }}",
+            "cert_file":"{{ redpanda_cert_file }}",
+            "truststore_file": "{{ redpanda_truststore_file }}"
+        }
+      ]
     },
     "rpk": {
       "admin_api": {

@@ -6,6 +6,8 @@ redpanda_mode: production
 redpanda_admin_api_port: 9644
 redpanda_kafka_port: 9092
 redpanda_rpc_port: 33145
+redpanda_pandaproxy_port: 8082
+redpanda_schema_registry_port: 8081
 
 redpanda_use_staging_repo: false
 redpanda_base_url: "https://dl.redpanda.com"
@@ -15,7 +17,7 @@ redpanda_rpk_opts: ""
 
 redpanda_base_dir: /var/lib/redpanda
 redpanda_data_directory: "{{ redpanda_base_dir }}/data"
-repdanda_mount_dir: /mnt/vectorized/redpanda
+redpanda_mount_dir: /mnt/vectorized/redpanda
 
 redpanda_certs_dir: /etc/redpanda/certs
 redpanda_csr_file: "{{ redpanda_certs_dir }}/node.csr"

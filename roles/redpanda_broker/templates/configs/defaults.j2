@@ -73,7 +73,24 @@
       "tune_swappiness": true,
       "tune_ballast_file": true
     },
-    "pandaproxy": {},
-    "schema_registry": {}
-  }
+    "pandaproxy": {
+        "pandaproxy_api": [
+          {
+            "address": "{{ hostvars[inventory_hostname].advertised_ip }}",
+            "port": "{{ redpanda_pandaproxy_port }}"
+          }],
+        "advertised_pandaproxy_api": [
+            "address": "{{ hostvars[inventory_hostname].advertised_ip }}",
+            "port": "{{ redpanda_pandaproxy_port }}"
+        }]
+    },
+    "schema_registry": {
+        "schema_registry_api": [
+            {
+                "address": "{{ hostvars[inventory_hostname].advertised_ip }}",
+                "port": "{{ redpanda_schema_registry_port }}"
+            }
+        ],
+    }
+
 }
