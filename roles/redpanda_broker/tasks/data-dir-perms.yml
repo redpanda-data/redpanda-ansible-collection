@@ -6,3 +6,5 @@
     owner: root
     group: root
     mode: "0775"
+  tags:
+    - data_dir_perms

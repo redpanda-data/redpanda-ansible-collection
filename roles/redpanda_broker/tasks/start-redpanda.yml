@@ -89,7 +89,9 @@
   ansible.builtin.systemd:
     name: redpanda-tuner
     state: started
-
+  tags:
+    rp_tuner
+    
 # ensure that systemd starts up redpanda
 - name: Start redpanda
   ansible.builtin.systemd:
