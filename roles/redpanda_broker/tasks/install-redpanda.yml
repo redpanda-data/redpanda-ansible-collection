@@ -50,6 +50,7 @@
     sslverify: yes
     metadata_expire: 300
     skip_if_unavailable: yes
+    proxy: "{{ rpm_proxy | default('') }}"
   when: ansible_os_family == 'RedHat'
 
 - name: Add redpanda-redpanda-noarch RPM repository
@@ -65,6 +66,7 @@
     sslverify: yes
     metadata_expire: 300
     skip_if_unavailable: yes
+    proxy: "{{ rpm_proxy | default('') }}"
   when: ansible_os_family == 'RedHat'
 
 - name: Add redpanda-redpanda-source RPM repository
@@ -80,9 +82,12 @@
     sslverify: yes
     metadata_expire: 300
     skip_if_unavailable: yes
+    proxy: "{{ rpm_proxy | default('') }}"
   when: ansible_os_family == 'RedHat'
 
 - name: Install GPG key (RPM)
+  environment:
+    https_proxy: "{{ https_proxy_value | default('') }}"
   ansible.builtin.rpm_key:
     state: present
     key: "{{ rp_key_rpm_actual }}"
