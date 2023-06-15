@@ -33,7 +33,7 @@
     - name: Prep Data Dir - Define mdadm_arrays variable
       ansible.builtin.set_fact:
         mdadm_arrays:
-          - name: Prep Data Dir - md0
+          - name: md0
             devices: "{{ nvme_devices_for_raid }}"
             community.general.filesystem: xfs
             level: 0
