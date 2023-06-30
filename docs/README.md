@@ -2,6 +2,13 @@
 
 Redpanda Ansible Collection that enables provisioning and managing a [Redpanda](https://www.redpanda.com/) cluster.
 
+## Prereqs
+
+* Install Ansible: https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
+* Depending on your system, you might need to install some python packages (e.g. `selinux` or `jmespath`). Ansible will
+  throw an error with the expected python packages, both on local and remote machines.
+* `ansible-galaxy install -r requirements.yml` to gather ansible requirements
+
 ## Usage
 
 ### Required Steps: Deploying Redpanda
@@ -19,7 +26,6 @@ Redpanda Ansible Collection that enables provisioning and managing a [Redpanda](
 > will disable TLS).
 
 Before running these steps, verify that the `hosts.ini` file contains the correct information for your infrastructure.
-This will be automatically populated if using the terraform steps above.
 
 1. `ansible-playbook --private-key <your_private_key> -i hosts.ini -v ansible/provision-node.yml`
 
