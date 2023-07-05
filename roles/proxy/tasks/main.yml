@@ -1,0 +1,23 @@
+---
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Install dependencies
+  package:
+    name: "{{ packages }}"
+    state: latest
+    update_cache: true
+  become: true
+
+- name: Configure SSH
+  template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+  notify: restart ssh
+  become: true
+
+- name: Configure tinyproxy
+  template:
+    src: tinyproxy.conf.j2
+    dest: /etc/tinyproxy/tinyproxy.conf
+  notify: restart tinyproxy
+  become: true

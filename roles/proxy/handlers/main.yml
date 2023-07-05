@@ -1,0 +1,9 @@
+- name: restart ssh
+  ansible.builtin.service:
+    name: "{{ ssh_service_name }}"
+    state: restarted
+
+- name: restart tinyproxy
+  ansible.builtin.service:
+    name: tinyproxy
+    state: restarted

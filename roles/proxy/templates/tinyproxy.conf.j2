@@ -1,0 +1,11 @@
+# tinyproxy configuration
+User tinyproxy
+Group tinyproxy
+
+Port {{ PROXY_PORT }}
+Timeout 600
+DefaultErrorFile "/usr/share/tinyproxy/default.html"
+StatFile "/usr/share/tinyproxy/stats.html"
+Logfile "/var/log/tinyproxy/tinyproxy.log"
+LogLevel Info
+PidFile "/var/run/tinyproxy/tinyproxy.pid"
