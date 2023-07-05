@@ -1,49 +1,11 @@
 ---
-- name: Check if redpanda_version is defined
-  fail:
-    msg: "A valid value must be provided for redpanda_version ex: '22.2.2-1' or 'latest'"
-  when: redpanda_version is not defined
+- name: Install Redpanda RPM
+  ansible.builtin.include_tasks: install-rp-rpm.yml
+  when: ansible_os_family == 'RedHat'
 
-- name: Check if ca_cert_file is defined
-  fail:
-    msg: "A valid path must be provided for ca_cert_file ex: tls/certs/ca.crt"
-  when:
-    - handle_cert_install | default(false) | bool
-    - ca_cert_file is not defined
-
-- name: Check if node_cert_file is defined
-  fail:
-    msg: "A valid path must be provided for node_cert_file ex: tls/certs/node.crt"
-  when:
-    - handle_cert_install | default(false) | bool
-    - node_cert_file is not defined
-
-# installs necessary dependencies for running redpanda
-- name: Install dependencies
-  ansible.builtin.include_tasks: install-node-deps.yml
-  when: prep_deps | default(true) | bool
-
-# configures the data dir. won't work if Install dependencies isn't run first
-- name: Prep data dir
-  ansible.builtin.include_tasks: prepare-data-dir.yml
-  when:
-    - prep_data_dir | default(true) | bool
-
-# Copies certs set in ca_cert_file and node_cert_file into the redpanda nodes. see defaults for the default values
-# only necessary when TLS is enabled
-- name: Install certs
-  ansible.builtin.include_tasks: install-certs.yml
-  when:
-    - handle_cert_install | default(false) | bool
-
-# sets permissions on the data directory -- separate from creating for increased flexibility
-- name: Set data dir perms
-  ansible.builtin.include_tasks: data-dir-perms.yml
-  when:
-    - data_dir_perms | default(true) | bool
-
-- name: Install Redpanda
-  ansible.builtin.include_tasks: install-redpanda.yml
+- name: Install Redpanda DEB
+  ansible.builtin.include_tasks: install-rp-deb.yml
+  when: ansible_os_family == 'Debian'
 
 - name: Start Redpanda
   ansible.builtin.include_tasks: start-redpanda.yml

@@ -1,0 +1,72 @@
+---
+- name: Set Redpanda GPG Key and Repository details
+  set_fact:
+    rp_key_deb_actual: "{{ is_using_unstable | bool | ternary(rp_key_deb_unstable, rp_key_deb) }}"
+    rp_key_path_deb_actual: "{{ is_using_unstable | bool | ternary(rp_key_path_deb_unstable, rp_key_path_deb) }}"
+    rp_repo_signing_deb_actual: "{{ is_using_unstable | bool | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
+    rp_repo_signing_src_deb_actual: "{{ is_using_unstable | bool | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
+  when: ansible_os_family == 'Debian'
+
+- name: Download and import Redpanda GPG Key with proxy
+  become: true
+  shell: |
+    curl -x "{{ https_proxy_value }}" -1sLf "{{ rp_key_deb_actual }}" | gpg --dearmor > "{{ rp_key_path_deb_actual }}"
+  args:
+    creates: "{{ rp_key_path_deb_actual }}"
+  when: https_proxy_value is defined and https_proxy_value | length > 0 and ansible_os_family == 'Debian'
+
+
+- name: Download and import Redpanda GPG Key without proxy
+  become: true
+  args:
+    creates: "{{ rp_key_path_deb_actual }}"
+  shell: |
+    curl -1sLf "{{ rp_key_deb_actual }}" | gpg --dearmor > "{{ rp_key_path_deb_actual }}"
+  when: (https_proxy_value is not defined or https_proxy_value | length == 0) and ansible_os_family == 'Debian'
+
+- name: Add Redpanda DEB repository
+  copy:
+    dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
+    content: "{{ rp_repo_signing_deb_actual }}\n"
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_os_family == 'Debian'
+
+- name: Add Redpanda DEB repository (source)
+  copy:
+    dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
+    content: "{{ rp_repo_signing_deb_actual }}\n"
+    owner: root
+    group: root
+    mode: '0644'
+  when: ansible_os_family == 'Debian'
+
+- name: Set fact for package name
+  set_fact:
+    redpanda_package_name: "redpanda{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}"
+
+- name: Install redpanda from repository
+  ansible.builtin.package:
+    name:
+      - "{{ redpanda_package_name }}"
+    state: "{{ redpanda_install_status }}"
+    update_cache: true
+  environment:
+    https_proxy: "{{ https_proxy_value | default('') }}"
+    http_proxy: "{{ https_proxy_value | default('') }}"
+  when: https_proxy_value is defined and https_proxy_value | length > 0
+
+- name: Install redpanda from repository
+  ansible.builtin.package:
+    name:
+      - "{{ redpanda_package_name }}"
+    state: "{{ redpanda_install_status }}"
+    update_cache: true
+  when: https_proxy_value is not defined or https_proxy_value | length == 0
+
+- name: Set data dir file perms
+  ansible.builtin.file:
+    path: "{{ redpanda_data_directory }}"
+    owner: redpanda
+    group: redpanda

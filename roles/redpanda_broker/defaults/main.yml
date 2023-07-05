@@ -38,10 +38,6 @@ rp_noarch_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unsta
 rp_source_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (ansible_distribution == 'RedHat') | ternary('el', ansible_distribution | lower) }}/{{ ansible_distribution_major_version }}/SRPMS"
 rp_source_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (ansible_distribution == 'RedHat') | ternary('el', ansible_distribution | lower) }}/{{ ansible_distribution_major_version }}/SRPMS"
 rp_conf_loc_rpm: "/etc/yum.repos.d/redpanda-redpanda.repo"
-rpm_prerequisite_packages:
-  - curl
-  - yum-utils
-  - dnf-plugins-core
 
 # the debs
 rp_key_deb: "{{ redpanda_base_url }}/sMIXnoa7DK12JW4A/redpanda/gpg.988A7B0A4918BC85.key"
@@ -54,12 +50,3 @@ rp_repo_signing_deb: "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-archi
 rp_repo_signing_deb_unstable: "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-unstable-archive-keyring.gpg] {{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
 rp_repo_signing_src_deb: "deb-src [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] {{ redpanda_base_url }}/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
 rp_repo_signing_src_deb_unstable: "deb-src [signed-by=/usr/share/keyrings/redpanda-redpanda-unstable-archive-keyring.gpg] {{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
-debian_prerequisite_packages:
-  - debian-keyring
-  - debian-archive-keyring
-  - apt-transport-https
-  - ca-certificates
-  - gnupg
-  - iotop
-  - mdadm
-  - xfsprogs
