@@ -4,6 +4,7 @@
     path: /etc/apt/apt.conf.d/70proxy
     line: 'Acquire::http::Proxy "{{ https_proxy_value }}";'
   when: https_proxy_value is defined and https_proxy_value | length > 0 and ansible_os_family == 'Debian'
+  debugger: always
 
 - name: Node dependencies - fedora setup
   when: ansible_os_family == 'RedHat'
@@ -44,6 +45,7 @@
   when: ansible_os_family == 'Debian'
   environment:
     https_proxy: "{{ https_proxy_value | default('') }}"
+  debugger: always
 
 - name: Install Debian prerequisites
   package:
