@@ -5,7 +5,6 @@
     line: 'Acquire::http::Proxy "{{ https_proxy_value }}";'
   when: https_proxy_value is defined and https_proxy_value | length > 0 and ansible_os_family == 'Debian'
 
-
 - name: Node dependencies - fedora setup
   when: ansible_os_family == 'RedHat'
   tags:
@@ -35,8 +34,6 @@
   ansible.builtin.apt_repository:
     repo: deb http://deb.debian.org/debian stretch-backports main
     state: present
-  environment:
-    https_proxy: "{{ https_proxy_value | default('') }}"
 
 - name: Node dependencies - update packages - debian
   tags:
