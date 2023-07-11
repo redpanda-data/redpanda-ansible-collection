@@ -9,19 +9,13 @@
 
 - name: Download and import Redpanda GPG Key with proxy
   shell: |
-    curl -x "{{ http_proxy_value }}" -1sLf "{{ rp_key_deb_actual }}" | gpg --dearmor > "{{ rp_key_path_deb_actual }}"
-  when: http_proxy_value is defined and http_proxy_value | length > 0 and ansible_os_family == 'Debian'
+    curl -x "{{ https_proxy_value }}" -1sLf "{{ rp_key_deb_actual }}" | gpg --dearmor > "{{ rp_key_path_deb_actual }}"
+  when: https_proxy_value is defined and https_proxy_value | length > 0 and ansible_os_family == 'Debian'
 
 - name: Download and import Redpanda GPG Key without proxy
   shell: |
     curl -1sLf "{{ rp_key_deb_actual }}" | gpg --dearmor > "{{ rp_key_path_deb_actual }}"
-  when: (http_proxy_value is not defined or http_proxy_value | length == 0) and ansible_os_family == 'Debian'
-
-- name: Set APT proxy
-  lineinfile:
-    path: /etc/apt/apt.conf.d/70proxy
-    line: 'Acquire::http::Proxy "{{ https_proxy_value }}";'
-  when: https_proxy_value is defined and https_proxy_value | length > 0 and ansible_os_family == 'Debian'
+  when: (https_proxy_value is not defined or https_proxy_value | length == 0) and ansible_os_family == 'Debian'
 
 - name: Add Redpanda DEB repository
   apt_repository:
