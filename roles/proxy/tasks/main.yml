@@ -21,3 +21,6 @@
     dest: /etc/tinyproxy/tinyproxy.conf
   notify: restart tinyproxy
   become: true
+
+- name: Flush handlers to ensure services are restarted
+  meta: flush_handlers
