@@ -24,7 +24,6 @@
     filename: "redpanda-redpanda"
     mode: 0644
     repo: "{{ rp_repo_signing_deb_actual }}"
-    update_cache: yes
   when: ansible_os_family == 'Debian'
   environment:
     https_proxy: "{{ https_proxy_value | default('') }}"
@@ -35,7 +34,6 @@
     filename: "redpanda-redpanda-src"
     mode: 0644
     repo: "{{ rp_repo_signing_src_deb_actual }}"
-    update_cache: yes
   when: ansible_os_family == 'Debian'
   environment:
     https_proxy: "{{ https_proxy_value | default('') }}"
