@@ -26,6 +26,7 @@
     repo: "{{ rp_repo_signing_deb_actual }}"
     update_cache: yes
   when: ansible_os_family == 'Debian'
+  debugger: always
 
 - name: Add Redpanda DEB repository (source)
   apt_repository:
