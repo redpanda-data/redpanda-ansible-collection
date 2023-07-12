@@ -26,6 +26,8 @@
     repo: "{{ rp_repo_signing_deb_actual }}"
     update_cache: yes
   when: ansible_os_family == 'Debian'
+  environment:
+    https_proxy: "{{ https_proxy_value | default('') }}"
   debugger: always
 
 - name: Add Redpanda DEB repository (source)
@@ -35,6 +37,8 @@
     repo: "{{ rp_repo_signing_src_deb_actual }}"
     update_cache: yes
   when: ansible_os_family == 'Debian'
+  environment:
+    https_proxy: "{{ https_proxy_value | default('') }}"
   debugger: always
 
 - name: Set Redpanda RPM and GPG Key details
