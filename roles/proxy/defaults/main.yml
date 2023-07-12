@@ -1,2 +1,2 @@
-SSH_PORT: 22
-PROXY_PORT: 8888
+ssh_port: 22
+proxy_port: 8888
