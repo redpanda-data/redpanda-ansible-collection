@@ -1,8 +1,17 @@
 ---
-- name: Set APT proxy
+- name: Set APT proxy http
   lineinfile:
     path: /etc/apt/apt.conf.d/70proxy
     line: "Acquire::http::Proxy \"{{ https_proxy_value }}\";"
+    create: true
+    mode: 0644
+  become: true
+  when: https_proxy_value is defined and https_proxy_value | length > 0 and ansible_os_family == 'Debian'
+
+- name: Set APT proxy https
+  lineinfile:
+    path: /etc/apt/apt.conf.d/70proxy
+    line: "Acquire::https::Proxy \"{{ https_proxy_value }}\";"
     create: true
     mode: 0644
   become: true
