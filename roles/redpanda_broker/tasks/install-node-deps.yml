@@ -5,8 +5,8 @@
     line: "Acquire::http::Proxy \"{{ https_proxy_value }}\";"
     create: true
   become: true
-  when: https_proxy_value is defined and https_proxy_value | length > 0 and ansible_os_family == 'Debian'
-  debugger: always
+#  when: https_proxy_value is defined and https_proxy_value | length > 0 and ansible_os_family == 'Debian'
+#  debugger: always
   
 - name: Node dependencies - fedora setup
   when: ansible_os_family == 'RedHat'
