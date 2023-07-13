@@ -25,26 +25,28 @@
   when: (https_proxy_value is not defined or https_proxy_value | length == 0) and ansible_os_family == 'Debian'
 
 - name: Add Redpanda DEB repository
-  apt_repository:
-    filename: "redpanda-redpanda"
-    mode: 0644
-    repo: "{{ rp_repo_signing_deb_actual }}"
+  copy:
+    dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
+    content: "deb [arch=amd64] {{ rp_repo_signing_deb_actual }} focal main"
+    owner: root
+    group: root
+    mode: '0644'
   when: ansible_os_family == 'Debian'
-  environment:
-    http_proxy: "{{ https_proxy_value | default('') }}"
-    https_proxy: "{{ https_proxy_value | default('') }}"
-  debugger: always
+  register: rp_apt_added
 
 - name: Add Redpanda DEB repository (source)
-  apt_repository:
-    filename: "redpanda-redpanda-src"
-    mode: 0644
-    repo: "{{ rp_repo_signing_src_deb_actual }}"
+  copy:
+    dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
+    content: "deb [arch=amd64] {{ rp_repo_signing_deb_actual }} focal main"
+    owner: root
+    group: root
+    mode: '0644'
   when: ansible_os_family == 'Debian'
-  environment:
-    http_proxy: "{{ https_proxy_value | default('') }}"
-    https_proxy: "{{ https_proxy_value | default('') }}"
-  debugger: always
+
+- name: Update apt cache if repository was added
+  apt:
+    update_cache: yes
+  when: rp_apt_added.changed
 
 - name: Set Redpanda RPM and GPG Key details
   set_fact:
