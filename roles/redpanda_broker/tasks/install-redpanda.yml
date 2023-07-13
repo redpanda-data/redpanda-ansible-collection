@@ -46,6 +46,9 @@
 - name: Update apt cache if repository was added
   apt:
     update_cache: yes
+  environment:
+    http_proxy: "{{ http_proxy_value }}"
+    https_proxy: "{{ https_proxy_value }}"
   when: rp_apt_added.changed
 
 - name: Set Redpanda RPM and GPG Key details
