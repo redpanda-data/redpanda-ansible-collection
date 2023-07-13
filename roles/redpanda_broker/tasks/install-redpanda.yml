@@ -27,7 +27,7 @@
 - name: Add Redpanda DEB repository
   copy:
     dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
-    content: "{{ rp_repo_signing_deb_actual }}"
+    content: "{{ rp_repo_signing_deb_actual }}\n"
     owner: root
     group: root
     mode: '0644'
@@ -37,7 +37,7 @@
 - name: Add Redpanda DEB repository (source)
   copy:
     dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
-    content: "{{ rp_repo_signing_deb_actual }}"
+    content: "{{ rp_repo_signing_deb_actual }}\n"
     owner: root
     group: root
     mode: '0644'
