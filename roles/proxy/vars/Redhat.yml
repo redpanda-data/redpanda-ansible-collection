@@ -1,6 +1,0 @@
-packages:
-  - openssh-server
-  - openssh-clients
-  - tinyproxy
-
-ssh_service_name: sshd

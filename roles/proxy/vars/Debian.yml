@@ -1,5 +1,0 @@
-packages:
-  - openssh-server
-  - tinyproxy
-
-ssh_service_name: ssh
