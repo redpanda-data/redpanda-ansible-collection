@@ -12,8 +12,10 @@ debian_prerequisite_packages:
   - iotop
   - mdadm
   - xfsprogs
+  - openssl
 rpm_prerequisite_packages:
   - curl
   - yum-utils
   - dnf-plugins-core
+  - openssl
 redpanda_certs_dir: /etc/redpanda/certs

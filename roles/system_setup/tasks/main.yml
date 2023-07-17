@@ -15,21 +15,20 @@
 
 # installs necessary dependencies for running redpanda
 - name: Install dependencies
-  ansible.builtin.include_tasks: install-node-deps.yml
-  when: prep_deps | default(true) | bool
+  ansible.builtin.include_tasks: install-node-deps-deb.yml
+  when: ansible_facts['os_family']|lower == 'debian'
+
+# installs necessary dependencies for running redpanda
+- name: Install dependencies
+  ansible.builtin.include_tasks: install-node-deps-rpm.yml
+  when: ansible_facts['os_family']|lower == 'redhat'
+
 
 # configures the data dir. won't work if Install dependencies isn't run first
 - name: Prep data dir
   ansible.builtin.include_tasks: prepare-data-dir.yml
   when:
     - prep_data_dir | default(true) | bool
-
-# Copies certs set in ca_cert_file and node_cert_file into the redpanda nodes. see defaults for the default values
-# only necessary when TLS is enabled
-- name: Install certs
-  ansible.builtin.include_tasks: install-certs.yml
-  when:
-    - handle_cert_install | default(false) | bool
 
 # sets permissions on the data directory -- separate from creating for increased flexibility
 - name: Set data dir perms

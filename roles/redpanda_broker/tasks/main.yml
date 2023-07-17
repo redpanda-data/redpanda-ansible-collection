@@ -1,11 +1,39 @@
 ---
+- name: Ensure redpanda_version is defined
+  assert:
+    that:
+      - redpanda_version != ''
+    fail_msg: "Variable 'redpanda_version' must be defined!"
+# Copies certs set in ca_cert_file and node_cert_file into the redpanda nodes. see defaults for the default values
+# only necessary when TLS is enabled
+- name: Install certs
+  ansible.builtin.include_tasks: install-certs.yml
+  when:
+    - handle_cert_install | default(false) | bool
+
 - name: Install Redpanda RPM
   ansible.builtin.include_tasks: install-rp-rpm.yml
-  when: ansible_os_family == 'RedHat'
+  when:
+    - ansible_os_family == 'RedHat'
+    - enable_airgap is false
 
 - name: Install Redpanda DEB
   ansible.builtin.include_tasks: install-rp-deb.yml
-  when: ansible_os_family == 'Debian'
+  when:
+    - ansible_os_family == 'Debian'
+    - enable_airgap is false
+
+- name: Install Redpanda RPM Airgap
+  ansible.builtin.include_tasks: install-rp-rpm-airgap.yml
+  when:
+    - ansible_os_family == 'RedHat'
+    - enable_airgap is true
+
+- name: Install Redpanda DEB Airgap
+  ansible.builtin.include_tasks: install-rp-deb-airgap.yml
+  when:
+    - ansible_os_family == 'Debian'
+    - enable_airgap is true
 
 - name: Start Redpanda
   ansible.builtin.include_tasks: start-redpanda.yml

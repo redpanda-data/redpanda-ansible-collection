@@ -1,0 +1,38 @@
+---
+- name: Ensure basearch is defined
+  assert:
+    that:
+      - basearch != ''
+    fail_msg: "Variable 'basearch' must be defined! This is equivalent to basearch (which can be gotten with uname -m) on the target system"
+
+- name: Ensure redpanda_version is defined
+  assert:
+    that:
+      - redpanda_version != ''
+    fail_msg: "Variable 'redpanda_version' must be defined! Don't use latest here, it won't work"
+
+- name: Ensure os_distribution is defined
+  assert:
+    that:
+      - os_distribution != ''
+    fail_msg: "Variable 'os_distribution' must be defined! This is equivalent to ansible_distribution (can be gotten with . /etc/os-release && echo $ID ) on the target system"
+
+- name: Ensure os_distribution_major_version is defined
+  assert:
+    that:
+      - os_distribution_major_version != ''
+    fail_msg: "Variable 'os_distribution_major_version' must be defined! This is equivalent to ansible_distribution_major_version (can be gotten with . /etc/os-release && echo ${VERSION_ID%%.*} ) on the target system"
+
+- name: Ensure rpm_or_deb is defined
+  assert:
+    that:
+      - rpm_or_deb != ''
+    fail_msg: "Variable 'rpm_or_deb' must be defined!"
+
+- name: Bundle RPM
+  ansible.builtin.include_tasks: rpm_bundle.yml
+  when: rpm_or_deb == "rpm"
+
+- name: Bundle DEB
+  ansible.builtin.include_tasks: deb_bundle.yml
+  when: rpm_or_deb == "deb"

@@ -60,7 +60,6 @@
     key: "{{ rp_key_rpm_actual }}"
   when: https_proxy_value is defined and https_proxy_value | length > 0
 
-
 - name: Install GPG key
   ansible.builtin.rpm_key:
     state: present

@@ -1,0 +1,13 @@
+- name: Copy Redpanda RPMs tarball to host
+  ansible.builtin.copy:
+    src: "{{ airgap_copy_src }}/redpanda_rpms.tar.gz"
+    dest: "{{ airgap_copy_dest }}/redpanda_rpms.tar.gz"
+
+- name: Unpack Redpanda RPMs on host
+  ansible.builtin.unarchive:
+    src: "{{ airgap_copy_dest }}/redpanda_rpms.tar.gz"
+    dest: "{{ airgap_copy_dest }}"
+
+- name: Install Redpanda RPMs
+  ansible.builtin.shell: "rpm -Uvh {{ airgap_copy_dest }}/*.rpm"
+  become: true
