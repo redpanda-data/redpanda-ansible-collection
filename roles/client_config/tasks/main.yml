@@ -1,0 +1,6 @@
+---
+- name: Install cert
+  ansible.builtin.include_tasks: install-cert.yml
+
+- name: Install rpk
+  ansible.builtin.include_tasks: install-rpk.yml

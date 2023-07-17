@@ -1,9 +1,11 @@
 ---
-- name: Set Redpanda RPM and GPG Key details
+- name: Set Redpanda RPM
   set_fact:
     rp_standard_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_standard_rpm_unstable, rp_standard_rpm) }}"
     rp_noarch_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
     rp_source_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
+  tags:
+    - airgap-tarball-install
 
 - name: Download Redpanda RPMs to local machine
   ansible.builtin.get_url:
@@ -16,6 +18,8 @@
       rp_standard: "{{ rp_standard_rpm_actual }}"
       rp_noarch: "{{ rp_noarch_rpm_actual }}"
       rp_source: "{{ rp_source_rpm_actual }}"
+  tags:
+    - airgap-tarball-install
 
 - name: Create tarball of Redpanda RPMs
   ansible.builtin.archive:
@@ -24,3 +28,5 @@
     format: gz
     remove: true
   delegate_to: localhost
+  tags:
+    - airgap-tarball-install

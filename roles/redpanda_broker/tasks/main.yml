@@ -4,6 +4,7 @@
     that:
       - redpanda_version != ''
     fail_msg: "Variable 'redpanda_version' must be defined!"
+
 # Copies certs set in ca_cert_file and node_cert_file into the redpanda nodes. see defaults for the default values
 # only necessary when TLS is enabled
 - name: Install certs
