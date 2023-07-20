@@ -1,10 +1,10 @@
 ---
 - name: Set Redpanda GPG Key and Repository details
   set_fact:
-    rp_key_deb_actual: "{{ is_using_unstable | bool | ternary(rp_key_deb_unstable, rp_key_deb) }}"
-    rp_key_path_deb_actual: "{{ is_using_unstable | bool | ternary(rp_key_path_deb_unstable, rp_key_path_deb) }}"
-    rp_repo_signing_deb_actual: "{{ is_using_unstable | bool | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
-    rp_repo_signing_src_deb_actual: "{{ is_using_unstable | bool | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
+    rp_key_deb_actual: "{{ redpanda_use_staging_repo | bool | ternary(rp_key_deb_unstable, rp_key_deb) }}"
+    rp_key_path_deb_actual: "{{ redpanda_use_staging_repo | bool | ternary(rp_key_path_deb_unstable, rp_key_path_deb) }}"
+    rp_repo_signing_deb_actual: "{{ redpanda_use_staging_repo | bool | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
+    rp_repo_signing_src_deb_actual: "{{ redpanda_use_staging_repo | bool | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
   when: ansible_os_family == 'Debian'
 
 - name: Download and import Redpanda GPG Key
@@ -30,11 +30,11 @@
 
 - name: Set Redpanda RPM and GPG Key details
   set_fact:
-    rp_key_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_key_rpm_unstable, rp_key_rpm) }}"
-    rp_standard_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_standard_rpm_unstable, rp_standard_rpm) }}"
-    rp_noarch_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
-    rp_source_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
-    repo_name_prefix: "{{ is_using_unstable | bool | ternary('redpanda-redpanda-unstable', 'redpanda-redpanda') }}"
+    rp_key_rpm_actual: "{{ redpanda_use_staging_repo | bool | ternary(rp_key_rpm_unstable, rp_key_rpm) }}"
+    rp_standard_rpm_actual: "{{ redpanda_use_staging_repo | bool | ternary(rp_standard_rpm_unstable, rp_standard_rpm) }}"
+    rp_noarch_rpm_actual: "{{ redpanda_use_staging_repo | bool | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
+    rp_source_rpm_actual: "{{ redpanda_use_staging_repo | bool | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
+    repo_name_prefix: "{{ redpanda_use_staging_repo | bool | ternary('redpanda-redpanda-unstable', 'redpanda-redpanda') }}"
   when: ansible_os_family == 'RedHat'
 
 - name: Add redpanda-redpanda RPM repository
