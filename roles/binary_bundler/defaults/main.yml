@@ -1,0 +1,24 @@
+# defaults
+redpanda_base_url: "https://dl.redpanda.com"
+download_directory: "/tmp"
+
+# required config from user:
+redpanda_version: ""
+is_using_unstable: false
+basearch: ""
+os_distribution: ""
+os_distribution_major_version: ""
+rpm_or_deb: ""
+
+# the rpms
+redpanda_package_name: "redpanda{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}.{{ basearch }}.rpm"
+rp_standard_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/{{ basearch }}/{{ redpanda_package_name }}"
+rp_standard_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/{{ basearch }}/{{ redpanda_package_name }}"
+rp_noarch_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/noarch/{{ redpanda_package_name }}"
+rp_noarch_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/noarch/{{ redpanda_package_name }}"
+rp_source_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/SRPMS/{{ redpanda_package_name }}"
+rp_source_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/SRPMS/{{ redpanda_package_name }}"
+
+# the debs
+deb_download_url: "https://dl.redpanda.com/public/redpanda/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda_{{ redpanda_version}}/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+deb_unstable_download_url: "https://dl.redpanda.com/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda_{{ redpanda_version}}/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"

@@ -1,33 +1,4 @@
 ---
-- name: Set Redpanda GPG Key and Repository details
-  set_fact:
-    rp_key_deb_actual: "{{ is_using_unstable | bool | ternary(rp_key_deb_unstable, rp_key_deb) }}"
-    rp_key_path_deb_actual: "{{ is_using_unstable | bool | ternary(rp_key_path_deb_unstable, rp_key_path_deb) }}"
-    rp_repo_signing_deb_actual: "{{ is_using_unstable | bool | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
-    rp_repo_signing_src_deb_actual: "{{ is_using_unstable | bool | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
-  when: ansible_os_family == 'Debian'
-
-- name: Download and import Redpanda GPG Key
-  shell: |
-    curl -1sLf "{{ rp_key_deb_actual }}" | gpg --dearmor > "{{ rp_key_path_deb_actual }}"
-  when: ansible_os_family == 'Debian'
-
-- name: Add Redpanda DEB repository
-  apt_repository:
-    filename: "redpanda-redpanda"
-    mode: 0644
-    repo: "{{ rp_repo_signing_deb_actual }}"
-    update_cache: yes
-  when: ansible_os_family == 'Debian'
-
-- name: Add Redpanda DEB repository (source)
-  apt_repository:
-    filename: "redpanda-redpanda-src"
-    mode: 0644
-    repo: "{{ rp_repo_signing_src_deb_actual }}"
-    update_cache: yes
-  when: ansible_os_family == 'Debian'
-
 - name: Set Redpanda RPM and GPG Key details
   set_fact:
     rp_key_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_key_rpm_unstable, rp_key_rpm) }}"
@@ -35,7 +6,6 @@
     rp_noarch_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
     rp_source_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
     repo_name_prefix: "{{ is_using_unstable | bool | ternary('redpanda-redpanda-unstable', 'redpanda-redpanda') }}"
-  when: ansible_os_family == 'RedHat'
 
 - name: Add redpanda-redpanda RPM repository
   ansible.builtin.yum_repository:
@@ -51,7 +21,6 @@
     metadata_expire: 300
     skip_if_unavailable: yes
     proxy: "{{ rpm_proxy | default('') }}"
-  when: ansible_os_family == 'RedHat'
 
 - name: Add redpanda-redpanda-noarch RPM repository
   ansible.builtin.yum_repository:
@@ -67,7 +36,6 @@
     metadata_expire: 300
     skip_if_unavailable: yes
     proxy: "{{ rpm_proxy | default('') }}"
-  when: ansible_os_family == 'RedHat'
 
 - name: Add redpanda-redpanda-source RPM repository
   ansible.builtin.yum_repository:
@@ -83,15 +51,20 @@
     metadata_expire: 300
     skip_if_unavailable: yes
     proxy: "{{ rpm_proxy | default('') }}"
-  when: ansible_os_family == 'RedHat'
 
-- name: Install GPG key (RPM)
+- name: Install GPG key with proxy
   environment:
-    https_proxy: "{{ https_proxy_value | default('') }}"
+    https_proxy: "{{ rpm_proxy | default('') }}"
   ansible.builtin.rpm_key:
     state: present
     key: "{{ rp_key_rpm_actual }}"
-  when: ansible_os_family == 'RedHat'
+  when: https_proxy_value is defined and https_proxy_value | length > 0
+
+- name: Install GPG key
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ rp_key_rpm_actual }}"
+  when: (https_proxy_value is not defined or https_proxy_value | length == 0)
 
 - name: Set fact for package name
   set_fact:
@@ -103,8 +76,6 @@
       - "{{ redpanda_package_name }}"
     state: "{{ redpanda_install_status }}"
     update_cache: true
-  register: package_result
-
 
 - name: Set data dir file perms
   ansible.builtin.file:

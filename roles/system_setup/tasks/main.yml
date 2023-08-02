@@ -1,0 +1,37 @@
+---
+- name: Check if ca_cert_file is defined
+  fail:
+    msg: "A valid path must be provided for ca_cert_file ex: tls/certs/ca.crt"
+  when:
+    - handle_cert_install | default(false) | bool
+    - ca_cert_file is not defined
+
+- name: Check if node_cert_file is defined
+  fail:
+    msg: "A valid path must be provided for node_cert_file ex: tls/certs/node.crt"
+  when:
+    - handle_cert_install | default(false) | bool
+    - node_cert_file is not defined
+
+# installs necessary dependencies for running redpanda
+- name: Install dependencies
+  ansible.builtin.include_tasks: install-node-deps-deb.yml
+  when: ansible_facts['os_family']|lower == 'debian'
+
+# installs necessary dependencies for running redpanda
+- name: Install dependencies
+  ansible.builtin.include_tasks: install-node-deps-rpm.yml
+  when: ansible_facts['os_family']|lower == 'redhat'
+
+
+# configures the data dir. won't work if Install dependencies isn't run first
+- name: Prep data dir
+  ansible.builtin.include_tasks: prepare-data-dir.yml
+  when:
+    - prep_data_dir | default(true) | bool
+
+# sets permissions on the data directory -- separate from creating for increased flexibility
+- name: Set data dir perms
+  ansible.builtin.include_tasks: data-dir-perms.yml
+  when:
+    - data_dir_perms | default(true) | bool

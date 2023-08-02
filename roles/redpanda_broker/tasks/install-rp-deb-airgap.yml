@@ -1,0 +1,22 @@
+- name: Copy Redpanda DEBs tarball to host
+  ansible.builtin.copy:
+    src: "{{ airgap_copy_src }}/redpanda_debs.tar.gz"
+    dest: "{{ airgap_copy_dest }}/redpanda_debs.tar.gz"
+
+- name: Unpack Redpanda DEBs on host
+  ansible.builtin.unarchive:
+    src: "{{ airgap_copy_dest }}/redpanda_debs.tar.gz"
+    dest: "{{ airgap_copy_dest }}"
+
+- name: Install Redpanda DEBs
+  ansible.builtin.shell: "dpkg -i --force-confold {{ airgap_copy_dest }}/*.deb"
+  become: true
+
+- name: Ensure /var/lib/redpanda and all contents are owned by redpanda:redpanda
+  become: true
+  ansible.builtin.file:
+    path: "/var/lib/redpanda"
+    state: directory
+    recurse: yes
+    owner: redpanda
+    group: redpanda
