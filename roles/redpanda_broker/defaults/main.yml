@@ -35,13 +35,18 @@ airgap_copy_dest: "/tmp"
 # the rpms
 rp_key_rpm: "{{ redpanda_base_url }}/public/redpanda/gpg.988A7B0A4918BC85.key"
 rp_key_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/gpg.39C20393EC2E8747.key"
-rp_standard_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (ansible_distribution == 'RedHat') | ternary('el', ansible_distribution | lower) }}/{{ ansible_distribution_major_version }}/$basearch"
-rp_standard_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (ansible_distribution == 'RedHat') | ternary('el', ansible_distribution | lower) }}/{{ ansible_distribution_major_version }}/$basearch"
-rp_noarch_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (ansible_distribution == 'RedHat') | ternary('el', ansible_distribution | lower) }}/{{ ansible_distribution_major_version }}/noarch"
-rp_noarch_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (ansible_distribution == 'RedHat') | ternary('el', ansible_distribution | lower) }}/{{ ansible_distribution_major_version }}/noarch"
-rp_source_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (ansible_distribution == 'RedHat') | ternary('el', ansible_distribution | lower) }}/{{ ansible_distribution_major_version }}/SRPMS"
-rp_source_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (ansible_distribution == 'RedHat') | ternary('el', ansible_distribution | lower) }}/{{ ansible_distribution_major_version }}/SRPMS"
+rp_standard_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ rp_rpm_distro_map[ansible_distribution] | default('el') }}/{{ ansible_distribution_major_version }}/$basearch"
+rp_standard_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/el/{{ ansible_distribution_major_version }}/$basearch"
+rp_noarch_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ rp_rpm_distro_map[ansible_distribution] | default('el') }}/{{ ansible_distribution_major_version }}/noarch"
+rp_noarch_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/el/{{ ansible_distribution_major_version }}/noarch"
+rp_source_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ rp_rpm_distro_map[ansible_distribution] | default('el') }}/{{ ansible_distribution_major_version }}/SRPMS"
+rp_source_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/el/{{ ansible_distribution_major_version }}/SRPMS"
 rp_conf_loc_rpm: "/etc/yum.repos.d/redpanda-redpanda.repo"
+rp_rpm_distro_map:
+  Fedora: fedora
+  Amazon: amzn
+  default: el
+
 
 # the debs
 rp_key_deb: "{{ redpanda_base_url }}/sMIXnoa7DK12JW4A/redpanda/gpg.988A7B0A4918BC85.key"
