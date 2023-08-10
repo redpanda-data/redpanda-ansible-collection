@@ -1,16 +1,51 @@
+- name: Check if RP exists
+  stat:
+    path: "/usr/bin/redpanda"
+  register: rp_exists_check
+
+- name: Get version from file
+  command:
+    cmd: "/usr/bin/redpanda --version"
+  register: rp_ver_output
+  when: rp_exists_check.stat.exists
+
+- name: Check if redpanda_version is set to latest
+  set_fact:
+    needs_update: true
+  when: redpanda_version == "latest"
+
+- name: Compare version if redpanda_version is not set to latest
+  set_fact:
+    needs_update: "{{ (redpanda_version.replace('v', '').split('-')[0] | string ) is version((rp_ver_output.stdout.replace('v', '').split('-')[0] | string), '>') }}"
+  when:
+    - rp_exists_check.stat.exists
+    - redpanda_version != "latest"
+
 - name: Copy Redpanda DEBs tarball to host
   ansible.builtin.copy:
     src: "{{ airgap_copy_src }}/redpanda_debs.tar.gz"
     dest: "{{ airgap_copy_dest }}/redpanda_debs.tar.gz"
+  tags:
+    - airgap-tarball-install
+  when:
+    - (needs_update | default(false)) or not rp_exists_check.stat.exists
 
 - name: Unpack Redpanda DEBs on host
   ansible.builtin.unarchive:
     src: "{{ airgap_copy_dest }}/redpanda_debs.tar.gz"
     dest: "{{ airgap_copy_dest }}"
+  tags:
+    - airgap-tarball-install
+  when:
+    - (needs_update | default(false)) or not rp_exists_check.stat.exists
 
 - name: Install Redpanda DEBs
   ansible.builtin.shell: "dpkg -i --force-confold {{ airgap_copy_dest }}/*.deb"
   become: true
+  tags:
+    - airgap-tarball-install
+  when:
+    - (needs_update | default(false)) or not rp_exists_check.stat.exists
 
 - name: Ensure /var/lib/redpanda and all contents are owned by redpanda:redpanda
   become: true
@@ -20,3 +55,5 @@
     recurse: yes
     owner: redpanda
     group: redpanda
+  tags:
+    - airgap-tarball-install

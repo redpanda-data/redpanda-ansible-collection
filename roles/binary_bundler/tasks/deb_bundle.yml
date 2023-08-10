@@ -1,13 +1,17 @@
 ---
-- name: Set Redpanda RPM and GPG Key details
+- name: Set Redpanda RPM
   set_fact:
     deb_link_actual: "{{ is_using_unstable | bool | ternary(deb_unstable_download_url, deb_download_url) }}"
+  tags:
+    - airgap-tarball-install
 
 - name: Download Redpanda DEBs to local machine
   ansible.builtin.get_url:
     url: "{{ deb_link_actual }}"
     dest: "{{ download_directory }}"
   delegate_to: localhost
+  tags:
+    - airgap-tarball-install
 
 - name: Create tarball of Redpanda DEBs
   ansible.builtin.archive:
@@ -16,3 +20,5 @@
     format: gz
     remove: true
   delegate_to: localhost
+  tags:
+    - airgap-tarball-install

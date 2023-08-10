@@ -5,7 +5,9 @@
     dest: /etc/apt/apt.conf.d/proxy.conf
     mode: 0644
   become: true
-  when: https_proxy_value is defined and https_proxy_value | length > 0
+  when:
+    - https_proxy_value is defined and https_proxy_value | length > 0
+    - (create_pkg_mgr_proxy | default(false)) is true
 
 - name: Node dependencies - update packages - debian
   tags:

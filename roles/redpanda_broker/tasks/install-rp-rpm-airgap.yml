@@ -1,13 +1,50 @@
+- name: Check if RP exists
+  stat:
+    path: "/usr/bin/redpanda"
+  register: rp_exists_check
+
+- name: Get version from file
+  command:
+    cmd: "/usr/bin/redpanda --version"
+  register: rp_ver_output
+  when: rp_exists_check.stat.exists
+
+- name: Check if redpanda_version is set to latest
+  set_fact:
+    needs_update: true
+  when: redpanda_version == "latest"
+
+- name: Compare version if redpanda_version is not set to latest
+  set_fact:
+    needs_update: "{{ (redpanda_version.replace('v', '').split('-')[0] | string ) is version((rp_ver_output.stdout.replace('v', '').split('-')[0] | string), '>') }}"
+  when:
+    - rp_exists_check.stat.exists
+    - redpanda_version != "latest"
+
 - name: Copy Redpanda RPMs tarball to host
   ansible.builtin.copy:
     src: "{{ airgap_copy_src }}/redpanda_rpms.tar.gz"
     dest: "{{ airgap_copy_dest }}/redpanda_rpms.tar.gz"
+  tags:
+    - airgap-tarball-install
+  when:
+    - (needs_update | default(false)) or not rp_exists_check.stat.exists
 
 - name: Unpack Redpanda RPMs on host
   ansible.builtin.unarchive:
     src: "{{ airgap_copy_dest }}/redpanda_rpms.tar.gz"
     dest: "{{ airgap_copy_dest }}"
+  tags:
+    - airgap-tarball-install
+  when:
+    - (needs_update | default(false)) or not rp_exists_check.stat.exists
 
 - name: Install Redpanda RPMs
-  ansible.builtin.shell: "rpm -Uvh {{ airgap_copy_dest }}/*.rpm"
+  ansible.builtin.shell: "rpm -Uvh --force {{ airgap_copy_dest }}/*.rpm"
+  register: rpm_result
+  failed_when: rpm_result.rc != 2 and rpm_result.rc != 0
   become: true
+  tags:
+    - airgap-tarball-install
+  when:
+    - (needs_update | default(false)) or not rp_exists_check.stat.exists

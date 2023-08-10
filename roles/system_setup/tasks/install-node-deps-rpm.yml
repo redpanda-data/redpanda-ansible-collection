@@ -5,7 +5,9 @@
     dest: /etc/dnf/dnf.conf
     mode: 0644
   become: true
-  when: rpm_proxy is defined and rpm_proxy | length > 0
+  when:
+    - rpm_proxy is defined and rpm_proxy | length > 0
+    - (create_pkg_mgr_proxy | default(false)) is true
 
 - name: Node dependencies - RPM setup
   tags:
