@@ -1,12 +1,7 @@
----
-- name: Set fact for package name
-  set_fact:
-    redpanda_package_name: "redpanda{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}"
-
 - name: Install redpanda from repository
   ansible.builtin.package:
     name:
-      - "{{ redpanda_package_name }}"
+      - redpanda-console
     state: "{{ redpanda_install_status }}"
     update_cache: true
   environment:
@@ -17,13 +12,7 @@
 - name: Install redpanda from repository
   ansible.builtin.package:
     name:
-      - "{{ redpanda_package_name }}"
+      - redpanda-console
     state: "{{ redpanda_install_status }}"
     update_cache: true
   when: https_proxy_value is not defined or https_proxy_value | length == 0
-
-- name: Set data dir file perms
-  ansible.builtin.file:
-    path: "{{ redpanda_data_directory }}"
-    owner: redpanda
-    group: redpanda

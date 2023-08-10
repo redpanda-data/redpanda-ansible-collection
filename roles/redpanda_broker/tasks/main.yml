@@ -11,30 +11,49 @@
   ansible.builtin.include_tasks: install-certs.yml
   when:
     - handle_cert_install | default(false) | bool
+    - install_console is false
+
+- name: Configure Redpanda RPM Repository
+  ansible.builtin.include_tasks: configure-rpm-repository.yml
+  when:
+    - ansible_os_family == 'RedHat'
+    - enable_airgap is false
+
+- name: Configure Redpanda DEB Repository
+  ansible.builtin.include_tasks: configure-deb-repository.yml
+  when:
+    - ansible_os_family == 'Debian'
+    - enable_airgap is false
 
 - name: Install Redpanda RPM
   ansible.builtin.include_tasks: install-rp-rpm.yml
   when:
     - ansible_os_family == 'RedHat'
     - enable_airgap is false
+    - install_console is false
 
 - name: Install Redpanda DEB
   ansible.builtin.include_tasks: install-rp-deb.yml
   when:
     - ansible_os_family == 'Debian'
     - enable_airgap is false
+    - install_console is false
 
 - name: Install Redpanda RPM Airgap
   ansible.builtin.include_tasks: install-rp-rpm-airgap.yml
   when:
     - ansible_os_family == 'RedHat'
     - enable_airgap is true
+    - install_console is false
 
 - name: Install Redpanda DEB Airgap
   ansible.builtin.include_tasks: install-rp-deb-airgap.yml
   when:
     - ansible_os_family == 'Debian'
     - enable_airgap is true
+    - install_console is false
 
 - name: Start Redpanda
   ansible.builtin.include_tasks: start-redpanda.yml
+  when:
+    - install_console is false
