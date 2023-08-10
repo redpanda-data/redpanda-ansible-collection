@@ -7,6 +7,6 @@
 
 - name: Copy the certificate for the application
   ansible.builtin.copy:
-    src: "{{ cert_src_dir}}/{{cert_name}}"
-    dest: "{{ cert_dest_dir }}/{{cert_name}}"
+    src: "{{ cert_src_dir}}/{{truststore_name}}"
+    dest: "{{ cert_dest_dir }}/{{truststore_name}}"
     mode: '0644'

@@ -10,7 +10,7 @@
 
 - name: Download Redpanda rpk zip for amd64
   ansible.builtin.get_url:
-    url: "https://github.com/redpanda-data/redpanda/releases/latest/download/rpk-linux-{{ rpk_arch }}.zip"
+    url: "{{ rpk_url | default('https://github.com/redpanda-data/redpanda/releases/latest/download/rpk-linux-' + rpk_arch + '.zip') }}"
     dest: "/tmp/rpk-linux-{{ rpk_arch }}.zip"
     mode: '0644'
   when: rpk_arch in ['amd64', 'arm64']
