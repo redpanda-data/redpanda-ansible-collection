@@ -1,0 +1,7 @@
+---
+- name: Install redpanda from repository
+  ansible.builtin.package:
+    name:
+      - redpanda-console
+    state: "{{ redpanda_install_status }}"
+    update_cache: true
