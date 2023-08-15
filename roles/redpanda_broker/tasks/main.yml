@@ -4,6 +4,7 @@
     that:
       - redpanda_version != ''
     fail_msg: "Variable 'redpanda_version' must be defined!"
+  when: not (install_certs_only | default(false) | bool)
 
 # Copies certs set in ca_cert_file and node_cert_file into the redpanda nodes. see defaults for the default values
 # only necessary when TLS is enabled
@@ -11,7 +12,11 @@
   ansible.builtin.include_tasks: install-certs.yml
   when:
     - handle_cert_install | default(false) | bool
-    - install_console is false
+
+# End play if install_certs_only is true
+- name: End play if only installing certs
+  meta: end_play
+  when: install_certs_only | default(false) | bool
 
 - name: Configure Redpanda RPM Repository
   ansible.builtin.include_tasks: configure-rpm-repository.yml
@@ -53,7 +58,24 @@
     - enable_airgap is true
     - install_console is false
 
+- name: Install Redpanda Console
+  ansible.builtin.include_tasks: install-console-deb.yml
+  when:
+    - ansible_os_family == 'Debian'
+    - install_console is true
+
+- name: Install Redpanda Console
+  ansible.builtin.include_tasks: install-console-rpm.yml
+  when:
+    - ansible_os_family == 'RedHat'
+    - install_console is true
+
 - name: Start Redpanda
   ansible.builtin.include_tasks: start-redpanda.yml
   when:
     - install_console is false
+
+- name: Start Redpanda Console
+  ansible.builtin.include_tasks: start-console.yml
+  when:
+    - install_console is true

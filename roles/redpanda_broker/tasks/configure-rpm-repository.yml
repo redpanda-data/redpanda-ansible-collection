@@ -20,7 +20,7 @@
     sslverify: yes
     metadata_expire: 300
     skip_if_unavailable: yes
-    proxy: "{{ rpm_proxy | default('') }}"
+    proxy: "{{ rpm_proxy | default('_none_') }}"
 
 - name: Add redpanda-redpanda-noarch RPM repository
   ansible.builtin.yum_repository:
@@ -35,7 +35,7 @@
     sslverify: yes
     metadata_expire: 300
     skip_if_unavailable: yes
-    proxy: "{{ rpm_proxy | default('') }}"
+    proxy: "{{ rpm_proxy | default('_none_') }}"
 
 - name: Add redpanda-redpanda-source RPM repository
   ansible.builtin.yum_repository:
@@ -50,7 +50,7 @@
     sslverify: yes
     metadata_expire: 300
     skip_if_unavailable: yes
-    proxy: "{{ rpm_proxy | default('') }}"
+    proxy: "{{ rpm_proxy | default('_none_') }}"
 
 - name: Install GPG key with proxy
   environment:
