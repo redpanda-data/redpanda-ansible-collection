@@ -1,0 +1,12 @@
+---
+- name: Ensure certificate directory exists
+  ansible.builtin.file:
+    path: "{{ cert_dest_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy the certificate for the application
+  ansible.builtin.copy:
+    src: "{{ cert_src_dir}}/{{truststore_name}}"
+    dest: "{{ cert_dest_dir }}/{{truststore_name}}"
+    mode: '0644'

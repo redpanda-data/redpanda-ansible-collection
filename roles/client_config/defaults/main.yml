@@ -1,0 +1,6 @@
+rpk_base_url: "https://github.com/redpanda-data/redpanda/releases/latest/download"
+cert_dest_dir: "/opt/rpk/certs"
+cert_src_dir: "{{ playbook_dir }}/tls/ca"
+
+# truststore used to auth to RP brokers with RPK
+truststore_name: "ca.crt"

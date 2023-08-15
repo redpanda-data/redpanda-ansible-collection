@@ -1,0 +1,29 @@
+- name: Set architecture fact for url
+  set_fact:
+    rpk_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else 'unsupported' }}"
+
+- name: Ensure unzip is installed
+  ansible.builtin.package:
+    name: unzip
+    state: present
+  become: true
+
+- name: Download Redpanda rpk zip for amd64
+  ansible.builtin.get_url:
+    url: "{{ rpk_url | default('https://github.com/redpanda-data/redpanda/releases/latest/download/rpk-linux-' + rpk_arch + '.zip') }}"
+    dest: "/tmp/rpk-linux-{{ rpk_arch }}.zip"
+    mode: '0644'
+  when: rpk_arch in ['amd64', 'arm64']
+
+- name: Unzip Redpanda rpk to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/rpk-linux-{{ rpk_arch }}.zip"
+    dest: /usr/local/bin
+    remote_src: yes
+  become: yes
+  when: rpk_arch in ['amd64', 'arm64']
+
+- name: Fail for unsupported architecture
+  fail:
+    msg: "The architecture '{{ ansible_architecture }}' is not supported for Redpanda rpk installation"
+  when: rpk_arch == 'unsupported'
