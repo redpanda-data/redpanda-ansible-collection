@@ -66,3 +66,7 @@
         -batch
     creates: tls/certs/{{ansible_hostname}}/node.crt
   delegate_to: 127.0.0.1
+  register: result_issue_certs
+  until: result_issue_certs.rc == 0
+  retries: 3
+  delay: 5
