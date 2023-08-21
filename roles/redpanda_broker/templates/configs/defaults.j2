@@ -74,6 +74,13 @@
       "tune_ballast_file": true
     },
     "pandaproxy": {},
-    "schema_registry": {}
+    "schema_registry": {
+        "schema_registry_api": {
+        {
+          "address": "{{ hostvars[inventory_hostname].private_ip }}",
+          "port": "{{ redpanda_kafka_port }}"
+        }
+      }
+    }
   }
 }
