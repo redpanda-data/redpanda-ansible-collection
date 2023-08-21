@@ -35,6 +35,10 @@ airgap_copy_dest: "/tmp"
 # console
 install_console: false
 
+# sasl
+sasl_bootstrap_admin_user: "admin"
+sasl_bootstrap_admin_pw: "admin"
+
 # the rpms
 rp_key_rpm: "{{ redpanda_base_url }}/public/redpanda/gpg.988A7B0A4918BC85.key"
 rp_key_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/gpg.39C20393EC2E8747.key"

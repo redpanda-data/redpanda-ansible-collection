@@ -1,7 +1,11 @@
 {
   "cluster": {
     "rpc_server_tcp_recv_buf": 65536,
-    "enable_rack_awareness": "{{ true if rack is defined and rack != -1 else false }}"
+    "enable_rack_awareness": "{{ true if rack is defined and rack != -1 else false }}"{% if enable_sasl|default(false) %},
+    "kafka_enable_authorization": true,
+    "superusers": ["admin"],
+    "enable_sasl": true
+    {% endif %}
   },
   "node": {
     "organization": "{{ redpanda_organization }}",
@@ -26,7 +30,8 @@
       "kafka_api": [
         {
           "address": "{{ hostvars[inventory_hostname].private_ip }}",
-          "port": "{{ redpanda_kafka_port }}"
+          "port": "{{ redpanda_kafka_port }}"{% if enable_sasl|default(false) %},
+          "authentication_method": "sasl"{% endif %}
         }
       ],
       "admin": [
@@ -73,14 +78,5 @@
       "tune_swappiness": true,
       "tune_ballast_file": true
     },
-    "pandaproxy": {},
-    "schema_registry": {
-        "schema_registry_api": {
-        {
-          "address": "{{ hostvars[inventory_hostname].private_ip }}",
-          "port": "{{ redpanda_kafka_port }}"
-        }
-      }
-    }
   }
 }
