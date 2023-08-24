@@ -38,6 +38,8 @@ install_console: false
 # sasl
 sasl_bootstrap_admin_user: "admin"
 sasl_bootstrap_admin_pw: "admin"
+console_sasl_user: "admin"
+console_sasl_pw: "admin"
 
 # the rpms
 rp_key_rpm: "{{ redpanda_base_url }}/public/redpanda/gpg.988A7B0A4918BC85.key"

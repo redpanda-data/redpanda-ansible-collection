@@ -11,8 +11,15 @@
     "certFilepath": "{{ redpanda_cert_file }}",
     "keyFilepath": "{{ redpanda_key_file }}",
     "insecureSkipTlsVerify": false
-  }
-  {% endif %}
+  }{% endif %}{% if enable_sasl | default(false) %},
+    "schemaRegistry": {
+    "enabled": true,
+    "urls": [{% for host in advertised_ips %}
+      "{{ host }}:{{ redpanda_kafka_port }}"{% if not loop.last %},{% endif %}
+      {% endfor %}],
+    "username": "{{ console_sasl_user }}",
+    "password": "{{ console_sasl_pw }}"
+  }{% endif %}
   },
   "redpanda": {
     "adminApi": {
