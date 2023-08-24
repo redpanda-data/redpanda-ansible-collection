@@ -50,7 +50,25 @@
         }{% if not loop.last %},{% endif %}
         {% endfor %}
       ],
-      "rack": "{% if rack is defined %}{{ rack | default('null') }}{% endif %}"
+      "rack": "{% if rack is defined %}{{ rack | default('null') }}{% endif %}",
+    },
+    "schema_registry": {
+            "schema_registry_api": [
+                {
+                    "address": "{{ hostvars[inventory_hostname].private_ip }}",
+                    "port": "{{ redpanda_kafka_port }}"{% if enable_sasl|default(false) %},
+                    "authentication_method": "sasl"{% endif %}
+                }
+            ]{% if enable_tls|default(false) %},
+                "schema_registry_api_tls": [
+            {
+                "enabled": true,
+                "require_client_auth": false,
+                "key_file": "{{ redpanda_key_file }}",
+                "cert_file": "{{ redpanda_cert_file }}",
+                "truststore_file": "{{ redpanda_truststore_file }}"
+            }
+        ]{% endif %}
     },
     "rpk": {
       "kafka_api": {
@@ -77,6 +95,6 @@
       "tune_clocksource": true,
       "tune_swappiness": true,
       "tune_ballast_file": true
-    },
+    }
   }
 }

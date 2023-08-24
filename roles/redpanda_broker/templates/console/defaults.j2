@@ -15,7 +15,7 @@
     "schemaRegistry": {
     "enabled": true,
     "urls": [{% for host in advertised_ips %}
-      "{{ host }}:{{ redpanda_kafka_port }}"{% if not loop.last %},{% endif %}
+      "http://{{ host }}:{{ redpanda_schema_registry_port }}"{% if not loop.last %},{% endif %}
       {% endfor %}],
     "username": "{{ console_sasl_user }}",
     "password": "{{ console_sasl_pw }}"
