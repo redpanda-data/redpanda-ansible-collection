@@ -1,0 +1,41 @@
+- name: Ensure /etc/redpanda exists
+  ansible.builtin.file:
+    path: /etc/redpanda
+    state: directory
+    mode: "0755"
+
+- name: Create list of advertised_ips
+  set_fact:
+    advertised_ips: "{{
+      groups['redpanda'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_ips | default(False) | bool) else 'private_ip') | list
+    }}"
+
+- name: Reset configuration
+  ansible.builtin.set_fact:
+    console_config: { }
+
+- name: Generate configurations
+  ansible.builtin.set_fact:
+    console_config: "{{ console_config | combine(lookup('template', console_config_template.template), recursive=True) }}"
+  loop: "{{ console_config_templates }}"
+  loop_control:
+    loop_var: console_config_template
+  when: console_config_template.condition | default(True)
+
+- name: Merge with user-provided overrides (via rpconsole variable)
+  ansible.builtin.set_fact:
+    console_config: "{{ console_config | combine((rpconsole | default('{}') | from_json), recursive=True) }}"
+
+- name: Generate Console config
+  ansible.builtin.template:
+    src: console/console.yml
+    dest: /etc/redpanda/redpanda-console-config.yaml
+    owner: redpanda
+    group: redpanda
+    mode: "0644"
+
+# ensure that systemd starts up redpanda console
+- name: Start redpanda console
+  ansible.builtin.systemd:
+    name: redpanda-console
+    state: restarted

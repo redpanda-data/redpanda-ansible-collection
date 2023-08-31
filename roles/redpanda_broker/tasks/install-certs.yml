@@ -1,4 +1,21 @@
 ---
+- name: Install certs - create redpanda user if it doesn't exist already
+  tags:
+    - install_certs
+  ansible.builtin.user:
+    name: redpanda
+    system: true
+
+- name: Install certs - ensure /etc/redpanda/certs exists
+  tags:
+    - install_certs
+  ansible.builtin.file:
+    path: "{{ redpanda_certs_dir }}"
+    state: directory
+    owner: redpanda
+    group: redpanda
+    mode: "0755"
+
 - name: Install_certs - Copy CA Certs
   tags:
     - install_certs
@@ -20,6 +37,7 @@
     group: redpanda
     force: "{{ overwrite_certs | default('no') | bool }}"
     mode: "0644"
+
 - name: Install_certs - Set Redpanda config
   tags:
     - install_certs

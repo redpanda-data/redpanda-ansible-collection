@@ -1,0 +1,67 @@
+---
+- name: Set Redpanda RPM and GPG Key details
+  set_fact:
+    rp_key_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_key_rpm_unstable, rp_key_rpm) }}"
+    rp_standard_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_standard_rpm_unstable, rp_standard_rpm) }}"
+    rp_noarch_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
+    rp_source_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
+    repo_name_prefix: "{{ is_using_unstable | bool | ternary('redpanda-redpanda-unstable', 'redpanda-redpanda') }}"
+
+- name: Add redpanda-redpanda RPM repository
+  ansible.builtin.yum_repository:
+    name: "{{ repo_name_prefix }}"
+    description: "{{ repo_name_prefix }}"
+    baseurl: "{{ rp_standard_rpm_actual }}"
+    gpgkey: "{{ rp_key_rpm_actual }}"
+    repo_gpgcheck: yes
+    gpgcheck: yes
+    enabled: yes
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: yes
+    metadata_expire: 300
+    skip_if_unavailable: yes
+    proxy: "{{ rpm_proxy | default('_none_') }}"
+
+- name: Add redpanda-redpanda-noarch RPM repository
+  ansible.builtin.yum_repository:
+    name: "{{ repo_name_prefix }}-noarch"
+    description: "{{ repo_name_prefix }}-noarch"
+    baseurl: "{{ rp_noarch_rpm_actual }}"
+    gpgkey: "{{ rp_key_rpm_actual }}"
+    repo_gpgcheck: yes
+    gpgcheck: yes
+    enabled: yes
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: yes
+    metadata_expire: 300
+    skip_if_unavailable: yes
+    proxy: "{{ rpm_proxy | default('_none_') }}"
+
+- name: Add redpanda-redpanda-source RPM repository
+  ansible.builtin.yum_repository:
+    name: "{{ repo_name_prefix }}-source"
+    description: "{{ repo_name_prefix }}-source"
+    baseurl: "{{ rp_source_rpm_actual }}"
+    gpgkey: "{{ rp_key_rpm_actual }}"
+    repo_gpgcheck: yes
+    gpgcheck: yes
+    enabled: yes
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: yes
+    metadata_expire: 300
+    skip_if_unavailable: yes
+    proxy: "{{ rpm_proxy | default('_none_') }}"
+
+- name: Install GPG key with proxy
+  environment:
+    https_proxy: "{{ rpm_proxy | default('') }}"
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ rp_key_rpm_actual }}"
+  when: https_proxy_value is defined and https_proxy_value | length > 0
+
+- name: Install GPG key
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ rp_key_rpm_actual }}"
+  when: (https_proxy_value is not defined or https_proxy_value | length == 0)

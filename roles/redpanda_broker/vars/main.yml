@@ -5,3 +5,5 @@ custom_config_templates:
     condition: "{{ tls | default(False) | bool }}"
   - template: configs/tiered_storage.j2
     condition: "{{ tiered_storage_bucket_name is defined | default(False) | bool }}"
+console_config_templates:
+  - template: console/defaults.j2
