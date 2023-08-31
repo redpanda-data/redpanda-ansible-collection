@@ -1,11 +1,11 @@
 ---
 - name: Set Redpanda RPM and GPG Key details
   set_fact:
-    rp_key_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_key_rpm_unstable, rp_key_rpm) }}"
-    rp_standard_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_standard_rpm_unstable, rp_standard_rpm) }}"
-    rp_noarch_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
-    rp_source_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
-    repo_name_prefix: "{{ is_using_unstable | bool | ternary('redpanda-redpanda-unstable', 'redpanda-redpanda') }}"
+    rp_key_rpm_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_key_rpm_unstable, rp_key_rpm) }}"
+    rp_standard_rpm_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_standard_rpm_unstable, rp_standard_rpm) }}"
+    rp_noarch_rpm_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
+    rp_source_rpm_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
+    repo_name_prefix: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary('redpanda-redpanda-unstable', 'redpanda-redpanda') }}"
 
 - name: Add redpanda-redpanda RPM repository
   ansible.builtin.yum_repository:
