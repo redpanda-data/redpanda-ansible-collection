@@ -1,10 +1,10 @@
 ---
 - name: Set Redpanda GPG Key and Repository details
   set_fact:
-    rp_key_deb_actual: "{{ is_using_unstable | bool | ternary(rp_key_deb_unstable, rp_key_deb) }}"
-    rp_key_path_deb_actual: "{{ is_using_unstable | bool | ternary(rp_key_path_deb_unstable, rp_key_path_deb) }}"
-    rp_repo_signing_deb_actual: "{{ is_using_unstable | bool | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
-    rp_repo_signing_src_deb_actual: "{{ is_using_unstable | bool | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
+    rp_key_deb_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_key_deb_unstable, rp_key_deb) }}"
+    rp_key_path_deb_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_key_path_deb_unstable, rp_key_path_deb) }}"
+    rp_repo_signing_deb_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
+    rp_repo_signing_src_deb_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
 
 - name: Download and import Redpanda GPG Key with proxy
   become: true
