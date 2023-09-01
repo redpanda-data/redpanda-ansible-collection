@@ -26,7 +26,8 @@
   tags:
     - prep_data_dir
 
-- name: Prep Data Dir - handle mdadm
+# Prepare raid 0 for multiple devices
+- name: Prep Data Dir - handle mdadm (raid 0)
   tags:
     - prep_data_dir
   block:
@@ -44,24 +45,46 @@
         name: mrlesmithjr.mdadm
       when: nvme_devices_for_raid|length > 1
 
-- name: Prep Data Dir - mounting file system
+# Prepare single device
+- name: Prep Data Dir - mounting file system (single device)
   tags:
     - prep_data_dir
   block:
     - name: Prep Data Dir - Create XFS file system
       community.general.filesystem:
         fstype: xfs
-        dev: "{{ nvme_devices_for_raid[0] }}"
+        dev: '{{ nvme_devices_for_raid[0] }}'
+      when: nvme_devices_for_raid|length == 1
     - name: Prep Data Dir - Mount NVMe device
       ansible.posix.mount:
         path: /mnt/vectorized
-        src: "{{ nvme_devices_for_raid[0] }}"
+        src: '{{ nvme_devices_for_raid[0] }}'
         fstype: xfs
         opts: "{{ 'defaults,nofail' if ephemeral_disk else 'defaults'}}"
         dump: "{{ 1 if ephemeral_disk else 0}}"
         passno: "{{ 2 if ephemeral_disk else 0}}"
         state: mounted
       when: nvme_devices_for_raid|length == 1
+
+- name: Prep Data Dir - mounting file system (raid 0)
+  tags:
+    - prep_data_dir
+  block:
+    - name: Prep Data Dir - Create XFS file system
+      community.general.filesystem:
+        fstype: xfs
+        dev: /dev/md0
+      when: nvme_devices_for_raid|length > 1
+    - name: Prep Data Dir - Mount NVMe device
+      ansible.posix.mount:
+        path: /mnt/vectorized
+        src: /dev/md0
+        fstype: xfs
+        opts: "{{ 'defaults,nofail' if ephemeral_disk else 'defaults'}}"
+        dump: "{{ 1 if ephemeral_disk else 0}}"
+        passno: "{{ 2 if ephemeral_disk else 0}}"
+        state: mounted
+      when: nvme_devices_for_raid|length > 1
 
 - name: Prep Data Dir - Create data path
   ansible.builtin.file:
