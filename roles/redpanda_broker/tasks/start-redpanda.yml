@@ -93,6 +93,18 @@
     rp_tuner
 
 # ensure that systemd starts up redpanda
+- name: Start redpanda with sasl bootstrap value
+  ansible.builtin.systemd:
+    name: redpanda
+    state: started
+  environment:
+    RP_BOOTSTRAP_USER: "{{ sasl_bootstrap_admin_user }}:{{ sasl_bootstrap_admin_pw }}"
+  when:
+    - not is_initialized
+    - enable_sasl is true
+
+# ensure that systemd starts up redpanda
+# we're repeating it because we've already generated the sasl admin
 - name: Start redpanda
   ansible.builtin.systemd:
     name: redpanda
