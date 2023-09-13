@@ -23,7 +23,6 @@ an [API key from Ansible Galaxy](https://galaxy.ansible.com/me/preferences)
 
 
 ```shell
-cd ansible/redpanda
 ansible-galaxy collection build
 ansible-galaxy collection publish redpanda-cluster-*.tar.gz --token <YOUR_API_KEY> -s https://galaxy.ansible.com/api/
 ```
