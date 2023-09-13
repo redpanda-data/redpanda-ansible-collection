@@ -74,6 +74,14 @@
       "tune_ballast_file": true
     },
     "pandaproxy": {},
-    "schema_registry": {}
+    "schema_registry": {
+        "schema_registry_api": [
+        {
+          "address": "0.0.0.0",
+          "port": "{{ redpanda_schema_registry_port }}"
+        }
+      ],
+      "schema_registry_replication_factor": {{schema_registry_replication_factor | default(1)}}
+    }
   }
 }
