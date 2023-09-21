@@ -1,9 +1,27 @@
 ---
+- name: Check if VM is in GCP
+  uri:
+    url: "http://metadata.google.internal/computeMetadata/v1/instance/id"
+    headers:
+      Metadata-Flavor: "Google"
+    method: GET
+    timeout: 10
+    validate_certs: no
+    status_code: 200
+    return_content: no
+  register: gcp_metadata
+  ignore_errors: yes
+
+- name: Set fact if in GCP
+  set_fact:
+    using_gcp: true
+  when: gcp_metadata.status == 200
+
 - name: Set fact for package name
   set_fact:
     redpanda_package_name: "redpanda{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}"
 
-- name: Install redpanda from repository
+- name: Install redpanda from repository (Proxy)
   ansible.builtin.package:
     name:
       - "{{ redpanda_package_name }}"
@@ -12,15 +30,28 @@
   environment:
     https_proxy: "{{ https_proxy_value | default('') }}"
     http_proxy: "{{ https_proxy_value | default('') }}"
-  when: https_proxy_value is defined and https_proxy_value | length > 0
+  when:
+    - https_proxy_value is defined
+    - https_proxy_value | length > 0
+    - (using_gcp | default(false)) is false
 
-- name: Install redpanda from repository
+- name: Install redpanda from repository (Standard)
   ansible.builtin.package:
     name:
       - "{{ redpanda_package_name }}"
     state: "{{ redpanda_install_status }}"
     update_cache: true
-  when: https_proxy_value is not defined or https_proxy_value | length == 0
+  when: https_proxy_value is not defined and (using_gcp | default(false)) is false
+
+- name: Install redpanda from repository (GCP)
+  ansible.builtin.package:
+    name:
+      - "{{ redpanda_package_name }}"
+    state: "{{ redpanda_install_status }}"
+    update_cache: true
+    allow_unauthenticated: yes
+  when: (using_gcp | default(false)) is not false
+
 
 - name: Set data dir file perms
   ansible.builtin.file:
