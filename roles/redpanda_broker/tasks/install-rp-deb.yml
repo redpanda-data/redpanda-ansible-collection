@@ -1,21 +1,8 @@
 ---
-- name: Check if VM is in GCP
-  uri:
-    url: "http://metadata.google.internal/computeMetadata/v1/instance/id"
-    headers:
-      Metadata-Flavor: "Google"
-    method: GET
-    timeout: 10
-    validate_certs: no
-    status_code: 200
-    return_content: no
-  register: gcp_metadata
-  ignore_errors: yes
-
-- name: Set fact if in GCP
+- name: Set custom fact based on ansible_system_vendor
   set_fact:
     using_gcp: true
-  when: gcp_metadata.status == 200
+  when: ansible_system_vendor == 'Google'
 
 - name: Set fact for package name
   set_fact:
