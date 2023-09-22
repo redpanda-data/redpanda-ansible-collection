@@ -1,4 +1,9 @@
 ---
+- name: Set custom fact based on ansible_system_vendor
+  set_fact:
+    using_gcp: true
+  when: ansible_system_vendor == 'Google'
+
 - name: Node dependencies - Set DNF proxy
   template:
     src: dnf_proxy.j2
@@ -8,6 +13,7 @@
   when:
     - rpm_proxy is defined and rpm_proxy | length > 0
     - (create_pkg_mgr_proxy | default(false)) is true
+    - (using_gcp | default(false)) is false
 
 - name: Node dependencies - RPM setup
   tags:
