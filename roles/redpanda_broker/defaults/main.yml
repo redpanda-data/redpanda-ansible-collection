@@ -40,6 +40,15 @@ airgap_copy_dest: "/tmp"
 
 # console
 install_console: false
+console_http_listen_port: 80
+console_https_listen_port: 443
+
+# sasl
+sasl_bootstrap_admin_user: "admin"
+sasl_bootstrap_admin_pw: "password"
+console_sasl_user: "admin"
+console_sasl_pw: "password"
+console_sasl_mechanism: "plain"
 
 # the rpms
 rp_key_rpm: "{{ redpanda_base_url }}/public/redpanda/gpg.988A7B0A4918BC85.key"

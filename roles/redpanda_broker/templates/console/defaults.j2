@@ -1,4 +1,8 @@
 {
+  "server": {
+    "listenPort": {{ console_http_listen_port }},
+    "HTTPSListenPort":{{ console_https_listen_port }}
+  },
   "kafka": {
     "schemaRegistry": {
       "enabled": true,
@@ -13,14 +17,13 @@
         {% endfor %}
         {% endif %}
       ]{% if enable_tls | default(false) %},
-      "tls": {
+    "tls": {
         "enabled": true,
         "caFilepath": "{{ redpanda_truststore_file }}",
         "certFilepath": "{{ redpanda_cert_file }}",
         "keyFilepath": "{{ redpanda_key_file }}",
         "insecureSkipTlsVerify": false
-      }
-      {% endif %}
+    }{% endif %}
     },
     "protobuf": {
       "enabled": true,
@@ -28,20 +31,25 @@
         "enabled": true,
         "refreshInterval": "5m"
       }
-    },
+    },{% if enable_sasl | default(false) %}
+    "sasl": {
+        "enabled": true,
+        "username": "{{ console_sasl_user }}",
+        "password": "{{ console_sasl_pw }}",
+        "mechanism": "SCRAM-SHA-256"
+    },{% endif %}
     "brokers": [
-      {% for host in advertised_ips %}
-      "{{ host }}:{{ redpanda_kafka_port }}"{% if not loop.last %},{% endif %}
-      {% endfor %}
+        {% for host in advertised_ips %}
+        "{{ host }}:{{ redpanda_kafka_port }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
     ]{% if enable_tls | default(false) %},
-  "tls": {
-    "enabled": true,
-    "caFilepath": "{{ redpanda_truststore_file }}",
-    "certFilepath": "{{ redpanda_cert_file }}",
-    "keyFilepath": "{{ redpanda_key_file }}",
-    "insecureSkipTlsVerify": false
-  }
-  {% endif %}
+    "tls": {
+        "enabled": true,
+        "caFilepath": "{{ redpanda_truststore_file }}",
+        "certFilepath": "{{ redpanda_cert_file }}",
+        "keyFilepath": "{{ redpanda_key_file }}",
+        "insecureSkipTlsVerify": false
+    }{% endif %}
   },
   "redpanda": {
     "adminApi": {

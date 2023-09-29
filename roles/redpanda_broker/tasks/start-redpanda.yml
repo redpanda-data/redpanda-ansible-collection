@@ -92,6 +92,17 @@
   tags:
     rp_tuner
 
+- name: Create file with RP_BOOTSTRAP_USER for systemd
+  ansible.builtin.copy:
+    dest: "/etc/redpanda.d/superuser.conf"
+    content: "RP_BOOTSTRAP_USER={{ sasl_bootstrap_admin_user }}:{{ sasl_bootstrap_admin_pw }}\n"
+    owner: "redpanda"
+    group: "redpanda"
+    mode: "0600"
+  when:
+    - not is_initialized
+    - enable_sasl is true
+
 # ensure that systemd starts up redpanda
 - name: Start redpanda
   ansible.builtin.systemd:
