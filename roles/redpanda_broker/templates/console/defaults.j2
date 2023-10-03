@@ -1,5 +1,26 @@
 {
   "kafka": {
+    "schemaRegistry": {
+      "enabled": true,
+      "urls": [
+        {% if enable_tls | default(false) %}
+        {% for host in advertised_ips %}
+        "https://{{ host }}:{{ redpanda_schema_registry_port }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+        {% else  %}
+        {% for host in advertised_ips %}
+        "http://{{ host }}:{{ redpanda_schema_registry_port }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+        {% endif %}
+      ]
+    },
+    "protobuf": {
+      "enabled": true,
+      "schemaRegistry": {
+        "enabled": true,
+        "refreshInterval": "5m"
+      }
+    },
     "brokers": [
       {% for host in advertised_ips %}
       "{{ host }}:{{ redpanda_kafka_port }}"{% if not loop.last %},{% endif %}
