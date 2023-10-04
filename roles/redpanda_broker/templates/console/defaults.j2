@@ -12,7 +12,15 @@
         "http://{{ host }}:{{ redpanda_schema_registry_port }}"{% if not loop.last %},{% endif %}
         {% endfor %}
         {% endif %}
-      ]
+      ]{% if enable_tls | default(false) %},
+      "tls": {
+        "enabled": true,
+        "caFilepath": "{{ redpanda_truststore_file }}",
+        "certFilepath": "{{ redpanda_cert_file }}",
+        "keyFilepath": "{{ redpanda_key_file }}",
+        "insecureSkipTlsVerify": false
+      }
+      {% endif %}
     },
     "protobuf": {
       "enabled": true,
