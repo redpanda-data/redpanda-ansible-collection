@@ -66,5 +66,15 @@
       }
       {% endif %}
     }
+  }{% if enable_tls | default(false) %},
+  "server": {
+    "listenPort": 8080,
+    "httpsListenPort": 8081,
+    "tls": {
+      "enabled": true,
+      "certFilepath": "{{ console_cert_file }}",
+      "keyFilepath": "{{ console_key_file }}",
+    }
   }
+  {% endif %}
 }
