@@ -30,6 +30,11 @@ cloud_storage_enable_remote_write: "true"
 cloud_storage_enable_remote_read: "true"
 is_using_unstable: false
 
+# We default to use the same redpanda dirs, but in prod, a user can specify them directly
+console_certs_dir: "{{ redpanda_certs_dir }}"
+console_key_file: "{{ console_certs_dir }}/node.key"
+console_cert_file: "{{ console_certs_dir }}/node.crt"
+
 airgap_copy_src: "/tmp"
 airgap_copy_dest: "/tmp"
 
