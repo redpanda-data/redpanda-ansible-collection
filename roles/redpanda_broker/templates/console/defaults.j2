@@ -1,7 +1,7 @@
 {
   "server": {
     "listenPort": {{ console_http_listen_port }},
-    "HTTPSListenPort":{{ console_https_listen_port }}
+    "httpsListenPort":{{ console_https_listen_port }}
   },
   "kafka": {
     "schemaRegistry": {
@@ -36,7 +36,7 @@
         "enabled": true,
         "username": "{{ console_sasl_user }}",
         "password": "{{ console_sasl_pw }}",
-        "mechanism": "SCRAM-SHA-256"
+        "mechanism": "{{ console_sasl_mechanism }}"
     },{% endif %}
     "brokers": [
         {% for host in advertised_ips %}

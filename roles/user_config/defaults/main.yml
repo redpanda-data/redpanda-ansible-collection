@@ -1,0 +1,37 @@
+sasl_mechanism: SCRAM-SHA-256
+
+# set this false to switch to deleting
+acl_user_create: true
+
+# set this to true to delete users
+delete_users: false
+
+# set this to true to delete permissions
+delete_permissions: false
+
+# don't do this in production. run with these in the CLI and passed in by the environment. this is purely for CI convenience
+sasl_admin_username: admin
+sasl_admin_password: password
+
+# these are split into create and delete maps for safety reasons. if you want something deleted add it to the delete map
+user_password_map_create:
+  fizz:
+    password: "buzz"
+    permissions: "--operation all --topic '*' --group '*'"
+  foo:
+    password: "bar"
+    permissions: "--operation all --topic '*' --group '*'"
+  boom:
+    password: "bam"
+    permissions: "--operation all --topic '*' --group '*'"
+
+user_password_map_delete:
+  fizz:
+    password: "buzz"
+    permissions: "--operation all --topic '*' --group '*'"
+  foo:
+    password: "bar"
+    permissions: "--operation all --topic '*' --group '*'"
+  boom:
+    password: "bam"
+    permissions: "--operation all --topic '*' --group '*'"

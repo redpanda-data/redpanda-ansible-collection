@@ -109,6 +109,15 @@
     name: redpanda
     state: started
 
+# we don't need this file after RP has started
+- name: Delete file with RP_BOOTSTRAP_USER
+  ansible.builtin.file:
+    path: "/etc/redpanda.d/superuser.conf"
+    state: absent
+  when:
+    - is_initialized
+    - enable_sasl is true
+
 # every node must have a unique node id. we extract it for use elsewhere
 #
 - name: Establish node id

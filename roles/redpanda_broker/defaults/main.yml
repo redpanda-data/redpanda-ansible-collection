@@ -48,7 +48,7 @@ sasl_bootstrap_admin_user: "admin"
 sasl_bootstrap_admin_pw: "password"
 console_sasl_user: "admin"
 console_sasl_pw: "password"
-console_sasl_mechanism: "plain"
+console_sasl_mechanism: "SCRAM-SHA-256"
 
 # the rpms
 rp_key_rpm: "{{ redpanda_base_url }}/public/redpanda/gpg.988A7B0A4918BC85.key"

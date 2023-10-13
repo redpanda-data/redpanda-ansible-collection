@@ -1,0 +1,33 @@
+# purpose : adds support for creating SASL users and ACLs
+
+# this should be passed through safely on the CLI not stored in plaintext
+- name: Create ACL Users
+  ansible.builtin.command:
+    cmd: "rpk acl user create {{ item.key }} -p {{ item.value.password }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
+  loop: "{{ user_password_map_create | dict2items }}"
+  when:
+    - acl_user_create
+
+- name: Create acl-user linkages
+  ansible.builtin.command:
+    cmd: "rpk acl create --allow-principal User:{{ item.key }} {{ item.value.permissions }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
+  loop: "{{ user_password_map_create | dict2items }}"
+  when:
+    - acl_user_create
+
+- name: Delete acl-user linkages
+  ansible.builtin.command:
+    cmd: "rpk acl delete --allow-principal User:{{ item.key }} {{ item.value.permissions }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
+  loop: "{{ user_password_map_delete | dict2items }}"
+  when:
+    - not acl_user_create
+    - delete_permissions
+
+# this should be passed through safely on the CLI not stored in plaintext
+- name: Delete ACL Users
+  ansible.builtin.command:
+    cmd: "rpk acl user delete {{ item.key }} -p {{ item.value.password }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
+  loop: "{{ user_password_map_delete | dict2items }}"
+  when:
+    - not acl_user_create
+    - delete_users
