@@ -1,24 +1,49 @@
 # purpose : adds support for creating SASL users and ACLs
 
+- name: Decode Base64 and Parse JSON if base64_encoded_up_map_create is defined and not empty
+  set_fact:
+    evaluated_user_password_map_create: "{{ (base64_encoded_up_map_create | b64decode | from_json) }}"
+  when:
+    - base64_encoded_up_map_create is defined
+
+- name: Decode Base64 and Parse JSON if base64_encoded_up_map_delete is defined and not empty
+  set_fact:
+    evaluated_user_password_map_delete: "{{ (base64_encoded_up_map_delete | b64decode | from_json) }}"
+  when:
+    - base64_encoded_up_map_delete is defined
+
+- name: Use user_password_map_create if base64_encoded_up_map_create is not defined or empty
+  set_fact:
+    evaluated_user_password_map_create: "{{ user_password_map_create }}"
+  when: base64_encoded_up_map_create is not defined
+
+- name: Use user_password_map_delete if base64_encoded_up_map_delete is not defined or empty
+  set_fact:
+    evaluated_user_password_map_delete: "{{ user_password_map_delete }}"
+  when: base64_encoded_up_map_delete is not defined
+
 # this should be passed through safely on the CLI not stored in plaintext
 - name: Create ACL Users
   ansible.builtin.command:
     cmd: "rpk acl user create {{ item.key }} -p {{ item.value.password }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
-  loop: "{{ user_password_map_create | dict2items }}"
+  loop: "{{ evaluated_user_password_map_create | dict2items }}"
+  run_once: true
   when:
     - acl_user_create
 
 - name: Create acl-user linkages
   ansible.builtin.command:
-    cmd: "rpk acl create --allow-principal User:{{ item.key }} {{ item.value.permissions }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
-  loop: "{{ user_password_map_create | dict2items }}"
+    cmd: "rpk acl create {{ item.value.operation }} User:{{ item.key }} {{ item.value.permissions }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
+  loop: "{{ evaluated_user_password_map_create | dict2items }}"
+  run_once: true
   when:
     - acl_user_create
 
 - name: Delete acl-user linkages
   ansible.builtin.command:
-    cmd: "rpk acl delete --allow-principal User:{{ item.key }} {{ item.value.permissions }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
-  loop: "{{ user_password_map_delete | dict2items }}"
+    cmd: "rpk acl delete {{ item.value.operation }} User:{{ item.key }} {{ item.value.permissions }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
+  loop: "{{ evaluated_user_password_map_create | dict2items }}"
+  run_once: true
   when:
     - not acl_user_create
     - delete_permissions
@@ -26,8 +51,9 @@
 # this should be passed through safely on the CLI not stored in plaintext
 - name: Delete ACL Users
   ansible.builtin.command:
-    cmd: "rpk acl user delete {{ item.key }} -p {{ item.value.password }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
-  loop: "{{ user_password_map_delete | dict2items }}"
+    cmd: "rpk acl user delete {{ item.key }} --user {{ sasl_admin_username }} --password {{ sasl_admin_password }} --sasl-mechanism {{ sasl_mechanism }}"
+  loop: "{{ evaluated_user_password_map_create | dict2items }}"
+  run_once: true
   when:
     - not acl_user_create
     - delete_users

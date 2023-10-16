@@ -18,20 +18,26 @@ user_password_map_create:
   fizz:
     password: "buzz"
     permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
   foo:
     password: "bar"
     permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
   boom:
     password: "bam"
     permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
 
 user_password_map_delete:
   fizz:
     password: "buzz"
     permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
   foo:
     password: "bar"
     permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
   boom:
     password: "bam"
     permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
