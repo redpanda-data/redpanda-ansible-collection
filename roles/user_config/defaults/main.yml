@@ -13,7 +13,10 @@ delete_permissions: false
 sasl_admin_username: admin
 sasl_admin_password: password
 
-# these are split into create and delete maps for safety reasons. if you want something deleted add it to the delete map
+# you can override this with a base64 encoded JSON object passed in through the command line
+# using the variable base64_encoded_up_map_create
+# this will allow password passthrough in a safer manner
+# make sure to not include whitespace in the JSON object
 user_password_map_create:
   fizz:
     password: "buzz"
@@ -28,6 +31,10 @@ user_password_map_create:
     permissions: "--operation all --topic '*' --group '*'"
     operation: "--allow-principal"
 
+# you can override this with a base64 encoded JSON object passed in through the command line
+# using the variable base64_encoded_up_map_delete
+# this will allow password passthrough in a safer manner
+# make sure to not include whitespace in the JSON object
 user_password_map_delete:
   fizz:
     password: "buzz"
