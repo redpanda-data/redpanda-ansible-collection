@@ -37,9 +37,3 @@
     group: redpanda
     force: "{{ overwrite_certs | default('no') | bool }}"
     mode: "0644"
-
-- name: Install_certs - Set Redpanda config
-  tags:
-    - install_certs
-  ansible.builtin.set_fact:
-    tls: true
