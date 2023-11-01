@@ -16,15 +16,23 @@
         }{% if not loop.last %},{% endif %}
         {% endfor %}
       ],
-      "advertised_rpc_api": {
-        "address": "{{ hostvars[inventory_hostname].private_ip }}",
-        "port": "{{ redpanda_rpc_port }}"
-      },
+      "advertised_rpc_api": [
+        {% for host in groups['redpanda'] %}
+        {
+          "address": "{{ hostvars[host]['advertised_ip'] }}",
+          "port": "{{ redpanda_kafka_port }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ],
       "data_directory": "{{ redpanda_data_directory }}",
-      "rpc_server": {
-        "address": "{{ hostvars[inventory_hostname].private_ip }}",
-        "port": "{{ redpanda_rpc_port }}"
-      },
+      "rpc_server": [
+        {% for host in groups['redpanda'] %}
+        {
+          "address": "{{ hostvars[host]['private_ip'] }}",
+          "port": "{{ redpanda_rpc_port }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
       "kafka_api": [
         {% for host in groups['redpanda'] %}
         {
