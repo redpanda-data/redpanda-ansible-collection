@@ -9,10 +9,12 @@
     "redpanda": {
       "empty_seed_starts_cluster": false,
       "advertised_kafka_api": [
+        {% for host in groups['redpanda'] %}
         {
-          "address": "{{ hostvars[inventory_hostname].advertised_ip }}",
+          "address": "{{ hostvars[host]['advertised_ip'] }}",
           "port": "{{ redpanda_kafka_port }}"
-        }
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
       ],
       "advertised_rpc_api": {
         "address": "{{ hostvars[inventory_hostname].private_ip }}",
@@ -24,16 +26,20 @@
         "port": "{{ redpanda_rpc_port }}"
       },
       "kafka_api": [
+        {% for host in groups['redpanda'] %}
         {
-          "address": "{{ hostvars[inventory_hostname].private_ip }}",
+          "address": "{{ hostvars[host]['private_ip'] }}",
           "port": "{{ redpanda_kafka_port }}"
-        }
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
       ],
       "admin": [
+        {% for host in groups['redpanda'] %}
         {
-          "address": "{{ hostvars[inventory_hostname].private_ip }}",
-          "port": "{{ redpanda_admin_api_port }}"
-        }
+          "address": "{{ hostvars[host]['private_ip'] }}",
+          "port": "{{ redpanda_admin_port }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
       ],
       "seed_servers": [
         {% for host in groups['redpanda'] %}
