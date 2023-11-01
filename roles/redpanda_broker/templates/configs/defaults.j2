@@ -37,7 +37,7 @@
         {% for host in groups['redpanda'] %}
         {
           "address": "{{ hostvars[host]['private_ip'] }}",
-          "port": "{{ redpanda_admin_port }}"
+          "port": "{{ redpanda_admin_api_port }}"
         }{% if not loop.last %},{% endif %}
         {% endfor %}
       ],
