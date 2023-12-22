@@ -35,6 +35,7 @@
           "port": "{{ redpanda_admin_api_port }}"
         }
       ],
+      {% if rack is defined and rack != ''  %}"rack": "{{ rack | default('null') }},"{% endif %}
       "seed_servers": [
         {% for host in groups['redpanda'] %}
         {
@@ -45,7 +46,6 @@
         }{% if not loop.last %},{% endif %}
         {% endfor %}
       ],
-      "rack": "{% if rack is defined %}{{ rack | default('null') }}{% endif %}"
     },
     "rpk": {
       "kafka_api": {
