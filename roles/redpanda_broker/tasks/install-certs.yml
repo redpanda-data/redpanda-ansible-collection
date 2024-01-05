@@ -38,6 +38,17 @@
     force: "{{ overwrite_certs | default('no') | bool }}"
     mode: "0644"
 
+- name: Install_certs - Copy Node Keys
+  tags:
+    - install_certs
+  ansible.builtin.copy:
+    src: "{{ node_key_file }}"
+    dest: "{{ redpanda_key_file }}"
+    owner: redpanda
+    group: redpanda
+    force: "{{ overwrite_certs | default('no') | bool }}"
+    mode: "0644"
+
 - name: Install_certs - Set Redpanda config
   tags:
     - install_certs
