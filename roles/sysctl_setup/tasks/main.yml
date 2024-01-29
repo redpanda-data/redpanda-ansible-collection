@@ -1,0 +1,9 @@
+- name: Deploy sysctl configuration for Redpanda Operator
+  template:
+    src: 99-redpanda.conf.j2
+    dest: /etc/sysctl.d/99-redpanda.conf
+  become: yes
+
+- name: Reload sysctl
+  command: sysctl -p /etc/sysctl.d/99-redpanda.conf
+  become: yes
