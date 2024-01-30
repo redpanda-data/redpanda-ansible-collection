@@ -1,9 +1,8 @@
-- name: Deploy sysctl configuration for Redpanda Operator
-  template:
-    src: 99-redpanda.conf.j2
-    dest: /etc/sysctl.d/99-redpanda.conf
-  become: yes
-
-- name: Reload sysctl
-  command: sysctl -p /etc/sysctl.d/99-redpanda.conf
+- name: Max user instances
+  ansible.posix.sysctl:
+    name: fs.inotify.max_user_instances
+    value: "{{ max_user_instances }}"
+    sysctl_set: yes
+    state: present
+    reload: yes
   become: yes
