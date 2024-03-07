@@ -140,16 +140,20 @@
 # NOTE: the cluster configuration is different than the per-node redpanda.yaml
 # configuration.  cluster configuration is set through rpk commands and
 # propogates to each node in the cluster via an internal topic
-#
-# TODO: fix changed_when to stop throwing ansible warnings on the jinja {{}} parsing
+# currently this will never not detect a change because rpk uses identical terms for changed and no-op states
+#   rpk cluster config set enable_rack_awareness=false
+#     Successfully updated configuration. New configuration version is 2.
+#   rpk cluster config set enable_rack_awareness=false
+#     Successfully updated configuration. New configuration version is 2.
+#   rpk cluster config set enable_rack_awareness=true
+#     Successfully updated configuration. New configuration version is 3.
+#   rpk cluster config set enable_rack_awareness=false
+#     Successfully updated configuration. New configuration version is 4.
 #
 - name: Set cluster config
   ansible.builtin.command: rpk cluster config set {{ item.key }} {{ item.value }} {{ redpanda_rpk_opts }}
   loop: "{{ configuration.cluster | dict2items }}"
-  register: result
-  changed_when: '"New configuration version is {{ config_version.stdout|int() }}." not in result.stdout'
-  run_once: true
-  no_log: true
+  nolog: true
 
 # Set Redpanda license
 #
