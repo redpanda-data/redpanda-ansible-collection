@@ -92,11 +92,31 @@
   tags:
     rp_tuner
 
+- name: Create file with RP_BOOTSTRAP_USER for systemd
+  ansible.builtin.copy:
+    dest: "/etc/redpanda.d/superuser.conf"
+    content: "RP_BOOTSTRAP_USER={{ sasl_bootstrap_admin_user }}:{{ sasl_bootstrap_admin_pw }}\n"
+    owner: "redpanda"
+    group: "redpanda"
+    mode: "0600"
+  when:
+    - not is_initialized
+    - enable_sasl is true
+
 # ensure that systemd starts up redpanda
 - name: Start redpanda
   ansible.builtin.systemd:
     name: redpanda
     state: started
+
+# we don't need this file after RP has started
+- name: Delete file with RP_BOOTSTRAP_USER
+  ansible.builtin.file:
+    path: "/etc/redpanda.d/superuser.conf"
+    state: absent
+  when:
+    - is_initialized
+    - enable_sasl is true
 
 # every node must have a unique node id. we extract it for use elsewhere
 #

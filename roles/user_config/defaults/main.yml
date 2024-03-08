@@ -1,0 +1,50 @@
+sasl_mechanism: SCRAM-SHA-256
+
+# set this false to switch to deleting
+acl_user_create: true
+
+# set this to true to delete users
+delete_users: false
+
+# set this to true to delete permissions
+delete_permissions: false
+
+# don't do this in production. run with these in the CLI and passed in by the environment. this is purely for CI convenience
+sasl_admin_username: admin
+sasl_admin_password: password
+
+# you can override this with a base64 encoded JSON object passed in through the command line
+# using the variable base64_encoded_up_map_create
+# this will allow password passthrough in a safer manner
+# make sure to not include whitespace in the JSON object
+user_password_map_create:
+  fizz:
+    password: "buzz"
+    permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
+  foo:
+    password: "bar"
+    permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
+  boom:
+    password: "bam"
+    permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
+
+# you can override this with a base64 encoded JSON object passed in through the command line
+# using the variable base64_encoded_up_map_delete
+# this will allow password passthrough in a safer manner
+# make sure to not include whitespace in the JSON object
+user_password_map_delete:
+  fizz:
+    password: "buzz"
+    permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
+  foo:
+    password: "bar"
+    permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
+  boom:
+    password: "bam"
+    permissions: "--operation all --topic '*' --group '*'"
+    operation: "--allow-principal"
