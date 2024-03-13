@@ -2,3 +2,5 @@
 *.gz
 *.xml
 *.iml
+
+.idea/**
