@@ -5,7 +5,7 @@ redpanda_group: redpanda_connect
 java_home: /usr/lib/jvm/java-17-openjdk
 
 # required config values
-redpanda_connect_rpm: "redpanda-connectors.x86_64.rpm"
+redpanda_connect_rpm: "redpanda-connect.x86_64.rpm"
 redpanda_connect_rpm_dir: "/tmp"
 
 schema_registry_url: "http://localhost:8081"
