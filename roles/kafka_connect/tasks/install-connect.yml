@@ -1,0 +1,6 @@
+# install rpm using rpm -i from given directory and file name
+- name: Install Redpanda RPMs
+  ansible.builtin.shell: "rpm -Uvh --force {{ redpanda_connect_rpm_dir }}/{{ redpanda_connect_rpm }}"
+  register: rpm_result
+  failed_when: rpm_result.rc != 2 and rpm_result.rc != 0
+  become: true

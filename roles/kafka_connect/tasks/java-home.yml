@@ -1,0 +1,11 @@
+# create a new file named java-home.sh in /etc/profile.d
+- name: Create java-home.sh
+  copy:
+    dest: /etc/profile.d/java-home.sh
+    content: |
+      export JAVA_HOME={{ java_home }}
+      export PATH=$JAVA_HOME/bin:$PATH
+      export CLASSPATH=.:$JAVA_HOME/jre/lib:$JAVA_HOME/lib:$JAVA_HOME/lib/tools.jar
+    owner: root
+    group: root
+    mode: '0644'
