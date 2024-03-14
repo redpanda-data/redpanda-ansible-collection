@@ -1,12 +1,12 @@
 - name: Create redpanda group
   group:
-    name: {{ redpanda_group }}
+    name: "{{ redpanda_group }}"
     state: present
 
 - name: Create redpanda user
   user:
-    name: {{ redpanda_user }}
-    group: {{ redpanda_group }}}
+    name: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
     state: present
     create_home: yes
     shell: /bin/bash

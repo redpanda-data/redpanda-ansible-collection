@@ -3,4 +3,6 @@
 *.xml
 *.iml
 
-.idea/**
+.idea/
+
+*pycache*

@@ -1,0 +1,7 @@
+- name: Instantiate a template
+  template:
+    src: kc.properties.j2
+    dest: "{{ redpanda_connect_config_dir }}/kc.properties"
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    mode: '0644'
