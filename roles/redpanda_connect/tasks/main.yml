@@ -14,4 +14,4 @@
   ansible.builtin.include_tasks: install-connect.yml
 
 - name: Configure Kafka Connect
-  ansible.builtin.include_tasks: configure-connect.yml
+  ansible.builtin.include_tasks: generate-config.yml
