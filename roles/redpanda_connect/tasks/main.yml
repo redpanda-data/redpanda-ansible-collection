@@ -11,7 +11,7 @@
   ansible.builtin.include_tasks: java-home.yml
 
 - name: Create directories
-  ansible.builtin.include_tasks: create-dirs.yml
+  ansible.builtin.include_tasks: create-directories.yml
 
 - name: Install Kafka Connect
   ansible.builtin.include_tasks: install-connect.yml
