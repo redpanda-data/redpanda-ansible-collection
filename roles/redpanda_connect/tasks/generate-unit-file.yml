@@ -6,3 +6,12 @@
     group: "root"
     mode: '0644'
   become: true
+
+- name: Chown /opt/kafka
+  ansible.builtin.file:
+    path: /opt/kafka
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    state: directory
+    recurse: yes
+  become: true
