@@ -15,3 +15,6 @@
 
 - name: Configure Kafka Connect
   ansible.builtin.include_tasks: generate-config.yml
+
+- name: Configure Systemd Unit File
+  ansible.builtin.include_tasks: generate-unit-file.yml
