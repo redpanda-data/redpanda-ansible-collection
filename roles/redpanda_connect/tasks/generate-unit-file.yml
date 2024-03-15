@@ -1,0 +1,7 @@
+- name: Instantiate systemd unit file for kafka connect
+  template:
+    src: unit-file.j2
+    dest: "/etc/systemd/system/redpanda-connect.service"
+    owner: "root"
+    group: "root"
+    mode: '0644'

@@ -1,0 +1,15 @@
+[Unit]
+Description=Redpanda's distribution of Apache Kafka Connect in distributed mode
+Documentation=https://docs.redpanda.com/
+After=network.target
+
+[Service]
+Type=simple
+User={{ redpanda_user }}
+Group={{ redppanda_group }}
+ExecStart=/opt/kafka/bin/kafka_connect_run.sh {{ redpanda_connect_config_dir }}/connect-distributed.properties
+TimeoutStopSec=180
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
