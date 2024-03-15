@@ -1,9 +1,9 @@
 # config directory
-redpanda_connect_config_dir: "/etc/redpanda-connect"
+redpanda_connect_config_dir: "/opt/kafka"
 
 # user and group
-redpanda_user: connect
-redpanda_group: connect
+redpanda_user: redpanda
+redpanda_group: redpanda
 
 java_home: /usr/lib/jvm/java-17-openjdk
 

@@ -1,8 +1,0 @@
-# create kafka cnnect configuration directory
-- name: Create Kafka Connect configuration directory
-  file:
-    path: "{{ redpanda_connect_config_dir }}"
-    state: directory
-    owner: "{{ redpanda_user }}"
-    group: "{{ redpanda_group }}"
-    mode: '0755'

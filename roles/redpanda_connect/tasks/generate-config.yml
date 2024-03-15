@@ -4,10 +4,10 @@
       groups['connect'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_address | bool) else 'private_ip') | list
     }}"
 
-- name: Instantiate a template
+- name: Instantiate config file
   template:
     src: kc.properties.j2
-    dest: "{{ redpanda_connect_config_dir }}/kc.properties"
+    dest: "{{ redpanda_connect_config_dir }}/connect-distributed.properties"
     owner: "{{ redpanda_user }}"
     group: "{{ redpanda_group }}"
     mode: '0644'
