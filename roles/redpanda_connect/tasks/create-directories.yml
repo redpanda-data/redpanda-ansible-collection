@@ -6,5 +6,3 @@
     owner: "{{ redpanda_user }}"
     group: "{{ redpanda_group }}"
     mode: '0755'
-  tags:
-    kafka_connect
