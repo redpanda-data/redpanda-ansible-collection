@@ -1,3 +1,7 @@
+- name: Identify advertised address
+  ansible.builtin.set_fact:
+    advertised_ip: "{{ inventory_hostname if (advertise_public_address | bool) else private_ip }}"
+
 - name: Instantiate a template
   template:
     src: kc.properties.j2

@@ -1,4 +1,4 @@
-bootstrap.servers={% for host in groups['connect'] %}{{ hostvars[host]['ansible_host'] }}:{{ rest_advertised_port }}{% if not loop.last %},{% endif %}{% endfor %}
+bootstrap.servers={% for host in groups['connect'] %}{{ hostvars[host]['inventory_hostname'].advertised_ip }}:{{ rest_advertised_port }}{% if not loop.last %},{% endif %}{% endfor %}
 schema.registry.url={{ schema_registry_url }}
 group.id={{ group_id }}
 rest.port={{ rest_port }}
