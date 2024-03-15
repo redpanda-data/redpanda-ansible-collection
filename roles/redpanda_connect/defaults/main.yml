@@ -31,6 +31,9 @@ connect_tls_auth_key: false
 # used when connect_tls_enabled are true
 security_protocol: SSL
 
+# kafka_connect_run.sh
+redpanda_connect_home: "/opt/kafka"
+
 # used when connect_tls_enabled and connect_trusted_certs are true
 ssl_truststore_location: /tmp/kafka/cluster.truststore.p12
 ssl_truststore_password: "{{ certs_store_password }}"
