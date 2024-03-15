@@ -3,7 +3,7 @@
     name: "{{ redpanda_group }}"
     state: present
     system: true
-  become: yes
+  become: true
 
 - name: Create redpanda user
   user:
@@ -13,4 +13,4 @@
     shell: /usr/sbin/nologin
     create_home: false
     state: present
-  become: yes
+  become: true
