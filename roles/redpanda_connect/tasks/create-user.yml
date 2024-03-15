@@ -2,6 +2,7 @@
   group:
     name: "{{ redpanda_group }}"
     state: present
+  become: yes
 
 - name: Create redpanda user
   user:
@@ -10,3 +11,4 @@
     state: present
     create_home: yes
     shell: /bin/bash
+  become: yes
