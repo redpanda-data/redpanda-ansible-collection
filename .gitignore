@@ -8,3 +8,4 @@
 *pycache*
 .idea/misc.xml
 .idea/redpanda-ansible-collection.iml
+.idea/misc.xml

@@ -1,3 +1,14 @@
+# Kafka Cluster connection values
+is_using_private: false # set to true if you'd prefer it connected using the private IP
+kafka_port: 9092
+
+key_converter: "org.apache.kafka.connect.json.JsonConverter"
+
+# connect topics
+config_storage_topic: "connect-configs"
+offset_storage_topic: "connect-offsets"
+status_storage_topic: "connect-status"
+
 # config directory
 redpanda_connect_config_dir: "/opt/kafka"
 

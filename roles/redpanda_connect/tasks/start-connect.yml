@@ -1,5 +1,5 @@
 - name: Start Redpanda Kafka Connect
   ansible.builtin.systemd:
-      name: redpanda-connect
+      name: redpanda-connect.service
       state: started
       enabled: true
