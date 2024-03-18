@@ -18,3 +18,6 @@
 
 - name: Configure Systemd Unit File
   ansible.builtin.include_tasks: generate-unit-file.yml
+
+- name: Start Kafka Connect
+  ansible.builtin.include_tasks: start-connect.yml
