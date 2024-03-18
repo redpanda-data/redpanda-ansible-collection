@@ -8,7 +8,7 @@
   when: not use_existing_jvm | default(false)
 
 - name: Set JAVA_HOME
-  ansible.builtin.include_tasks: java-home.yml
+  ansible.builtin.include_tasks: environment-variables.yml
 
 - name: Install Kafka Connect
   ansible.builtin.include_tasks: install-connect.yml
