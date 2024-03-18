@@ -3,4 +3,3 @@
       name: redpanda-connect
       state: started
       enabled: true
-  become: true
