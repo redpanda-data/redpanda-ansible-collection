@@ -2,7 +2,9 @@
 is_using_private: false # set to true if you'd prefer it connected using the private IP
 kafka_port: 9092
 
+# converters
 key_converter: "org.apache.kafka.connect.json.JsonConverter"
+value_converter: "org.apache.kafka.connect.json.JsonConverter"
 
 # connect topics
 config_storage_topic: "connect-configs"
