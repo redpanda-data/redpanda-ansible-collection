@@ -28,7 +28,7 @@
 
 - name: Generate Console config
   ansible.builtin.template:
-    src: console/console.yml
+    src: console.yml
     dest: /etc/redpanda/redpanda-console-config.yaml
     owner: redpanda
     group: redpanda
