@@ -12,7 +12,7 @@ offset_storage_topic: "connect-offsets"
 status_storage_topic: "connect-status"
 
 # config directory
-redpanda_connect_config_dir: "/opt/kafka"
+redpanda_connect_config_dir: "/opt/kafka/config"
 
 # user and group
 redpanda_user: redpanda
@@ -71,3 +71,72 @@ consumer_ssl_keystore_type: PKCS12
 admin_ssl_keystore_location: /tmp/kafka/cluster.keystore.p12
 admin_ssl_keystore_password: "{{ certs_store_password }}"
 admin_ssl_keystore_type: PKCS12
+
+# log4j values
+log4j_rootlogger: "INFO, stdout, kafkaAppender"
+
+log4j_appender_stdout: "org.apache.log4j.ConsoleAppender"
+log4j_appender_stdout_layout: "org.apache.log4j.PatternLayout"
+log4j_appender_stdout_layout_conversionpattern: "[%d] %p %m (%c)%n"
+
+log4j_appender_kafkaappender: "org.apache.log4j.DailyRollingFileAppender"
+log4j_appender_kafkaappender_datepattern: "'.'yyyy-MM-dd-HH"
+log4j_appender_kafkaappender_file: "${kafka.logs.dir}/server.log"
+log4j_appender_kafkaappender_layout: "org.apache.log4j.PatternLayout"
+log4j_appender_kafkaappender_layout_conversionpattern: "[%d] %p %m (%c)%n"
+
+log4j_appender_statechangeappender: "org.apache.log4j.DailyRollingFileAppender"
+log4j_appender_statechangeappender_datepattern: "'.'yyyy-MM-dd-HH"
+log4j_appender_statechangeappender_file: "${kafka.logs.dir}/state-change.log"
+log4j_appender_statechangeappender_layout: "org.apache.log4j.PatternLayout"
+log4j_appender_statechangeappender_layout_conversionpattern: "[%d] %p %m (%c)%n"
+
+log4j_appender_requestappender: "org.apache.log4j.DailyRollingFileAppender"
+log4j_appender_requestappender_datepattern: "'.'yyyy-MM-dd-HH"
+log4j_appender_requestappender_file: "${kafka.logs.dir}/kafka-request.log"
+log4j_appender_requestappender_layout: "org.apache.log4j.PatternLayout"
+log4j_appender_requestappender_layout_conversionpattern: "[%d] %p %m (%c)%n"
+
+log4j_appender_cleanerappender: "org.apache.log4j.DailyRollingFileAppender"
+log4j_appender_cleanerappender_datepattern: "'.'yyyy-MM-dd-HH"
+log4j_appender_cleanerappender_file: "${kafka.logs.dir}/log-cleaner.log"
+log4j_appender_cleanerappender_layout: "org.apache.log4j.PatternLayout"
+log4j_appender_cleanerappender_layout_conversionpattern: "[%d] %p %m (%c)%n"
+
+log4j_appender_controllerappender: "org.apache.log4j.DailyRollingFileAppender"
+log4j_appender_controllerappender_datepattern: "'.'yyyy-MM-dd-HH"
+log4j_appender_controllerappender_file: "${kafka.logs.dir}/controller.log"
+log4j_appender_controllerappender_layout: "org.apache.log4j.PatternLayout"
+log4j_appender_controllerappender_layout_conversionpattern: "[%d] %p %m (%c)%n"
+
+log4j_appender_authorizerappender: "org.apache.log4j.DailyRollingFileAppender"
+log4j_appender_authorizerappender_datepattern: "'.'yyyy-MM-dd-HH"
+log4j_appender_authorizerappender_file: "${kafka.logs.dir}/kafka-authorizer.log"
+log4j_appender_authorizerappender_layout: "org.apache.log4j.PatternLayout"
+log4j_appender_authorizerappender_layout_conversionpattern: "[%d] %p %m (%c)%n"
+
+log4j_logger_orgapachezookeeper: "INFO"
+
+log4j_logger_kafka: "INFO"
+log4j_logger_orgapachekafka: "INFO"
+
+log4j_logger_kafkarequestlogger: "WARN, requestAppender"
+log4j_additivity_kafkarequestlogger: "false"
+
+log4j_logger_kafkanetworkrequestchannel: "WARN, requestAppender"
+log4j_additivity_kafkanetworkrequestchannel: "false"
+
+log4j_logger_orgapachekafkacontroller: "INFO, controllerAppender"
+log4j_additivity_orgapachekafkacontroller: "false"
+
+log4j_logger_kafkacontroller: "TRACE, controllerAppender"
+log4j_additivity_kafkacontroller: "false"
+
+log4j_logger_kafkaloglogcleaner: "INFO, cleanerAppender"
+log4j_additivity_kafkaloglogcleaner: "false"
+
+log4j_logger_statechangelogger: "INFO, stateChangeAppender"
+log4j_additivity_statechangelogger: "false"
+
+log4j_logger_kafkaauthorizerlogger: "INFO, authorizerAppender"
+log4j_additivity_kafkaauthorizerlogger: "false"
