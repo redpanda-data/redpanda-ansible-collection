@@ -7,7 +7,7 @@ After=network.target
 Type=simple
 User={{ redpanda_user }}
 Group={{ redpanda_group }}
-ExecStart={{ redpanda_connect_home }}/bin/connect-distributed.sh {{ redpanda_connect_config_dir }}/connect-distributed.properties
+ExecStart={{ redpanda_connect_home }}/bin/connect-distributed.sh {{ redpanda_connect_config_dir }}/connect-distributed.properties --log4j-config {{ redpanda_connect_config_dir }}/connect-log4j.properties
 TimeoutStopSec=180
 Restart=no
 

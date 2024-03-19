@@ -1,67 +1,24 @@
-log4j.rootLogger={{ log4j_rootlogger }}
+log4j.rootLogger=INFO, stdout, syslogAppender
 
-log4j.appender.stdout={{ log4j_appender_stdout }}
-log4j.appender.stdout.layout={{ log4j_appender_stdout_layout }}
-log4j.appender.stdout.layout.ConversionPattern={{ log4j_appender_stdout_layout_conversionpattern }}
+# Send the logs to the console.
+#
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
 
-log4j.appender.kafkaAppender={{ log4j_appender_kafkaappender }}
-log4j.appender.kafkaAppender.DatePattern={{ log4j_appender_kafkaappender_datepattern }}
-log4j.appender.kafkaAppender.File={{ log4j_appender_kafkaappender_file }}
-log4j.appender.kafkaAppender.layout={{ log4j_appender_kafkaappender_layout }}
-log4j.appender.kafkaAppender.layout.ConversionPattern={{ log4j_appender_kafkaappender_layout_conversionpattern }}
+# Send the logs to the system journal using SyslogAppender
+#
+log4j.appender.syslogAppender=org.apache.log4j.net.SyslogAppender
+log4j.appender.syslogAppender.syslogHost=localhost
+log4j.appender.syslogAppender.facility=LOCAL0
+log4j.appender.syslogAppender.layout=org.apache.log4j.PatternLayout
 
-log4j.appender.stateChangeAppender={{ log4j_appender_statechangeappender }}
-log4j.appender.stateChangeAppender.DatePattern={{ log4j_appender_statechangeappender_datepattern }}
-log4j.appender.stateChangeAppender.File={{ log4j_appender_statechangeappender_file }}
-log4j.appender.stateChangeAppender.layout={{ log4j_appender_statechangeappender_layout }}
-log4j.appender.stateChangeAppender.layout.ConversionPattern={{ log4j_appender_statechangeappender_layout_conversionpattern }}
+# The `%X{connector.context}` parameter in the layout includes connector-specific and task-specific information
+# in the log messages, where appropriate. This makes it easier to identify those log messages that apply to a
+# specific connector.
+#
+connect.log.pattern=[%d] %p %X{connector.context}%m (%c:%L)%n
 
-log4j.appender.requestAppender={{ log4j_appender_requestappender }}
-log4j.appender.requestAppender.DatePattern={{ log4j_appender_requestappender_datepattern }}
-log4j.appender.requestAppender.File={{ log4j_appender_requestappender_file }}
-log4j.appender.requestAppender.layout={{ log4j_appender_requestappender_layout }}
-log4j.appender.requestAppender.layout.ConversionPattern={{ log4j_appender_requestappender_layout_conversionpattern }}
+log4j.appender.stdout.layout.ConversionPattern=${connect.log.pattern}
+log4j.appender.syslogAppender.layout.ConversionPattern=${connect.log.pattern}
 
-log4j.appender.cleanerAppender={{ log4j_appender_cleanerappender }}
-log4j.appender.cleanerAppender.DatePattern={{ log4j_appender_cleanerappender_datepattern }}
-log4j.appender.cleanerAppender.File={{ log4j_appender_cleanerappender_file }}
-log4j.appender.cleanerAppender.layout={{ log4j_appender_cleanerappender_layout }}
-log4j.appender.cleanerAppender.layout.ConversionPattern={{ log4j_appender_cleanerappender_layout_conversionpattern }}
-
-log4j.appender.controllerAppender={{ log4j_appender_controllerappender }}
-log4j.appender.controllerAppender.DatePattern={{ log4j_appender_controllerappender_datepattern }}
-log4j.appender.controllerAppender.File={{ log4j_appender_controllerappender_file }}
-log4j.appender.controllerAppender.layout={{ log4j_appender_controllerappender_layout }}
-log4j.appender.controllerAppender.layout.ConversionPattern={{ log4j_appender_controllerappender_layout_conversionpattern }}
-
-log4j.appender.authorizerAppender={{ log4j_appender_authorizerappender }}
-log4j.appender.authorizerAppender.DatePattern={{ log4j_appender_authorizerappender_datepattern }}
-log4j.appender.authorizerAppender.File={{ log4j_appender_authorizerappender_file }}
-log4j.appender.authorizerAppender.layout={{ log4j_appender_authorizerappender_layout }}
-log4j.appender.authorizerAppender.layout.ConversionPattern={{ log4j_appender_authorizerappender_layout_conversionpattern }}
-
-log4j.logger.org.apache.zookeeper={{ log4j_logger_orgapachezookeeper }}
-
-log4j.logger.kafka={{ log4j_logger_kafka }}
-log4j.logger.org.apache.kafka={{ log4j_logger_orgapachekafka }}
-
-log4j.logger.kafka.request.logger={{ log4j_logger_kafkarequestlogger }}
-log4j.additivity.kafka.request.logger={{ log4j_additivity_kafkarequestlogger }}
-
-log4j.logger.kafka.network.RequestChannel$={{ log4j_logger_kafkanetworkrequestchannel }}
-log4j.additivity.kafka.network.RequestChannel$={{ log4j_additivity_kafkanetworkrequestchannel }}
-
-log4j.logger.org.apache.kafka.controller={{ log4j_logger_orgapachekafkacontroller }}
-log4j.additivity.org.apache.kafka.controller={{ log4j_additivity_orgapachekafkacontroller }}
-
-log4j.logger.kafka.controller={{ log4j_logger_kafkacontroller }}
-log4j.additivity.kafka.controller={{ log4j_additivity_kafkacontroller }}
-
-log4j.logger.kafka.log.LogCleaner={{ log4j_logger_kafkaloglogcleaner }}
-log4j.additivity.kafka.log.LogCleaner={{ log4j_additivity_kafkaloglogcleaner }}
-
-log4j.logger.state.change.logger={{ log4j_logger_statechangelogger }}
-log4j.additivity.state.change.logger={{ log4j_additivity_statechangelogger }}
-
-log4j.logger.kafka.authorizer.logger={{ log4j_logger_kafkaauthorizerlogger }}
-log4j.additivity.kafka.authorizer.logger={{ log4j_additivity_kafkaauthorizerlogger }}
+log4j.logger.org.reflections=ERROR
