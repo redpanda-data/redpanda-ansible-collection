@@ -1,7 +1,5 @@
 # Ansible Deployment for Redpanda
 
-[![Build status](https://badge.buildkite.com/b4528cf1604a18231c935663db15739e56d202dde6d7a2ec2a.svg)](https://buildkite.com/redpanda/deployment-automation)
-
 Ansible configuration to easily provision a [Redpanda](https://www.redpanda.com/) cluster.
 
 ## Installation Prerequisites
@@ -76,27 +74,3 @@ Change the redpanda.cluster entry in your requirements.yml file to the following
     type: git
     version: <<<YOUR BRANCH NAME>>>
 ```
-
-### pre-commit
-
-We use pre-commit to ensure good code health on this repo. To install
-pre-commit [check the docs here](https://pre-commit.com/#install). The basic idea is that you'll have a fairly
-comprehensive checkup happen on each commit, guaranteeing that everything will be properly formatted and validated. You
-may also need to install some pre-requisite tools for pre-commit to work correctly. At the time of writing this
-includes:
-
-* [ansible-lint](https://ansible-lint.readthedocs.io/installing/#installing-from-source-code)
-* [tflint](https://github.com/terraform-linters/tflint#installation)
-
-## Ansible Linter Skip List Whys and Wherefores
-
-A lot of effort to bring the linter and IDE into alignment without meaningful improvement in readability, outcomes or
-correctness.
-
-- jinja[spacing]
-- yaml[brackets]
-- yaml[line-length]
-
-Breaks the play because intermediate commands in the pipe return nonzero (but irrelevant) error codes
-
-- risky-shell-pipe 

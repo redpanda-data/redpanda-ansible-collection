@@ -1,4 +1,3 @@
----
 - name: Ensure redpanda_version is defined
   assert:
     that:
@@ -29,30 +28,15 @@
   when:
     - ansible_os_family == 'Debian'
     - enable_airgap is false
-
-- name: Install Redpanda RPM
-  ansible.builtin.include_tasks: install-rp-rpm.yml
-  when:
-    - ansible_os_family == 'RedHat'
-    - enable_airgap is false
-
-- name: Install Redpanda DEB
-  ansible.builtin.include_tasks: install-rp-deb.yml
+- name: Install Redpanda Console
+  ansible.builtin.include_tasks: install-console-deb.yml
   when:
     - ansible_os_family == 'Debian'
-    - enable_airgap is false
 
-- name: Install Redpanda RPM Airgap
-  ansible.builtin.include_tasks: install-rp-rpm-airgap.yml
+- name: Install Redpanda Console
+  ansible.builtin.include_tasks: install-console-rpm.yml
   when:
     - ansible_os_family == 'RedHat'
-    - enable_airgap is true
 
-- name: Install Redpanda DEB Airgap
-  ansible.builtin.include_tasks: install-rp-deb-airgap.yml
-  when:
-    - ansible_os_family == 'Debian'
-    - enable_airgap is true
-
-- name: Start Redpanda
-  ansible.builtin.include_tasks: start-redpanda.yml
+- name: Start Redpanda Console
+  ansible.builtin.include_tasks: start-console.yml
