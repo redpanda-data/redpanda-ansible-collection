@@ -1,21 +1,13 @@
 log4j.rootLogger=INFO, stdout, syslogAppender
 
-# Send the logs to the console.
-#
 log4j.appender.stdout=org.apache.log4j.ConsoleAppender
 log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
 
-# Send the logs to the system journal using SyslogAppender
-#
 log4j.appender.syslogAppender=org.apache.log4j.net.SyslogAppender
 log4j.appender.syslogAppender.syslogHost=localhost
 log4j.appender.syslogAppender.facility=LOCAL0
 log4j.appender.syslogAppender.layout=org.apache.log4j.PatternLayout
 
-# The `%X{connector.context}` parameter in the layout includes connector-specific and task-specific information
-# in the log messages, where appropriate. This makes it easier to identify those log messages that apply to a
-# specific connector.
-#
 connect.log.pattern=[%d] %p %X{connector.context}%m (%c:%L)%n
 
 log4j.appender.stdout.layout.ConversionPattern=${connect.log.pattern}
