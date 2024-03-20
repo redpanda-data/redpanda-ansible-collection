@@ -1,6 +1,6 @@
 # create a new file named java-home.sh in /etc/profile.d
 - name: Create java-home.sh
-  copy:
+  ansible.builtin.copy:
     dest: /etc/profile.d/java-home.sh
     content: |
       export JAVA_HOME={{ java_home }}

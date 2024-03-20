@@ -1,5 +1,5 @@
 - name: Instantiate l4j file
-  template:
+  ansible.builtin.template:
     src: log4j.properties.j2
     dest: "{{ redpanda_connect_config_dir }}/connect-log4j.properties"
     owner: "{{ redpanda_user }}"

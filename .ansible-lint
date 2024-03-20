@@ -1,0 +1,18 @@
+---
+exclude_paths:
+  - .github/**
+  - Taskfile.yaml
+
+enable_list:
+  - yaml
+  - empty-string-compare
+  - args
+
+profile: production
+
+skip_list:
+  - risky-shell-pipe
+  - jinja[spacing]
+  - yaml[brackets]
+  - yaml[line-length]
+  - yaml[trailing-spaces]
