@@ -1,13 +1,13 @@
 ---
 - name: Check if ca_cert_file is defined
-  fail:
+  ansible.builtin.fail:
     msg: "A valid path must be provided for ca_cert_file ex: tls/certs/ca.crt"
   when:
     - handle_cert_install | default(false) | bool
     - ca_cert_file is not defined
 
 - name: Check if node_cert_file is defined
-  fail:
+  ansible.builtin.fail:
     msg: "A valid path must be provided for node_cert_file ex: tls/certs/node.crt"
   when:
     - handle_cert_install | default(false) | bool
