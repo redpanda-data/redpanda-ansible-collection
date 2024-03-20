@@ -4,7 +4,7 @@
         {% for host in advertised_ips %}
         "{{ host }}:{{ redpanda_kafka_port }}"{% if not loop.last %},{% endif %}
         {% endfor %}
-    }
+    },
     "schemaRegistry": {
       "enabled": true,
       "urls": [
