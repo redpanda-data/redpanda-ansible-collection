@@ -67,10 +67,12 @@
 {
     "connect": {
     "enabled": true,
-    "urls": [
-      {% for host in connect_advertised_ips | default([]) %}
-      "{% if enable_tls | default(false) %}https{% else %}http{% endif %}://{{ host }}:{{ redpanda_connect_port }}"{% if not loop.last %},{% endif %}
-      {% endfor %}
+    "clusters":
+    [
+      {
+        "name": "Connect",
+        "url": "{% if enable_tls | default(false) %}https{% else %}http{% endif %}://{{ connect_advertised_ips[0] }}:{{ redpanda_connect_port }}"
+      }
     ]{% if enable_tls | default(false) %},
     "tls": {
       "enabled": true,
