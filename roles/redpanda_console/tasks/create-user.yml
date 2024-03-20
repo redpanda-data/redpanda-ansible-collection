@@ -1,12 +1,12 @@
 - name: Create redpanda group
-  group:
+  ansible.builtin.group:
     name: "{{ redpanda_group }}"
     state: present
     system: true
   become: true
 
 - name: Create redpanda user
-  user:
+  ansible.builtin.user:
     name: "{{ redpanda_user }}"
     group: "{{ redpanda_group }}"
     system: true

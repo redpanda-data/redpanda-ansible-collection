@@ -1,5 +1,5 @@
 - name: Ensure redpanda_version is defined
-  assert:
+  ansible.builtin.assert:
     that:
       - redpanda_version != ''
     fail_msg: "Variable 'redpanda_version' must be defined!"
@@ -14,7 +14,7 @@
 
 # End play if install_certs_only is true
 - name: End play if only installing certs
-  meta: end_play
+  ansible.builtin.meta: end_play
   when: install_certs_only | default(false) | bool
 
 - name: Create user and group

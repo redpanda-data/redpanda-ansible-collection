@@ -5,13 +5,13 @@
     mode: "0755"
 
 - name: Create list of advertised_ips
-  set_fact:
+  ansible.builtin.set_fact:
     advertised_ips: "{{
       groups['redpanda'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_ips | default(False) | bool) else 'private_ip') | list
     }}"
 
 - name: Create list of connect_advertised_ips
-  set_fact:
+  ansible.builtin.set_fact:
     connect_advertised_ips: "{{
       groups['connect'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_ips | default(False) | bool) else 'private_ip') | list
     }}"
