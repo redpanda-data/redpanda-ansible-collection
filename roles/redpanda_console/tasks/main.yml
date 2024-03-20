@@ -33,6 +33,9 @@
   when:
     - ansible_os_family == 'Debian'
 
+- name: Configure Redpanda Console
+  ansible.builtin.include_tasks: configure-console.yml
+
 - name: Install Redpanda Console
   ansible.builtin.include_tasks: install-console-rpm.yml
   when:

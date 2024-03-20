@@ -63,23 +63,23 @@
       "certFilepath": "{{ console_cert_file }}",
       "keyFilepath": "{{ console_key_file }}",
     }
-  }{% endif %}{%  if enable_connect | default(false) %},
-  {
+  }{% endif %}{% if connect_advertised_ips is defined %},
+{
     "connect": {
+    "enabled": true,
+    "urls": [
+      {% for host in connect_advertised_ips | default([]) %}
+      "{% if enable_tls | default(false) %}https{% else %}http{% endif %}://{{ host }}:{{ redpanda_connect_port }}"{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]{% if enable_tls | default(false) %},
+    "tls": {
       "enabled": true,
-      "urls": [
-        {% for host in connect_advertised_ips %}
-        "{% if enable_tls | default(false) %}https{% else %}http{% endif %}://{{ host }}:{{ redpanda_connect_port }}"{% if not loop.last %},{% endif %}
-        {% endfor %}
-      ]{% if enable_tls | default(false) %},
-      "tls": {
-        "enabled": true,
-        "caFilepath": "{{ redpanda_truststore_file }}",
-        "certFilepath": "{{ redpanda_cert_file }}",
-        "keyFilepath": "{{ redpanda_key_file }}",
-        "insecureSkipTlsVerify": false
-      }
-      {% endif %}
+      "caFilepath": "{{ redpanda_truststore_file }}",
+      "certFilepath": "{{ redpanda_cert_file }}",
+      "keyFilepath": "{{ redpanda_key_file }}",
+      "insecureSkipTlsVerify": false
     }
-  }{% endif %}
+    {% endif %}
+  }
+}{% endif %}
 }

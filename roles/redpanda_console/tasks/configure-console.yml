@@ -15,7 +15,7 @@
     connect_advertised_ips: "{{
       groups['connect'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_ips | default(False) | bool) else 'private_ip') | list
     }}"
-  when: enable_connect | default(False) | bool
+  when: "'connect' in groups"
 
 - name: Reset configuration
   ansible.builtin.set_fact:
