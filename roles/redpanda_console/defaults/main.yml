@@ -10,6 +10,9 @@ redpanda_rpc_port: 33145
 redpanda_schema_registry_port: 8081
 redpanda_connect_port: 8083
 
+redpanda_group: redpanda
+redpanda_user: redpanda
+
 redpanda_use_staging_repo: false
 redpanda_base_url: "https://dl.redpanda.com"
 
