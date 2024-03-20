@@ -1,21 +1,21 @@
 - name: Check if RP exists
-  stat:
+  ansible.builtin.stat:
     path: "/usr/bin/redpanda"
   register: rp_exists_check
 
 - name: Get version from file
-  command:
+  ansible.builtin.command:
     cmd: "/usr/bin/redpanda --version"
   register: rp_ver_output
   when: rp_exists_check.stat.exists
 
-- name: Check if redpanda_version is set to latest
-  set_fact:
+- name: If redpanda_version is latest set needs_update to true
+  ansible.builtin.set_fact:
     needs_update: true
   when: redpanda_version == "latest"
 
 - name: Compare version if redpanda_version is not set to latest
-  set_fact:
+  ansible.builtin.set_fact:
     needs_update: "{{ (redpanda_version.replace('v', '').split('-')[0] | string ) is version((rp_ver_output.stdout.replace('v', '').split('-')[0] | string), '>') }}"
   when:
     - rp_exists_check.stat.exists
@@ -25,6 +25,7 @@
   ansible.builtin.copy:
     src: "{{ airgap_copy_src }}/redpanda_debs.tar.gz"
     dest: "{{ airgap_copy_dest }}/redpanda_debs.tar.gz"
+    mode: '0644'
   tags:
     - airgap-tarball-install
   when:
@@ -52,8 +53,9 @@
   ansible.builtin.file:
     path: "/var/lib/redpanda"
     state: directory
-    recurse: yes
+    recurse: true
     owner: redpanda
     group: redpanda
+    mode: '0755'
   tags:
     - airgap-tarball-install
