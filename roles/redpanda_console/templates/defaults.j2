@@ -64,7 +64,6 @@
       "keyFilepath": "{{ console_key_file }}",
     }
   }{% endif %}{% if connect_advertised_ips is defined %},
-{
     "connect": {
     "enabled": true,
     "clusters":
@@ -82,6 +81,5 @@
       "insecureSkipTlsVerify": false
     }
     {% endif %}
-  }
 }{% endif %}
 }
