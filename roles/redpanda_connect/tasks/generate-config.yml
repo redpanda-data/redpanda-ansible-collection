@@ -6,7 +6,7 @@
 
 - name: Instantiate config file
   ansible.builtin.template:
-    src: kc.properties.j2
+    src: connect-distributed.properties.j2
     dest: "{{ redpanda_connect_config_dir }}/connect-distributed.properties"
     owner: "{{ redpanda_user }}"
     group: "{{ redpanda_group }}"
