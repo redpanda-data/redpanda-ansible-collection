@@ -1,6 +1,6 @@
 - name: Instantiate systemd unit file for kafka connect
   ansible.builtin.template:
-    src: unit-file.j2
+    src: redpanda-connect.service.j2
     dest: "/etc/systemd/system/redpanda-connect.service"
     owner: "root"
     group: "root"
