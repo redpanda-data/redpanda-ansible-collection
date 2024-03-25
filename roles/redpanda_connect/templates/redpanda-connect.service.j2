@@ -9,8 +9,8 @@ User={{ redpanda_user }}
 Group={{ redpanda_group }}
 Environment="LOG4J_CONFIGURATION_FILE={{ redpanda_connect_config_dir }}/connect-log4j.properties"
 Environment="CONNECT_PLUGIN_PATH={{ redpanda_connect_home }}/plugins"
-{% if KAFKA_OPTS != "" %}Environment="KAFKA_OPTS={{ KAFKA_OPTS }}"{% endif %}
-Environment="KAFKA_OPTS={% if KAFKA_OPTS != "" %}$KAFKA_OPTS{% endif %} -javaagent:{{ redpanda_connect_home }}/redpanda-plugins/jmx-exporter/jmx_prometheus_javaagent.jar=9404:{{ redpanda_connect_home }}/config/jmx-exporter-config.json"
+{% if KAFKA_OPTS is defined and KAFKA_OPTS != "" %}Environment="KAFKA_OPTS={{ KAFKA_OPTS }}"{% endif %}
+Environment="KAFKA_OPTS={% if KAFKA_OPTS is defined and KAFKA_OPTS != "" %}$KAFKA_OPTS{% endif %} -javaagent:{{ redpanda_connect_home }}/redpanda-plugins/jmx-exporter/jmx_prometheus_javaagent.jar=9404:{{ redpanda_connect_home }}/config/jmx-exporter-config.json"
 ExecStart={{ redpanda_connect_home }}/bin/connect-distributed.sh {{ redpanda_connect_config_dir }}/connect-distributed.properties
 TimeoutStopSec=180
 Restart=no
