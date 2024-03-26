@@ -5,4 +5,4 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install --no-cache-dir -r tests/requirements.txt
+CMD ["make", "do"]

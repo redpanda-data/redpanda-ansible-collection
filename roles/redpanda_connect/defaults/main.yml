@@ -1,3 +1,5 @@
+advertise_public_ips: true
+
 # Kafka Cluster connection values
 is_using_private: false # set to true if you'd prefer it connected using the private IP
 kafka_port: 9092

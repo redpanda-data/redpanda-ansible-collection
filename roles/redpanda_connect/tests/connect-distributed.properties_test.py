@@ -20,7 +20,7 @@ class TestBootstrapServerTemplate(unittest.TestCase):
 
         # Create a Jinja2 environment and load the template from file
         env = Environment(loader=FileSystemLoader(templates_dir))
-        template = env.get_template('kc.properties.j2')
+        template = env.get_template('connect-distributed.properties.j2')
 
         # Define the hostvars and groups for rendering the template
         hostvars = {
@@ -34,15 +34,16 @@ class TestBootstrapServerTemplate(unittest.TestCase):
                 'ansible_host': '54.190.184.126',
             }
         }
+        advertised_ips = ["35.91.106.231", "35.88.129.205", "54.190.184.126"]
         groups = {
             'connect': ['35.91.106.231', '35.88.129.205', '54.190.184.126']
         }
 
         # Render the template with the provided hostvars, groups, and defaults
-        rendered_template = template.render(hostvars=hostvars, groups=groups, **defaults)
+        rendered_template = template.render(hostvars=hostvars, advertised_ips=advertised_ips, groups=groups, **defaults)
 
         # Define the expected bootstrap server line
-        expected_bootstrap_servers = 'bootstrap.servers=35.91.106.231:8083,35.88.129.205:8083,54.190.184.126:8083'
+        expected_bootstrap_servers = 'bootstrap.servers=35.91.106.231:9092,35.88.129.205:9092,54.190.184.126:9092'
         expected_schema_registry_url = f"schema.registry.url={defaults['schema_registry_url']}"
         expected_group_id = f"group.id={defaults['group_id']}"
         expected_rest_port = f"rest.port={defaults['rest_port']}"
