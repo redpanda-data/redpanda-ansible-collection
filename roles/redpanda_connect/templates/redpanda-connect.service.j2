@@ -10,7 +10,7 @@ Group={{ redpanda_group }}
 Environment="LOG4J_CONFIGURATION_FILE={{ redpanda_connect_config_dir }}/connect-log4j.properties"
 Environment="CONNECT_PLUGIN_PATH={{ redpanda_connect_home }}/plugins"
 {% if KAFKA_OPTS is defined and KAFKA_OPTS != "" %}Environment="KAFKA_OPTS={{ KAFKA_OPTS }}"{% endif %}
-{% set jmx_hostname = hostvars[inventory_hostname]['ansible_default_ipv4']['address'] if advertise_public_ips else hostvars[inventory_hostname]['private_ip'] %}
+{% set jmx_hostname = inventory_hostname if advertise_public_ips else hostvars[inventory_hostname]['private_ip'] %}
 Environment="KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname={{ jmx_hostname }} -Djava.net.preferIPv4Stack=true"
 Environment="KAFKA_OPTS={% if KAFKA_OPTS is defined and KAFKA_OPTS != "" %}$KAFKA_OPTS{% endif %} -javaagent:{{ redpanda_connect_home }}/redpanda-plugins/jmx-exporter/jmx_prometheus_javaagent.jar=9404:{{ redpanda_connect_home }}/config/jmx-exporter-config.json"
 ExecStart={{ redpanda_connect_home }}/bin/connect-distributed.sh {{ redpanda_connect_config_dir }}/connect-distributed.properties
