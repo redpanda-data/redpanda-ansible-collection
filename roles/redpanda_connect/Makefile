@@ -4,17 +4,19 @@ PYTHON ?= python
 PIP ?= pip
 
 DIR := tests
-TESTS := $(wildcard $(DIR)/*_test.py)
+SCRIPTS := $(wildcard $(DIR)/*_test.py)
 
 # Target to process each file
 all: $(FILES)
 
 do: reqs test
 
-test: $(TESTS)
-	echo "running $(DIR) $(TESTS)"
-	$(foreach script,$(SCRIPTS),echo "Running $(script)";python $(script);)
-
+test: $(SCRIPTS)
+	echo "running $(DIR) $(SCRIPTS)"
+	$(foreach FILE,$(SCRIPTS), $(PYTHON) $(FILE);)
 
 reqs:
 	$(PIP) install --no-cache-dir -r tests/requirements.txt
+
+up:
+	docker-compose up --build
