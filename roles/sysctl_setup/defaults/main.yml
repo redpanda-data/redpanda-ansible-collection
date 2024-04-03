@@ -1,1 +1,8 @@
-max_user_instances: 512
+# inotify.max_user_instances caps the number of inotify watches a specific user
+# is allowed to create in Linux. In some larger setups, Redpanda may need to create
+# more. If this is set too low (like 512), it could manifest as odd behavior in
+# Schema Registry. 
+#
+# Adjust upwards as necessary. An upper limit has not been established. Increasing
+# this excessively can increase kernel memory usage. 
+max_user_instances: 8192
