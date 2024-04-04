@@ -1,12 +1,12 @@
 ---
-- name: Install certs - create redpanda user if it doesn't exist already
+- name: Create redpanda user if it doesn't exist already
   tags:
     - install_certs
   ansible.builtin.user:
     name: redpanda
     system: true
 
-- name: Install certs - ensure /etc/redpanda/certs exists
+- name: Ensure /etc/redpanda/certs exists
   tags:
     - install_certs
   ansible.builtin.file:
@@ -16,7 +16,7 @@
     group: redpanda
     mode: "0755"
 
-- name: Install_certs - Copy CA Certs
+- name: Copy CA Cert
   tags:
     - install_certs
   ansible.builtin.copy:
@@ -27,7 +27,7 @@
     force: "{{ overwrite_certs | default('no') | bool }}"
     mode: "0644"
 
-- name: Install_certs - Copy Node Certs
+- name: Copy Node Certs
   tags:
     - install_certs
   ansible.builtin.copy:
@@ -38,7 +38,7 @@
     force: "{{ overwrite_certs | default('no') | bool }}"
     mode: "0644"
 
-- name: Install_certs - Copy Node Keys
+- name: Copy Node Keys
   tags:
     - install_certs
   ansible.builtin.copy:
@@ -52,9 +52,3 @@
     - not (node_key_file | default('') == '')
     - handle_cert_install | default(false) | bool
     - not (create_demo_certs | default(false) | bool)
-
-- name: Install_certs - Set Redpanda config
-  tags:
-    - install_certs
-  ansible.builtin.set_fact:
-    tls: true

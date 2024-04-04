@@ -49,6 +49,7 @@
     force: "{{ overwrite_certs | default('no') | bool }}"
     mode: "0644"
   when:
+    - not (node_key_file | default('') == '')
     - handle_cert_install | default(false) | bool
     - not (create_demo_certs | default(false) | bool)
 

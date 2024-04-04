@@ -10,6 +10,9 @@ redpanda_rpc_port: 33145
 redpanda_schema_registry_port: 8081
 redpanda_connect_port: 8083
 
+http_port: 8080
+https_port: 443
+
 redpanda_group: redpanda
 redpanda_user: redpanda
 

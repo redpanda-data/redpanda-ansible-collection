@@ -3,7 +3,7 @@
 #
 
 ---
-- name: Create-ca - check existence of Root CA directory {{ root_ca_dir }}
+- name: Check existence of Root CA directory {{ root_ca_dir }}
   delegate_to: localhost
   ansible.builtin.file:
     path: "{{ root_ca_dir }}"
@@ -12,7 +12,7 @@
   tags:
     - create_ca
 
-- name: Create-ca - copy the ca.conf file to CA
+- name: Copy the ca.conf file to CA
   delegate_to: localhost
   ansible.builtin.template:
     src: ca.conf.tpl
@@ -21,7 +21,7 @@
   tags:
     - create_ca
 
-- name: Create-ca - generate an OpenSSH keypair for the CA
+- name: Generate an OpenSSH keypair for the CA
   delegate_to: localhost
   ansible.builtin.command:
     chdir: "{{ root_ca_dir }}"
@@ -30,7 +30,7 @@
   tags:
     - create_ca
 
-- name: Create-ca - generate self-signed CA certificate
+- name: Generate self-signed CA certificate
   delegate_to: localhost
   ansible.builtin.command:
     chdir: "{{ root_ca_dir }}"
@@ -39,7 +39,7 @@
   tags:
     - create_ca
 
-- name: Create-ca - initialize CA data files
+- name: Initialize CA data files
   delegate_to: localhost
   ansible.builtin.shell: |
     cd {{ root_ca_dir }}

@@ -2,3 +2,5 @@
 *.gz
 *.xml
 *.iml
+.idea/redpanda-ansible-collection.iml
+.idea/misc.xml

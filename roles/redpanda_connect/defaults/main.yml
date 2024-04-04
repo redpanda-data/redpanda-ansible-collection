@@ -47,6 +47,7 @@ connect_tls_auth_key: false
 
 # used when connect_tls_enabled are true
 security_protocol: SSL
+ssl_protocol: TLSv1.3
 
 # jmx options
 jmxremote_authenticate: false
@@ -56,29 +57,40 @@ jmxremote_ssl: false
 prefer_ipv4_stack: true
 
 # used when connect_tls_enabled and connect_trusted_certs are true
-ssl_truststore_location: /tmp/kafka/cluster.truststore.p12
-ssl_truststore_password: "{{ certs_store_password }}"
+redpanda_truststores_dir: /etc/redpanda/truststores
+truststore_file_name: truststore.p12
+ssl_truststore_location: /etc/redpanda/truststores/truststore.p12
+ssl_truststore_password: password
 ssl_truststore_type: PKCS12
-producer_ssl_truststore_location: /tmp/kafka/cluster.truststore.p12
-producer_ssl_truststore_password: "{{ certs_store_password }}"
-consumer_ssl_truststore_location: /tmp/kafka/cluster.truststore.p12
-consumer_ssl_truststore_password: "{{ certs_store_password }}"
-admin_ssl_truststore_location: /tmp/kafka/cluster.truststore.p12
-admin_ssl_truststore_password: "{{ certs_store_password }}"
+producer_ssl_truststore_location: /etc/redpanda/truststores/truststore.p12
+producer_ssl_truststore_password: password
+consumer_ssl_truststore_location: /etc/redpanda/truststores/truststore.p12
+consumer_ssl_truststore_password: password
+admin_ssl_truststore_location: /etc/redpanda/truststores/truststore.p12
+admin_ssl_truststore_password: password
 
 # use when connect_tls_enabled, connect_tls_auth_cert and connect_tls_auth_key are true
-ssl_keystore_location: /tmp/kafka/cluster.keystore.p12
-ssl_keystore_password: "{{ certs_store_password }}"
+redpanda_keystores_dir: /etc/redpanda/keystores
+keystores_file_name: keystore.p12
+ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
+ssl_keystore_password:  password
 ssl_keystore_type: PKCS12
-producer_ssl_keystore_location: /tmp/kafka/cluster.keystore.p12
-producer_ssl_keystore_password: "{{ certs_store_password }}"
+producer_ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
+producer_ssl_keystore_password: password
 producer_ssl_keystore_type: PKCS12
-consumer_ssl_keystore_location: /tmp/kafka/cluster.keystore.p12
-consumer_ssl_keystore_password: "{{ certs_store_password }}"
+consumer_ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
+consumer_ssl_keystore_password: password
 consumer_ssl_keystore_type: PKCS12
-admin_ssl_keystore_location: /tmp/kafka/cluster.keystore.p12
-admin_ssl_keystore_password: "{{ certs_store_password }}"
+admin_ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
+admin_ssl_keystore_password: password
 admin_ssl_keystore_type: PKCS12
 
 # log4j values
-log4j_log_level: "INFO"
+log4j_log_level: "WARN"
+
+# used for keystore gen
+redpanda_certs_dir: /etc/redpanda/certs
+redpanda_csr_file: "{{ redpanda_certs_dir }}/node.csr"
+redpanda_key_file: "{{ redpanda_certs_dir }}/node.key"
+redpanda_cert_file: "{{ redpanda_certs_dir }}/node.crt"
+redpanda_truststore_file: "{{ redpanda_certs_dir }}/truststore.pem"

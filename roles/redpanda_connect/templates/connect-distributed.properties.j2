@@ -13,8 +13,11 @@ key.converter={{ key_converter }}
 value.converter={{ value_converter }}
 
 {% if connect_tls_enabled %}
-security.protocol={{security_protocol}}
-{% if connect_trusted_certs %}
+security.protocol=SSL
+ssl.protocol={{ ssl_protocol }}
+ssl.debug=true
+listeners=https://0.0.0.0:8083
+rest.advertised.listeners=https://{{ inventory_hostname }}:8083
 ssl.truststore.location={{ssl_truststore_location}}
 ssl.truststore.password={{ssl_truststore_password}}
 ssl.truststore.type={{ssl_truststore_type}}
@@ -24,7 +27,6 @@ consumer.ssl.truststore.location={{consumer_ssl_truststore_location}}
 consumer.ssl.truststore.password={{consumer_ssl_truststore_password}}
 admin.ssl.truststore.location={{admin_ssl_truststore_location}}
 admin.ssl.truststore.password={{admin_ssl_truststore_password}}
-{% elif connect_tls_auth_cert and connect_tls_auth_key %}
 ssl.keystore.location={{ssl_keystore_location}}
 ssl.keystore.password={{ssl_keystore_password}}
 ssl.keystore.type={{ssl_keystore_type}}
@@ -37,7 +39,6 @@ consumer.ssl.keystore.type={{consumer_ssl_keystore_type}}
 admin.ssl.keystore.location={{admin_ssl_keystore_location}}
 admin.ssl.keystore.password={{admin_ssl_keystore_password}}
 admin.ssl.keystore.type={{admin_ssl_keystore_type}}
-{% endif %}
 {% else %}
 security.protocol=PLAINTEXT
 producer.security.protocol=PLAINTEXT

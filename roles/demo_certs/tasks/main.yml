@@ -17,3 +17,21 @@
   ansible.builtin.include_tasks: issue-certs.yml
   when:
     - create_demo_certs | default(false) | bool
+
+# Generates a Java truststore containing the CA certificate and the node certificate on localhost
+- name: Generate CSRs for keystores
+  ansible.builtin.include_tasks: generate-csrs-keystore.yml
+  when:
+    - create_keystore | default(false) | bool
+
+# Generates a Java truststore containing the CA certificate and the node certificate on localhost
+- name: Generate certs for keystores
+  ansible.builtin.include_tasks: issue-certs-keystore.yml
+  when:
+    - create_keystore | default(false) | bool
+    -
+# Generates a Java truststore containing the CA certificate and the node certificate on localhost
+- name: Generate truststore on localhost for connect group
+  ansible.builtin.include_tasks: generate-truststore.yml
+  when:
+    - create_keystore | default(false) | bool
