@@ -1,0 +1,26 @@
+- name: Create user
+  ansible.builtin.include_tasks: create-user.yml
+
+- name: Install JVM
+  ansible.builtin.package:
+      name: java-17-openjdk
+      state: present
+  when: not use_existing_jvm | default(false)
+
+- name: Set JAVA_HOME
+  ansible.builtin.include_tasks: environment-variables.yml
+
+- name: Install Kafka Connect
+  ansible.builtin.include_tasks: install-connect.yml
+
+- name: Configure Kafka Connect
+  ansible.builtin.include_tasks: generate-config.yml
+
+- name: Configure Log4j Config File
+  ansible.builtin.include_tasks: generate-log4j-config.yml
+
+- name: Configure Systemd Unit File
+  ansible.builtin.include_tasks: generate-unit-file.yml
+
+- name: Start Kafka Connect
+  ansible.builtin.include_tasks: start-connect.yml

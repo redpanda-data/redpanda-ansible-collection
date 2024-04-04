@@ -1,0 +1,14 @@
+- name: Create list of advertised_ips
+  ansible.builtin.set_fact:
+    advertised_ips: "{{
+      groups['redpanda'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_address | bool) else 'private_ip') | list
+    }}"
+
+- name: Instantiate config file
+  ansible.builtin.template:
+    src: connect-distributed.properties.j2
+    dest: "{{ redpanda_connect_config_dir }}/connect-distributed.properties"
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    mode: '0644'
+    force: true

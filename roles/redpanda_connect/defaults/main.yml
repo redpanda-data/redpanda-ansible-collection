@@ -1,0 +1,84 @@
+# connect distributed config file - allows overriding the config file
+connect_distributed_config_file: connect-distributed.properties
+
+# Kafka Cluster connection values
+is_using_private: false # set to true if you'd prefer it connected using the private IP
+kafka_port: 9092
+redpanda_connect_home: "/opt/kafka"
+
+# converters
+key_converter: "org.apache.kafka.connect.json.JsonConverter"
+value_converter: "org.apache.kafka.connect.json.JsonConverter"
+
+# connect topics
+config_storage_topic: "connect-configs"
+offset_storage_topic: "connect-offsets"
+status_storage_topic: "connect-status"
+
+# config directory
+redpanda_connect_config_dir: "/opt/kafka/config"
+
+# user and group
+redpanda_user: redpanda
+redpanda_group: redpanda
+
+java_home: /usr/lib/jvm/java-17-openjdk
+
+# required binary install values
+redpanda_connect_rpm: "redpanda-connect.x86_64.rpm"
+redpanda_connect_rpm_dir: "/tmp"
+
+# networking
+advertise_public_address: true
+schema_registry_url: "http://localhost:8081"
+rest_advertised_host_name: "localhost"
+rest_port: 8083
+rest_advertised_port: 8083
+
+# group and plugins
+group_id: "redpanda-kc"
+plugin_path: "/opt/kafka/redpanda-plugins"
+
+# security
+connect_tls_enabled: false
+connect_trusted_certs: false
+connect_tls_auth_cert: false
+connect_tls_auth_key: false
+
+# used when connect_tls_enabled are true
+security_protocol: SSL
+
+# jmx options
+jmxremote_authenticate: false
+advertise_public_ips: true
+jmxremote_port: 9999
+jmxremote_ssl: false
+prefer_ipv4_stack: true
+
+# used when connect_tls_enabled and connect_trusted_certs are true
+ssl_truststore_location: /tmp/kafka/cluster.truststore.p12
+ssl_truststore_password: "{{ certs_store_password }}"
+ssl_truststore_type: PKCS12
+producer_ssl_truststore_location: /tmp/kafka/cluster.truststore.p12
+producer_ssl_truststore_password: "{{ certs_store_password }}"
+consumer_ssl_truststore_location: /tmp/kafka/cluster.truststore.p12
+consumer_ssl_truststore_password: "{{ certs_store_password }}"
+admin_ssl_truststore_location: /tmp/kafka/cluster.truststore.p12
+admin_ssl_truststore_password: "{{ certs_store_password }}"
+
+# use when connect_tls_enabled, connect_tls_auth_cert and connect_tls_auth_key are true
+ssl_keystore_location: /tmp/kafka/cluster.keystore.p12
+ssl_keystore_password: "{{ certs_store_password }}"
+ssl_keystore_type: PKCS12
+producer_ssl_keystore_location: /tmp/kafka/cluster.keystore.p12
+producer_ssl_keystore_password: "{{ certs_store_password }}"
+producer_ssl_keystore_type: PKCS12
+consumer_ssl_keystore_location: /tmp/kafka/cluster.keystore.p12
+consumer_ssl_keystore_password: "{{ certs_store_password }}"
+consumer_ssl_keystore_type: PKCS12
+admin_ssl_keystore_location: /tmp/kafka/cluster.keystore.p12
+admin_ssl_keystore_password: "{{ certs_store_password }}"
+admin_ssl_keystore_type: PKCS12
+
+# log4j values
+log4j_log_level: "INFO"

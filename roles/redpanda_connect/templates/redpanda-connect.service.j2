@@ -1,0 +1,20 @@
+[Unit]
+Description=Redpanda's distribution of Apache Kafka Connect in distributed mode
+Documentation=https://docs.redpanda.com/
+After=network.target
+
+[Service]
+Type=simple
+User={{ redpanda_user }}
+Group={{ redpanda_group }}
+Environment="KAFKA_LOG4J_OPTS=-Dlog4j.configuration=file:{{ redpanda_connect_config_dir }}/connect-log4j.properties -Dlog4j_log_level={{ log4j_log_level }}"
+Environment="CONNECT_PLUGIN_PATH={{ redpanda_connect_home }}/plugins"
+{% if KAFKA_OPTS is defined and KAFKA_OPTS != "" %}Environment="KAFKA_OPTS={{ KAFKA_OPTS }}"{% endif %}
+Environment="KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote.port={{ jmxremote_port }} -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.ssl={{ jmxremote_ssl | lower }} -Djava.rmi.server.hostname=localhost -Dcom.sun.management.jmxremote.authenticate={{ jmxremote_authenticate | lower }} -Djava.net.preferIPv4Stack={{ prefer_ipv4_stack | lower }} -Djava.util.logging.config.file={{ redpanda_connect_config_dir }}logging.properties"
+Environment="KAFKA_OPTS={% if KAFKA_OPTS is defined and KAFKA_OPTS != "" %}$KAFKA_OPTS{% endif %} -javaagent:{{ redpanda_connect_home }}/redpanda-plugins/jmx-exporter/jmx_prometheus_javaagent.jar=9404:{{ redpanda_connect_home }}/config/jmx-exporter-config.json"
+ExecStart={{ redpanda_connect_home }}/bin/connect-distributed.sh {{ redpanda_connect_config_dir }}/{{ connect_distributed_config_file }}
+TimeoutStopSec=180
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

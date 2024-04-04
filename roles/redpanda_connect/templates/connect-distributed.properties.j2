@@ -1,0 +1,46 @@
+bootstrap.servers={% for host in advertised_ips %}{{ host }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+schema.registry.url={{ schema_registry_url }}
+group.id={{ group_id }}
+config.storage.topic={{ config_storage_topic }}
+offset.storage.topic={{ offset_storage_topic }}
+status.storage.topic={{ status_storage_topic }}
+rest.port={{ rest_port }}
+rest.advertised.host.name={{ rest_advertised_host_name }}
+rest.advertised.port={{ rest_advertised_port }}
+plugin.path={{ plugin_path }}
+key.converter={{ key_converter }}
+value.converter={{ value_converter }}
+
+{% if connect_tls_enabled %}
+security.protocol={{security_protocol}}
+{% if connect_trusted_certs %}
+ssl.truststore.location={{ssl_truststore_location}}
+ssl.truststore.password={{ssl_truststore_password}}
+ssl.truststore.type={{ssl_truststore_type}}
+producer.ssl.truststore.location={{producer_ssl_truststore_location}}
+producer.ssl.truststore.password={{producer_ssl_truststore_password}}
+consumer.ssl.truststore.location={{consumer_ssl_truststore_location}}
+consumer.ssl.truststore.password={{consumer_ssl_truststore_password}}
+admin.ssl.truststore.location={{admin_ssl_truststore_location}}
+admin.ssl.truststore.password={{admin_ssl_truststore_password}}
+{% elif connect_tls_auth_cert and connect_tls_auth_key %}
+ssl.keystore.location={{ssl_keystore_location}}
+ssl.keystore.password={{ssl_keystore_password}}
+ssl.keystore.type={{ssl_keystore_type}}
+producer.ssl.keystore.location={{producer_ssl_keystore_location}}
+producer.ssl.keystore.password={{producer_ssl_keystore_password}}
+producer.ssl.keystore.type={{producer_ssl_keystore_type}}
+consumer.ssl.keystore.location={{consumer_ssl_keystore_location}}
+consumer.ssl.keystore.password={{consumer_ssl_keystore_password}}
+consumer.ssl.keystore.type={{consumer_ssl_keystore_type}}
+admin.ssl.keystore.location={{admin_ssl_keystore_location}}
+admin.ssl.keystore.password={{admin_ssl_keystore_password}}
+admin.ssl.keystore.type={{admin_ssl_keystore_type}}
+{% endif %}
+{% else %}
+security.protocol=PLAINTEXT
+producer.security.protocol=PLAINTEXT
+consumer.security.protocol=PLAINTEXT
+admin.security.protocol=PLAINTEXT
+{% endif %}

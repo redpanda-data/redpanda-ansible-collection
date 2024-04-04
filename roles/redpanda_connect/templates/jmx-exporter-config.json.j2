@@ -1,0 +1,204 @@
+{
+  "lowercaseOutputName": true,
+  "rules": [
+    {
+      "pattern": "kafka.(consumer|producer)<type=app-info, client-id=connector-(consumer|producer)-(.+)-([0-9]+)><>start-time-ms",
+      "name": "kafka_connector_start_time_ms",
+      "labels": {
+        "connector": "$3",
+        "task": "$4"
+      },
+      "help": "Kafka connector JMX metric start time ms",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.(.+)<type=app-info, client-id=(.+)><>start-time-ms",
+      "name": "kafka_$1_start_time_seconds",
+      "labels": {
+        "clientId": "$2"
+      },
+      "help": "Kafka $1 JMX metric start time seconds",
+      "type": "GAUGE",
+      "valueFactor": 0.001
+    },
+    {
+      "pattern": "kafka.(.+)<type=app-info, client-id=(.+)><>(commit-id|version): (.+)",
+      "name": "kafka_$1_$3_info",
+      "value": 1,
+      "labels": {
+        "clientId": "$2",
+        "$3": "$4"
+      },
+      "help": "Kafka $1 JMX metric info version and commit-id",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.(.+)<type=(.+)-metrics, client-id=(.+), topic=(.+), partition=(.+)><>(.+-total|compression-rate|.+-avg|.+-replica|.+-lag|.+-lead)",
+      "name": "kafka_$2_$6",
+      "labels": {
+        "clientId": "$3",
+        "topic": "$4",
+        "partition": "$5"
+      },
+      "help": "Kafka $1 JMX metric type $2",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.(.+)<type=(.+)-metrics, client-id=(.+), topic=(.+)><>(.+-total|compression-rate|.+-avg)",
+      "name": "kafka_$2_$5",
+      "labels": {
+        "clientId": "$3",
+        "topic": "$4"
+      },
+      "help": "Kafka $1 JMX metric type $2",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.(.+)<type=(.+)-metrics, client-id=(.+), node-id=(.+)><>(.+-total|.+-avg)",
+      "name": "kafka_$2_$5",
+      "labels": {
+        "clientId": "$3",
+        "nodeId": "$4"
+      },
+      "help": "Kafka $1 JMX metric type $2",
+      "type": "UNTYPED"
+    },
+    {
+      "pattern": "kafka.consumer<type=consumer-metrics, client-id=connector-consumer-(.+)-([0-9]+)><>(.+-total|.+-avg|.+-rate)",
+      "name": "kafka_connector_consumer_$3",
+      "labels": {
+        "connector": "$1",
+        "task": "$2"
+      },
+      "help": "Kafka connector consumer JMX metric type consumer-metrics",
+      "type": "UNTYPED"
+    },
+    {
+      "pattern": "kafka.producer<type=producer-metrics, client-id=connector-producer-(.+)-([0-9]+)><>(.+-total|.+-avg|.+-rate)",
+      "name": "kafka_connector_producer_$3",
+      "labels": {
+        "connector": "$1",
+        "task": "$2"
+      },
+      "help": "Kafka connector producer JMX metric type producer-metrics",
+      "type": "UNTYPED"
+    },
+    {
+      "pattern": "kafka.(.+)<type=(.+)-metrics, client-id=(.*)><>(.+-total|.+-avg|.+-bytes|.+-count|.+-ratio|.+-age|.+-flight|.+-threads|.+-connectors|.+-tasks|.+-ago)",
+      "name": "kafka_$2_$4",
+      "labels": {
+        "clientId": "$3"
+      },
+      "help": "Kafka $1 JMX metric type $2",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect<type=connector-metrics, connector=(.+)><>connector-class: (.+)",
+      "name": "kafka_connect_connector_class",
+      "value": 1,
+      "labels": {
+        "connector": "$1",
+        "connectorClass": "$2"
+      },
+      "help": "Kafka Connect JMX Connector Class",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect<type=connector-metrics, connector=(.+)><>connector-type: (.+)",
+      "name": "kafka_connect_connector_type",
+      "value": 1,
+      "labels": {
+        "connector": "$1",
+        "connectorType": "$2"
+      },
+      "help": "Kafka Connect JMX Connector Type",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect<type=connector-metrics, connector=(.+)><>connector-version: (.+)",
+      "name": "kafka_connect_connector_version",
+      "value": 1,
+      "labels": {
+        "connector": "$1",
+        "connectorVersion": "$2"
+      },
+      "help": "Kafka Connect JMX Connector Version",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect<type=connector-metrics, connector=(.+)><>status: (.+)",
+      "name": "kafka_connect_status",
+      "value": 1,
+      "labels": {
+        "connector": "$1",
+        "status": "$2"
+      },
+      "help": "Kafka Connect JMX Status",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect<type=connector-task-metrics, connector=(.+), task=(.+)><>status: ([a-z-]+)",
+      "name": "kafka_connect_connector_status",
+      "value": 1,
+      "labels": {
+        "connector": "$1",
+        "task": "$2",
+        "status": "$3"
+      },
+      "help": "Kafka Connect JMX Connector status",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect<type=(.+)-metrics, connector=(.+), task=(.+)><>(.+-total|.+-count|.+-ms|.+-ratio|.+-avg|.+-failures|.+-requests|.+-timestamp|.+-logged|.+-errors|.+-retries|.+-skipped)",
+      "name": "kafka_connect_$1_$4",
+      "labels": {
+        "connector": "$2",
+        "task": "$3"
+      },
+      "help": "Kafka Connect JMX metric type $1",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect<type=connect-worker-metrics, connector=(.+)><>([a-z-]+)",
+      "name": "kafka_connect_worker_$2",
+      "labels": {
+        "connector": "$1"
+      },
+      "help": "Kafka Connect JMX metric $1",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect<type=connect-worker-metrics><>([a-z-]+)",
+      "name": "kafka_connect_worker_$1",
+      "help": "Kafka Connect JMX metric worker",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect<type=connect-worker-rebalance-metrics><>([a-z-]+)",
+      "name": "kafka_connect_worker_rebalance_$1",
+      "help": "Kafka Connect JMX metric rebalance information",
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect.mirror<type=MirrorSourceConnector, target=(.+), topic=(.+), partition=([0-9]+)><>([a-z-]+)",
+      "name": "kafka_connect_mirror_source_connector_$4",
+      "help": "Kafka Connect MM2 Source Connector Information",
+      "labels": {
+        "destination": "$1",
+        "topic": "$2",
+        "partition": "$3"
+      },
+      "type": "GAUGE"
+    },
+    {
+      "pattern": "kafka.connect.mirror<type=MirrorCheckpointConnector, source=(.+), target=(.+)><>([a-z-]+)",
+      "name": "kafka_connect_mirror_checkpoint_connector_$3",
+      "help": "Kafka Connect MM2 Checkpoint Connector Information",
+      "labels": {
+        "source": "$1",
+        "target": "$2"
+      },
+      "type": "GAUGE"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+- name: Instantiate jmx-ex file
+  ansible.builtin.template:
+    src: jmx-exporter-config.json.j2
+    dest: "{{ redpanda_connect_config_dir }}/jmx-exporter-config.json"
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    mode: '0644'
+
+- name: Instantiate jmx logging file
+  ansible.builtin.template:
+    src: logging.properties.j2
+    dest: "{{ redpanda_connect_config_dir }}/logging.properties"
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    mode: '0644'
