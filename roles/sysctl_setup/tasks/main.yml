@@ -2,7 +2,7 @@
   ansible.posix.sysctl:
     name: fs.inotify.max_user_instances
     value: "{{ max_user_instances }}"
-    sysctl_set: yes
+    sysctl_set: true
     state: present
-    reload: yes
-  become: yes
+    reload: true
+  become: true

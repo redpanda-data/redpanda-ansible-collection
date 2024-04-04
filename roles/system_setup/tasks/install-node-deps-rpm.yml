@@ -1,14 +1,14 @@
 ---
 - name: Set custom fact based on ansible_system_vendor
-  set_fact:
+  ansible.builtin.set_fact:
     using_gcp: true
   when: ansible_system_vendor == 'Google'
 
 - name: Node dependencies - Set DNF proxy
-  template:
+  ansible.builtin.template:
     src: dnf_proxy.j2
     dest: /etc/dnf/dnf.conf
-    mode: 0644
+    mode: '0644'
   become: true
   when:
     - rpm_proxy is defined and rpm_proxy | length > 0
@@ -20,7 +20,7 @@
     - node_deps
   become: true
   block:
-    - name: node dependencies - delete unused repos
+    - name: Node dependencies - delete unused repos
       ansible.builtin.file:
         name: "{{item}}"
         state: absent
@@ -40,7 +40,7 @@
   tags:
     - node_deps
   become: true
-  package:
+  ansible.builtin.package:
     name: "{{ rpm_prerequisite_packages }}"
     state: present
-    update_cache: yes
+    update_cache: true
