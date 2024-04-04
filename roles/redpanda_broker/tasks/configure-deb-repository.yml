@@ -1,14 +1,14 @@
 ---
 - name: Set Redpanda GPG Key and Repository details
-  set_fact:
-    rp_key_deb_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_key_deb_unstable, rp_key_deb) }}"
-    rp_key_path_deb_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_key_path_deb_unstable, rp_key_path_deb) }}"
-    rp_repo_signing_deb_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
-    rp_repo_signing_src_deb_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
+  ansible.builtin.set_fact:
+    rp_key_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_key_deb_unstable, rp_key_deb) }}"
+    rp_key_path_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_key_path_deb_unstable, rp_key_path_deb) }}"
+    rp_repo_signing_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
+    rp_repo_signing_src_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
 
 - name: Download and import Redpanda GPG Key with proxy
   become: true
-  shell: |
+  ansible.builtin.shell: |
     curl -x "{{ https_proxy_value }}" -1sLf "{{ rp_key_deb_actual }}" | gpg --dearmor > "{{ rp_key_path_deb_actual }}"
   args:
     creates: "{{ rp_key_path_deb_actual }}"
@@ -18,12 +18,12 @@
   become: true
   args:
     creates: "{{ rp_key_path_deb_actual }}"
-  shell: |
+  ansible.builtin.shell: |
     curl -1sLf "{{ rp_key_deb_actual }}" | gpg --dearmor > "{{ rp_key_path_deb_actual }}"
   when: https_proxy_value is not defined or https_proxy_value | length == 0
 
 - name: Add Redpanda DEB repository
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
     content: "{{ rp_repo_signing_deb_actual }}\n"
     owner: root
@@ -31,7 +31,7 @@
     mode: '0644'
 
 - name: Add Redpanda DEB repository (source)
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
     content: "{{ rp_repo_signing_deb_actual }}\n"
     owner: root

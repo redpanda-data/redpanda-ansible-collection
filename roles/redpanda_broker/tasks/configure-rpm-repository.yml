@@ -1,11 +1,11 @@
 ---
 - name: Set Redpanda RPM and GPG Key details
-  set_fact:
-    rp_key_rpm_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_key_rpm_unstable, rp_key_rpm) }}"
-    rp_standard_rpm_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_standard_rpm_unstable, rp_standard_rpm) }}"
-    rp_noarch_rpm_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
-    rp_source_rpm_actual: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
-    repo_name_prefix: "{{ (is_using_unstable | bool | default(false) and not (install_console | bool | default(false))) | ternary('redpanda-redpanda-unstable', 'redpanda-redpanda') }}"
+  ansible.builtin.set_fact:
+    rp_key_rpm_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_key_rpm_unstable, rp_key_rpm) }}"
+    rp_standard_rpm_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_standard_rpm_unstable, rp_standard_rpm) }}"
+    rp_noarch_rpm_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
+    rp_source_rpm_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
+    repo_name_prefix: "{{ is_using_unstable | bool | default(false) | ternary('redpanda-redpanda-unstable', 'redpanda-redpanda') }}"
 
 - name: Add redpanda-redpanda RPM repository
   ansible.builtin.yum_repository:
@@ -13,13 +13,13 @@
     description: "{{ repo_name_prefix }}"
     baseurl: "{{ rp_standard_rpm_actual }}"
     gpgkey: "{{ rp_key_rpm_actual }}"
-    repo_gpgcheck: yes
-    gpgcheck: yes
-    enabled: yes
+    repo_gpgcheck: true
+    gpgcheck: true
+    enabled: true
     sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
-    sslverify: yes
+    sslverify: true
     metadata_expire: 300
-    skip_if_unavailable: yes
+    skip_if_unavailable: true
     proxy: "{{ rpm_proxy | default('_none_') }}"
 
 - name: Add redpanda-redpanda-noarch RPM repository
@@ -28,13 +28,13 @@
     description: "{{ repo_name_prefix }}-noarch"
     baseurl: "{{ rp_noarch_rpm_actual }}"
     gpgkey: "{{ rp_key_rpm_actual }}"
-    repo_gpgcheck: yes
-    gpgcheck: yes
-    enabled: yes
+    repo_gpgcheck: true
+    gpgcheck: true
+    enabled: true
     sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
-    sslverify: yes
+    sslverify: true
     metadata_expire: 300
-    skip_if_unavailable: yes
+    skip_if_unavailable: true
     proxy: "{{ rpm_proxy | default('_none_') }}"
 
 - name: Add redpanda-redpanda-source RPM repository
@@ -43,13 +43,13 @@
     description: "{{ repo_name_prefix }}-source"
     baseurl: "{{ rp_source_rpm_actual }}"
     gpgkey: "{{ rp_key_rpm_actual }}"
-    repo_gpgcheck: yes
-    gpgcheck: yes
-    enabled: yes
+    repo_gpgcheck: true
+    gpgcheck: true
+    enabled: true
     sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
-    sslverify: yes
+    sslverify: true
     metadata_expire: 300
-    skip_if_unavailable: yes
+    skip_if_unavailable: true
     proxy: "{{ rpm_proxy | default('_none_') }}"
 
 - name: Install GPG key with proxy
