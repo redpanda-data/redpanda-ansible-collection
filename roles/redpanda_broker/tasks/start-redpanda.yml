@@ -153,7 +153,7 @@
 - name: Set cluster config
   ansible.builtin.command: rpk cluster config set {{ item.key }} {{ item.value }} {{ redpanda_rpk_opts }}
   loop: "{{ configuration.cluster | dict2items }}"
-  nolog: true
+  no_log: true
 
 # Set Redpanda license
 #
