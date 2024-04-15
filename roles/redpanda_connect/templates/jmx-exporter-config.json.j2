@@ -1,4 +1,17 @@
 {
+  {%- if jmx_ssl is defined and jmx_ssl %}
+  "httpServer": {
+    "ssl": {
+      "keyStore": {
+        "filename": {{ jmx_keystore_path }},
+        "password": {{ jmx_keystore_password }}
+      },
+      "certificate": {
+        "alias": {{ ansible_hostname }}
+      }
+    }
+  },
+  {% endif -%}
   "lowercaseOutputName": true,
   "rules": [
     {

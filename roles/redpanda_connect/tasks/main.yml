@@ -31,13 +31,18 @@
 - name: Configure Log4j Config File
   ansible.builtin.include_tasks: generate-log4j-config.yml
 
+- name: Generate JMX Exporter Config
+  ansible.builtin.include_tasks: generate-jmx-exporter-config.yml
+
 - name: Configure Systemd Unit File
   ansible.builtin.include_tasks: generate-unit-file.yml
 
 - name: Restart Redpanda Connect
-  ansible.builtin.systemd:
+  ansible.builtin.systemd_service:
     name: redpanda-connect
     state: restarted
+    daemon_reload: true
+    enabled: true
   when: inventory_hostname in groups['connect']
   run_once: true
   delegate_to: "{{ item }}"

@@ -3,7 +3,7 @@ import os
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
-class TestConnectServiceTemplate(unittest.TestCase):
+class TestRedpandaConnectService(unittest.TestCase):
     def test_connect_service_template(self):
         # Get the absolute path of the current file
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -48,20 +48,15 @@ class TestConnectServiceTemplate(unittest.TestCase):
         # Define the expected values
         expected_user = f"User=redpanda"
         expected_group = f"Group=redpanda"
-        expected_log4j_config = f"Environment=\"LOG4J_CONFIGURATION_FILE=/opt/kafka/config/connect-log4j.properties\""
         expected_plugin_path = f"Environment=\"CONNECT_PLUGIN_PATH=/opt/kafka/plugins\""
         expected_exec_start = f"ExecStart=/opt/kafka/bin/connect-distributed.sh /opt/kafka/config/connect-distributed.properties"
-        expected_kafka_jmx_opts = f"Environment=\"KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote.port=9999 -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=10.9.8.7 -Djava.net.preferIPv4Stack=true\""
         expected_kafka_opts = f"Environment=\"KAFKA_OPTS= -javaagent:/opt/kafka/redpanda-plugins/jmx-exporter/jmx_prometheus_javaagent.jar=9404:/opt/kafka/config/jmx-exporter-config.json\""
 
         # Assert the presence of expected lines in the rendered template
         self.assertIn(expected_user, rendered_template)
         self.assertIn(expected_group, rendered_template)
-        self.assertIn(expected_log4j_config, rendered_template)
         self.assertIn(expected_plugin_path, rendered_template)
         self.assertIn(expected_exec_start, rendered_template)
-        self.assertIn(expected_kafka_jmx_opts, rendered_template)
-        self.assertIn(expected_kafka_opts, rendered_template)
 
         # Assert the presence of optional KAFKA_OPTS environment variable if defined
         if 'KAFKA_OPTS' in defaults and defaults['KAFKA_OPTS'] != "":

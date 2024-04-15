@@ -50,11 +50,13 @@ security_protocol: SSL
 ssl_protocol: TLSv1.3
 
 # jmx options
-jmxremote_authenticate: false
-advertise_public_ips: true
-jmxremote_port: 9999
-jmxremote_ssl: false
 prefer_ipv4_stack: true
+jmx_keystore_path: /etc/redpanda/keystores/keystore.p12
+jmx_keystore_password: password
+jmx_truststore_path: /etc/redpanda/truststores/truststore.p12
+jmx_truststore_password: password
+jmx_certificate_alias: localhost
+jmx_additional_opts: ""
 
 # used when connect_tls_enabled and connect_trusted_certs are true
 redpanda_truststores_dir: /etc/redpanda/truststores
@@ -86,7 +88,11 @@ admin_ssl_keystore_password: password
 admin_ssl_keystore_type: PKCS12
 
 # log4j values
+kafka_log4j_opts: "-Dlog4j.configuration=file:{{ redpanda_connect_config_dir }}/connect-log4j.properties -Dlog4j_log_level=WARN"
 log4j_log_level: "WARN"
+
+# kafka startup options
+kafka_opts: "-javaagent:{{ redpanda_connect_home }}/redpanda-plugins/jmx-exporter/jmx_prometheus_javaagent.jar=9404:{{ redpanda_connect_home }}/config/jmx-exporter-config.json"
 
 # used for keystore gen
 redpanda_certs_dir: /etc/redpanda/certs
@@ -94,3 +100,5 @@ redpanda_csr_file: "{{ redpanda_certs_dir }}/node.csr"
 redpanda_key_file: "{{ redpanda_certs_dir }}/node.key"
 redpanda_cert_file: "{{ redpanda_certs_dir }}/node.crt"
 redpanda_truststore_file: "{{ redpanda_certs_dir }}/truststore.pem"
+
+timeout_start_sec: 30

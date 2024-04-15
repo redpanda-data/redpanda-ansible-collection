@@ -7,11 +7,20 @@ After=network.target
 Type=simple
 User={{ redpanda_user }}
 Group={{ redpanda_group }}
-Environment="KAFKA_LOG4J_OPTS=-Dlog4j.configuration=file:{{ redpanda_connect_config_dir }}/connect-log4j.properties -Dlog4j_log_level={{ log4j_log_level }}"
+TimeoutStartSec={{ timeout_start_sec }}
 Environment="CONNECT_PLUGIN_PATH={{ redpanda_connect_home }}/plugins"
-{% if KAFKA_OPTS is defined and KAFKA_OPTS != "" %}Environment="KAFKA_OPTS={{ KAFKA_OPTS }}"{% endif %}
-Environment="KAFKA_JMX_OPTS=-Dcom.sun.management.jmxremote.port={{ jmxremote_port }} -Dcom.sun.management.jmxremote.rmi.port=9999 -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.ssl={{ jmxremote_ssl | lower }} -Djava.rmi.server.hostname=localhost -Dcom.sun.management.jmxremote.authenticate={{ jmxremote_authenticate | lower }} -Djava.net.preferIPv4Stack={{ prefer_ipv4_stack | lower }} -Djava.util.logging.config.file={{ redpanda_connect_config_dir }}logging.properties"
-Environment="KAFKA_OPTS={% if KAFKA_OPTS is defined and KAFKA_OPTS != "" %}$KAFKA_OPTS{% endif %} -javaagent:{{ redpanda_connect_home }}/redpanda-plugins/jmx-exporter/jmx_prometheus_javaagent.jar=9404:{{ redpanda_connect_home }}/config/jmx-exporter-config.json"
+{% if kafka_log4j_opts is defined and kafka_log4j_opts != "" %}
+Environment="KAFKA_LOG4J_OPTS={{ kafka_log4j_opts }}"
+{% endif %}
+{% if kafka_opts is defined and kafka_opts != "" %}
+Environment="KAFKA_OPTS={{ kafka_opts }}{% if jmx_ssl is defined and jmx_ssl != false -%} \
+    -Djavax.net.ssl.keyStore={{ jmx_keystore_path }} \
+    -Djavax.net.ssl.keyStorePassword={{ jmx_keystore_password }} \
+    -Djavax.net.ssl.trustStore={{ jmx_truststore_path }} \
+    -Djavax.net.ssl.trustStorePassword={{ jmx_truststore_password }}{% endif -%}
+{%- if jmx_additional_opts is defined and jmx_additional_opts != "" %} {{ jmx_additional_opts }}{% endif %}"
+{% endif %}
+
 ExecStart={{ redpanda_connect_home }}/bin/connect-distributed.sh {{ redpanda_connect_config_dir }}/{{ connect_distributed_config_file }}
 TimeoutStopSec=180
 Restart=no

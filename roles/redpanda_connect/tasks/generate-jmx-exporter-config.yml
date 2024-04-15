@@ -5,6 +5,7 @@
     owner: "{{ redpanda_user }}"
     group: "{{ redpanda_group }}"
     mode: '0644'
+    force: true
 
 - name: Instantiate jmx logging file
   ansible.builtin.template:
