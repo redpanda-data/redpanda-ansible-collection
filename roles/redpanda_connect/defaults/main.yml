@@ -38,6 +38,7 @@ rest_advertised_port: 8083
 # group and plugins
 group_id: "redpanda-kc"
 plugin_path: "/opt/kafka/redpanda-plugins"
+plugin_discovery: hybrid_warn
 
 # security
 connect_tls_enabled: false
@@ -56,7 +57,7 @@ jmx_keystore_password: password
 jmx_truststore_path: /etc/redpanda/truststores/truststore.p12
 jmx_truststore_password: password
 jmx_certificate_alias: localhost
-jmx_additional_opts: ""
+kafka_additional_opts: ""
 
 # used when connect_tls_enabled and connect_trusted_certs are true
 redpanda_truststores_dir: /etc/redpanda/truststores

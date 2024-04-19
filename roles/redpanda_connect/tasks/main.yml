@@ -8,7 +8,7 @@
   when: not use_existing_jvm | default(false)
 
 - name: Set JAVA_HOME
-  ansible.builtin.include_tasks: environment-variables.yml
+  ansible.builtin.include_tasks: generate-java-home.yml
 
 - name: Copy truststore
   ansible.builtin.include_tasks: copy-truststore.yml
@@ -26,7 +26,7 @@
   ansible.builtin.include_tasks: install-connect.yml
 
 - name: Configure Kafka Connect
-  ansible.builtin.include_tasks: generate-cluster-config.yml
+  ansible.builtin.include_tasks: generate-connect-distributed.yml
 
 - name: Configure Log4j Config File
   ansible.builtin.include_tasks: generate-log4j-config.yml

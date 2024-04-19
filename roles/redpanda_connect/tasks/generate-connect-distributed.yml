@@ -1,0 +1,35 @@
+- name: Create list of advertised_ips
+  ansible.builtin.set_fact:
+    advertised_ips: "{{
+      groups['redpanda'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_address | bool) else 'private_ip') | list
+    }}"
+
+- name: Schema Registry Actual
+  ansible.builtin.set_fact:
+    schema_registry_actual: "{{ schema_registry_url | default('http' + ('s' if connect_tls_enabled else '') + '://' + groups['redpanda'][0] + ':8081') }}"
+
+- name: Rest Advertised Host Name Actual
+  ansible.builtin.set_fact:
+    rest_advertised_host_name_actual: "{{ rest_advertised_host_name | default(hostvars[inventory_hostname]['ansible_default_ipv4']['address']) }}"
+- name: Set default configuration
+  ansible.builtin.set_fact:
+    connect_distributed_config: "{{ lookup('template', 'connect-distributed/connect-distributed.properties.j2') }}"
+
+- name: Include TLS configuration if enabled
+  ansible.builtin.set_fact:
+    connect_distributed_config: "{{ connect_distributed_config + lookup('template', 'connect-distributed/connect-distributed-tls.properties.j2') }}"
+  when: connect_tls_enabled
+
+- name: Merge user-provided configuration
+  ansible.builtin.set_fact:
+    connect_distributed_config: "{{ connect_distributed_config + '\n' + connect_distributed_user_config }}"
+  when: connect_distributed_user_config is defined
+
+- name: Instantiate config file
+  ansible.builtin.copy:
+    content: "{{ connect_distributed_config }}"
+    dest: "{{ redpanda_connect_config_dir }}/connect-distributed.properties"
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    mode: '0644'
+    force: true

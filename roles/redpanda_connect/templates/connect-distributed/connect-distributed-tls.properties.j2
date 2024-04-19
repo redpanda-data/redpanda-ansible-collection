@@ -1,18 +1,3 @@
-bootstrap.servers={% for host in advertised_ips %}{{ host }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}
-
-schema.registry.url={{ schema_registry_url }}
-group.id={{ group_id }}
-config.storage.topic={{ config_storage_topic }}
-offset.storage.topic={{ offset_storage_topic }}
-status.storage.topic={{ status_storage_topic }}
-rest.port={{ rest_port }}
-rest.advertised.host.name={{ rest_advertised_host_name }}
-rest.advertised.port={{ rest_advertised_port }}
-plugin.path={{ plugin_path }}
-key.converter={{ key_converter }}
-value.converter={{ value_converter }}
-
-{% if connect_tls_enabled %}
 security.protocol=SSL
 ssl.protocol={{ ssl_protocol }}
 ssl.debug=true
@@ -39,9 +24,3 @@ consumer.ssl.keystore.type={{consumer_ssl_keystore_type}}
 admin.ssl.keystore.location={{admin_ssl_keystore_location}}
 admin.ssl.keystore.password={{admin_ssl_keystore_password}}
 admin.ssl.keystore.type={{admin_ssl_keystore_type}}
-{% else %}
-security.protocol=PLAINTEXT
-producer.security.protocol=PLAINTEXT
-consumer.security.protocol=PLAINTEXT
-admin.security.protocol=PLAINTEXT
-{% endif %}

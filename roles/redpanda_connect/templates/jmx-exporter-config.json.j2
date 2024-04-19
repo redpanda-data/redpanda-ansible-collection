@@ -3,11 +3,11 @@
   "httpServer": {
     "ssl": {
       "keyStore": {
-        "filename": {{ jmx_keystore_path }},
-        "password": {{ jmx_keystore_password }}
+        "filename": "{{ jmx_keystore_path }}",
+        "password": "{{ jmx_keystore_password }}"
       },
       "certificate": {
-        "alias": {{ ansible_hostname }}
+        "alias": "{{ ansible_hostname }}"
       }
     }
   },

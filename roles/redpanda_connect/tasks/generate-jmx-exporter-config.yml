@@ -1,16 +1,55 @@
-- name: Instantiate jmx-ex file
+# example usage in a playbook
+#logging_config_override_content: |
+#  log4j.rootLogger=INFO, stdout, syslogAppender
+#
+#  log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+#  log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+#
+#  log4j.appender.syslogAppender=org.apache.log4j.net.SyslogAppender
+#  log4j.appender.syslogAppender.syslogHost=localhost
+#  log4j.appender.syslogAppender.facility=LOCAL0
+#  log4j.appender.syslogAppender.layout=org.apache.log4j.PatternLayout
+#
+#  connect.log.pattern=[%d] %p %X{connector.context}%m (%c:%L)%n
+#
+#  log4j.appender.stdout.layout.ConversionPattern=${connect.log.pattern}
+#  log4j.appender.syslogAppender.layout.ConversionPattern=${connect.log.pattern}
+#
+#  log4j.logger.org.reflections=ERROR
+
+- name: Use user-provided logging config content if defined
+  ansible.builtin.copy:
+    content: "{{ logging_config_override_content }}"
+    dest: "{{ redpanda_connect_config_dir }}/connect-log4j.properties"
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    mode: '0644'
+    force: true
+  when: logging_config_override_content is defined
+
+- name: Use default logging config if user-provided content is not defined
   ansible.builtin.template:
-    src: jmx-exporter-config.json.j2
+    src: log4j.properties.j2
+    dest: "{{ redpanda_connect_config_dir }}/connect-log4j.properties"
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    mode: '0644'
+    force: true
+  when: logging_config_override_content is not defined
+
+- name: Load template contents
+  ansible.builtin.set_fact:
+    jmx_exporter_config: "{{ lookup('template', 'jmx-exporter-config.json.j2') }}"
+
+- name: Merge with user-provided overrides
+  ansible.builtin.set_fact:
+    jmx_exporter_config: "{{ jmx_exporter_config | combine((jmx_exporter_override | default('{}') | from_json), recursive=True) }}"
+
+- name: Instantiate jmx-exporter file
+  ansible.builtin.copy:
+    content: "{{ jmx_exporter_config | to_nice_json }}"
     dest: "{{ redpanda_connect_config_dir }}/jmx-exporter-config.json"
     owner: "{{ redpanda_user }}"
     group: "{{ redpanda_group }}"
     mode: '0644'
     force: true
-
-- name: Instantiate jmx logging file
-  ansible.builtin.template:
-    src: logging.properties.j2
-    dest: "{{ redpanda_connect_config_dir }}/logging.properties"
-    owner: "{{ redpanda_user }}"
-    group: "{{ redpanda_group }}"
-    mode: '0644'

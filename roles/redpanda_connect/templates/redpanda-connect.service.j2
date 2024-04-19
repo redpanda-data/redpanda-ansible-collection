@@ -18,7 +18,7 @@ Environment="KAFKA_OPTS={{ kafka_opts }}{% if jmx_ssl is defined and jmx_ssl != 
     -Djavax.net.ssl.keyStorePassword={{ jmx_keystore_password }} \
     -Djavax.net.ssl.trustStore={{ jmx_truststore_path }} \
     -Djavax.net.ssl.trustStorePassword={{ jmx_truststore_password }}{% endif -%}
-{%- if jmx_additional_opts is defined and jmx_additional_opts != "" %} {{ jmx_additional_opts }}{% endif %}"
+{%- if kafka_additional_opts is defined and kafka_additional_opts != "" %} {{ kafka_additional_opts }}{% endif %}"
 {% endif %}
 
 ExecStart={{ redpanda_connect_home }}/bin/connect-distributed.sh {{ redpanda_connect_config_dir }}/{{ connect_distributed_config_file }}
