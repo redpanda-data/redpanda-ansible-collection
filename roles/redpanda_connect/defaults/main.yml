@@ -30,8 +30,6 @@ redpanda_connect_rpm_dir: "/tmp"
 
 # networking
 advertise_public_address: true
-schema_registry_url: "http://localhost:8081"
-rest_advertised_host_name: "localhost"
 rest_port: 8083
 rest_advertised_port: 8083
 
