@@ -5,7 +5,10 @@
 "cloud_storage_enable_remote_write": "{{ cloud_storage_enable_remote_write }}",
 "cloud_storage_region": "{{ cloud_storage_region if cloud_storage_region is defined }}",
 "cloud_storage_credentials_source": "{{ cloud_storage_credentials_source }}",
-"cloud_storage_enabled": "{{ true if tiered_storage_bucket_name is defined and tiered_storage_bucket_name|d('')|length > 0 else false }}"{% if cloud_storage_credentials_source == 'gcp_instance_metadata' %},
+# cloud_storage_enabled is true if the bucket name is set and the cloud_storage_credentials_source isn't set to "config_file".
+# If config_file is required, you'll need to specify the cloud_storage_access_key, cloud_storage_secret_key and also cloud_storage_enabled=true
+# using the redpanda variable which gets merged into these templates.
+"cloud_storage_enabled": "{{ true if tiered_storage_bucket_name is defined and tiered_storage_bucket_name|d('')|length > 0 and cloud_storage_credentials_source != "config_file" else false }}"{% if cloud_storage_credentials_source == 'gcp_instance_metadata' %},
 "cloud_storage_api_endpoint": "storage.googleapis.com",
 {% endif %}
 }
