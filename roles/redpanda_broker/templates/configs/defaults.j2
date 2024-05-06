@@ -73,7 +73,12 @@
       "tune_swappiness": {{ enable_tune_swappiness | default(true) }},
       "tune_ballast_file": {{ enable_tune_ballast_file | default(true) }}
     },
-    "pandaproxy": {},
+    "pandaproxy": {
+        "pandaproxy_api": [
+          "address": "0.0.0.0",
+          "port": "{{ redpanda_pandaproxy_port }}"
+        }
+    },
     "schema_registry": {
         "schema_registry_api": [
         {

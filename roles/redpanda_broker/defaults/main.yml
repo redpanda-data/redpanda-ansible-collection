@@ -8,6 +8,7 @@ redpanda_admin_api_port: 9644
 redpanda_kafka_port: 9092
 redpanda_rpc_port: 33145
 redpanda_schema_registry_port: 8081
+redpanda_pandaproxy_port: 8082
 
 redpanda_use_staging_repo: false
 redpanda_base_url: "https://dl.redpanda.com"
