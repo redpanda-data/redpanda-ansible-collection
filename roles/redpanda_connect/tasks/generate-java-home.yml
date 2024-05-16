@@ -1,0 +1,8 @@
+- name: Instantiate java-home.sh file
+  ansible.builtin.template:
+    src: java-home.sh.j2
+    dest: /etc/profile.d/java-home.sh
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    mode: '0755'
+    force: true

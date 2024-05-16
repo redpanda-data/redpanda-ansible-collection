@@ -1,11 +1,11 @@
 ---
 - name: Set custom fact based on ansible_system_vendor
-  set_fact:
+  ansible.builtin.set_fact:
     using_gcp: true
   when: ansible_system_vendor == 'Google'
 
 - name: Set fact for package name
-  set_fact:
+  ansible.builtin.set_fact:
     redpanda_package_name: "redpanda{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}"
 
 - name: Install redpanda from repository (Proxy)
@@ -36,7 +36,7 @@
       - "{{ redpanda_package_name }}"
     state: "{{ redpanda_install_status }}"
     update_cache: true
-    allow_unauthenticated: yes
+    allow_unauthenticated: true
   when: (using_gcp | default(false)) is not false
 
 

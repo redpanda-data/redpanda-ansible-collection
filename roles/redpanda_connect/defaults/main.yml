@@ -1,0 +1,103 @@
+# connect distributed config file - allows overriding the config file
+connect_distributed_config_file: connect-distributed.properties
+
+# Kafka Cluster connection values
+is_using_private: false # set to true if you'd prefer it connected using the private IP
+kafka_port: 9092
+redpanda_connect_home: "/opt/kafka"
+
+# converters
+key_converter: "org.apache.kafka.connect.json.JsonConverter"
+value_converter: "org.apache.kafka.connect.json.JsonConverter"
+
+# connect topics
+config_storage_topic: "connect-configs"
+offset_storage_topic: "connect-offsets"
+status_storage_topic: "connect-status"
+
+# config directory
+redpanda_connect_config_dir: "/opt/kafka/config"
+
+# user and group
+redpanda_user: redpanda
+redpanda_group: redpanda
+
+java_home: /usr/lib/jvm/java-17-openjdk
+
+# required binary install values
+redpanda_connect_rpm: "redpanda-connect.x86_64.rpm"
+redpanda_connect_rpm_dir: "/tmp"
+
+# networking
+advertise_public_address: true
+rest_port: 8083
+rest_advertised_port: 8083
+
+# group and plugins
+group_id: "redpanda-kc"
+plugin_path: "/opt/kafka/redpanda-plugins"
+plugin_discovery: hybrid_warn
+
+# security
+connect_tls_enabled: false
+connect_trusted_certs: false
+connect_tls_auth_cert: false
+connect_tls_auth_key: false
+
+# used when connect_tls_enabled are true
+security_protocol: SSL
+ssl_protocol: TLSv1.3
+
+# jmx options
+prefer_ipv4_stack: true
+jmx_keystore_path: /etc/redpanda/keystores/keystore.p12
+jmx_keystore_password: password
+jmx_truststore_path: /etc/redpanda/truststores/truststore.p12
+jmx_truststore_password: password
+jmx_certificate_alias: localhost
+kafka_additional_opts: ""
+
+# used when connect_tls_enabled and connect_trusted_certs are true
+redpanda_truststores_dir: /etc/redpanda/truststores
+truststore_file_name: truststore.p12
+ssl_truststore_location: /etc/redpanda/truststores/truststore.p12
+ssl_truststore_password: password
+ssl_truststore_type: PKCS12
+producer_ssl_truststore_location: /etc/redpanda/truststores/truststore.p12
+producer_ssl_truststore_password: password
+consumer_ssl_truststore_location: /etc/redpanda/truststores/truststore.p12
+consumer_ssl_truststore_password: password
+admin_ssl_truststore_location: /etc/redpanda/truststores/truststore.p12
+admin_ssl_truststore_password: password
+
+# use when connect_tls_enabled, connect_tls_auth_cert and connect_tls_auth_key are true
+redpanda_keystores_dir: /etc/redpanda/keystores
+keystores_file_name: keystore.p12
+ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
+ssl_keystore_password:  password
+ssl_keystore_type: PKCS12
+producer_ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
+producer_ssl_keystore_password: password
+producer_ssl_keystore_type: PKCS12
+consumer_ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
+consumer_ssl_keystore_password: password
+consumer_ssl_keystore_type: PKCS12
+admin_ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
+admin_ssl_keystore_password: password
+admin_ssl_keystore_type: PKCS12
+
+# log4j values
+kafka_log4j_opts: "-Dlog4j.configuration=file:{{ redpanda_connect_config_dir }}/connect-log4j.properties -Dlog4j_log_level=WARN"
+log4j_log_level: "WARN"
+
+# kafka startup options
+kafka_opts: "-javaagent:{{ redpanda_connect_home }}/redpanda-plugins/jmx-exporter/jmx_prometheus_javaagent.jar=9404:{{ redpanda_connect_home }}/config/jmx-exporter-config.json"
+
+# used for keystore gen
+redpanda_certs_dir: /etc/redpanda/certs
+redpanda_csr_file: "{{ redpanda_certs_dir }}/node.csr"
+redpanda_key_file: "{{ redpanda_certs_dir }}/node.key"
+redpanda_cert_file: "{{ redpanda_certs_dir }}/node.crt"
+redpanda_truststore_file: "{{ redpanda_certs_dir }}/truststore.pem"
+
+timeout_start_sec: 30

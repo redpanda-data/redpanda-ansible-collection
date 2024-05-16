@@ -1,6 +1,6 @@
 ---
 - name: Set fact for package name
-  set_fact:
+  ansible.builtin.set_fact:
     redpanda_package_name: "redpanda{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}"
 
 - name: Install redpanda from repository

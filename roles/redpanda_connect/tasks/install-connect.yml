@@ -1,0 +1,7 @@
+- name: Install Redpanda RPMs
+  ansible.builtin.dnf:
+    name: "{{ redpanda_connect_rpm_dir }}/{{ redpanda_connect_rpm }}"
+    state: present
+    disable_gpg_check: true
+  register: rpm_result
+  become: true

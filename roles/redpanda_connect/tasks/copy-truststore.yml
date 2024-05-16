@@ -1,0 +1,24 @@
+---
+- name: Set facts
+  ansible.builtin.set_fact:
+    truststore_file: tls/certs/{{ansible_hostname}}/{{ truststore_file_name}}
+  delegate_to: localhost
+  tags: copy_truststore
+
+- name: Ensure /etc/redpanda/truststores exists
+  ansible.builtin.file:
+    path: "{{ redpanda_truststores_dir }}"
+    state: directory
+    owner: redpanda
+    group: redpanda
+    mode: "0755"
+  tags: copy_truststore
+
+- name: Copy truststore to remote hosts in connect group
+  ansible.builtin.copy:
+      src: "{{ truststore_file }}"
+      dest: "{{ redpanda_truststores_dir }}/{{ truststore_file_name }}"
+      owner: redpanda
+      group: redpanda
+      mode: "0644"
+  tags: copy_truststore
