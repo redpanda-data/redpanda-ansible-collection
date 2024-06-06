@@ -33,11 +33,13 @@
   ansible.builtin.debug:
     var: redpanda
     verbosity: 3
+  when: redpanda is defined
 
 - name: Debug
   ansible.builtin.debug:
     msg: "{{ redpanda | from_json }}"
     verbosity: 3
+  when: redpanda is defined
 
 # merge in user's overrides of items in the templates
 - name: Merge with user-provided overrides (via redpanda variable)
