@@ -1,0 +1,19 @@
+- name: Use user-provided logging config content if defined
+  ansible.builtin.copy:
+    content: "{{ log4j_config_override_content }}"
+    dest: "{{ redpanda_connect_config_dir }}/connect-log4j.properties"
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    mode: '0644'
+    force: true
+  when: log4j_config_override_content is defined
+
+- name: Use default logging config if user-provided content is not defined
+  ansible.builtin.template:
+    src: log4j.properties.j2
+    dest: "{{ redpanda_connect_config_dir }}/connect-log4j.properties"
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    mode: '0644'
+    force: true
+  when: log4j_config_override_content is not defined

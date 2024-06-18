@@ -1,6 +1,6 @@
 ---
 - name: Set Redpanda RPM
-  set_fact:
+  ansible.builtin.set_fact:
     rp_standard_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_standard_rpm_unstable, rp_standard_rpm) }}"
     rp_noarch_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
     rp_source_rpm_actual: "{{ is_using_unstable | bool | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
@@ -11,6 +11,7 @@
   ansible.builtin.get_url:
     url: "{{ item.value }}"
     dest: "{{ download_directory }}/{{ item.key }}.rpm"
+    mode: '0644'
   loop: "{{ rp_rpm_urls | dict2items }}"
   delegate_to: localhost
   vars:
@@ -22,11 +23,12 @@
     - airgap-tarball-install
 
 - name: Create tarball of Redpanda RPMs
-  ansible.builtin.archive:
+  community.general.archive:
     path: "{{ download_directory }}/rp_*.rpm"
     dest: "{{ download_directory }}/redpanda_rpms.tar.gz"
     format: gz
     remove: true
+    mode: '0644'
   delegate_to: localhost
   tags:
     - airgap-tarball-install

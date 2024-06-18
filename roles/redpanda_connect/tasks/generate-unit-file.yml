@@ -1,0 +1,17 @@
+- name: Instantiate systemd unit file for kafka connect
+  ansible.builtin.template:
+    src: redpanda-connect.service.j2
+    dest: "/etc/systemd/system/redpanda-connect.service"
+    owner: "root"
+    group: "root"
+    mode: '0644'
+  become: true
+
+- name: Chown /opt/kafka
+  ansible.builtin.file:
+    path: /opt/kafka
+    owner: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
+    state: directory
+    recurse: true
+  become: true

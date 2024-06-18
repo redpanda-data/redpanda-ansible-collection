@@ -1,0 +1,8 @@
+#!/bin/sh
+
+export JAVA_HOME={{ java_home }}
+export PATH=$JAVA_HOME/bin:$PATH
+export CLASSPATH=.:$JAVA_HOME/jre/lib:$JAVA_HOME/lib:$JAVA_HOME/lib/tools.jar
+export CONNECT_HOME={{ redpanda_connect_home }}
+
+{{ java_home_extra_content | default('') }}

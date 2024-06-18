@@ -1,0 +1,5 @@
+# ensure that systemd starts up redpanda console
+- name: Start redpanda console
+  ansible.builtin.systemd:
+    name: redpanda-console
+    state: restarted

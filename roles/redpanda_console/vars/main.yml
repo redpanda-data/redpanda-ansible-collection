@@ -1,0 +1,3 @@
+---
+console_config_templates:
+  - template: defaults.j2

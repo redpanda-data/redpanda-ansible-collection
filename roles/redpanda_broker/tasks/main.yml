@@ -1,6 +1,6 @@
 ---
 - name: Ensure redpanda_version is defined
-  assert:
+  ansible.builtin.assert:
     that:
       - redpanda_version != ''
     fail_msg: "Variable 'redpanda_version' must be defined!"
@@ -15,7 +15,7 @@
 
 # End play if install_certs_only is true
 - name: End play if only installing certs
-  meta: end_play
+  ansible.builtin.meta: end_play
   when: install_certs_only | default(false) | bool
 
 - name: Configure Redpanda RPM Repository
@@ -35,47 +35,24 @@
   when:
     - ansible_os_family == 'RedHat'
     - enable_airgap is false
-    - install_console is false
 
 - name: Install Redpanda DEB
   ansible.builtin.include_tasks: install-rp-deb.yml
   when:
     - ansible_os_family == 'Debian'
     - enable_airgap is false
-    - install_console is false
 
 - name: Install Redpanda RPM Airgap
   ansible.builtin.include_tasks: install-rp-rpm-airgap.yml
   when:
     - ansible_os_family == 'RedHat'
     - enable_airgap is true
-    - install_console is false
 
 - name: Install Redpanda DEB Airgap
   ansible.builtin.include_tasks: install-rp-deb-airgap.yml
   when:
     - ansible_os_family == 'Debian'
     - enable_airgap is true
-    - install_console is false
-
-- name: Install Redpanda Console
-  ansible.builtin.include_tasks: install-console-deb.yml
-  when:
-    - ansible_os_family == 'Debian'
-    - install_console is true
-
-- name: Install Redpanda Console
-  ansible.builtin.include_tasks: install-console-rpm.yml
-  when:
-    - ansible_os_family == 'RedHat'
-    - install_console is true
 
 - name: Start Redpanda
   ansible.builtin.include_tasks: start-redpanda.yml
-  when:
-    - install_console is false
-
-- name: Start Redpanda Console
-  ansible.builtin.include_tasks: start-console.yml
-  when:
-    - install_console is true

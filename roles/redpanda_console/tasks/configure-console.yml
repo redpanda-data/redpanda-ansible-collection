@@ -5,10 +5,17 @@
     mode: "0755"
 
 - name: Create list of advertised_ips
-  set_fact:
+  ansible.builtin.set_fact:
     advertised_ips: "{{
       groups['redpanda'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_ips | default(False) | bool) else 'private_ip') | list
     }}"
+
+- name: Create list of connect_advertised_ips
+  ansible.builtin.set_fact:
+    connect_advertised_ips: "{{
+      groups['connect'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_ips | default(False) | bool) else 'private_ip') | list
+    }}"
+  when: "'connect' in groups"
 
 - name: Reset configuration
   ansible.builtin.set_fact:
@@ -28,14 +35,8 @@
 
 - name: Generate Console config
   ansible.builtin.template:
-    src: console/console.yml
+    src: console.yml
     dest: /etc/redpanda/redpanda-console-config.yaml
     owner: redpanda
     group: redpanda
     mode: "0644"
-
-# ensure that systemd starts up redpanda console
-- name: Start redpanda console
-  ansible.builtin.systemd:
-    name: redpanda-console
-    state: restarted

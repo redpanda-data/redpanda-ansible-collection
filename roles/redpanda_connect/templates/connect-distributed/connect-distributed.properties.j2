@@ -1,0 +1,21 @@
+bootstrap.servers={% for host in advertised_ips %}{{ host }}:{{ kafka_port }}{% if not loop.last %},{% endif %}{% endfor %}
+
+schema.registry.url={{ schema_registry_actual }}
+group.id={{ group_id }}
+config.storage.topic={{ config_storage_topic }}
+offset.storage.topic={{ offset_storage_topic }}
+status.storage.topic={{ status_storage_topic }}
+rest.port={{ rest_port }}
+rest.advertised.host.name={{ rest_advertised_host_name_actual }}
+rest.advertised.port={{ rest_advertised_port }}
+plugin.path={{ plugin_path }}
+plugin.discovery={{ plugin_discovery }}
+key.converter={{ key_converter }}
+value.converter={{ value_converter }}
+
+{% if not connect_tls_enabled %}
+security.protocol=PLAINTEXT
+producer.security.protocol=PLAINTEXT
+consumer.security.protocol=PLAINTEXT
+admin.security.protocol=PLAINTEXT
+{% endif %}

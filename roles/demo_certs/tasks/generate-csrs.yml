@@ -1,5 +1,5 @@
 ---
-- name: Generate_csrs - Test hosts list
+- name: Test hosts list
   tags:
     - generate_csrs
   ansible.builtin.debug:
@@ -9,14 +9,14 @@
       - "ansible_hostname: {{ hostvars[inventory_hostname]['ansible_hostname'] }}"
       - "ansible_fqdn    : {{ hostvars[inventory_hostname]['ansible_fqdn'] }}"
 
-- name: Generate_csrs - create redpanda user if it doesn't exist already
+- name: Create redpanda user if it doesn't exist already
   tags:
     - generate_csrs
   ansible.builtin.user:
     name: redpanda
     system: true
 
-- name: Generate_csrs - ensure /etc/redpanda/certs exists
+- name: Ensure /etc/redpanda/certs exists
   tags:
     - generate_csrs
   ansible.builtin.file:
@@ -26,7 +26,7 @@
     group: redpanda
     mode: "0755"
 
-- name: Generate_csrs - Copy node template
+- name: Copy node template
   tags:
     - generate_csrs
   ansible.builtin.template:
@@ -36,14 +36,14 @@
     group: redpanda
     mode: "0644"
 
-- name: Generate_csrs - Install openssl
+- name: Install openssl
   tags:
     - generate_csrs
   ansible.builtin.package:
     name: openssl
     state: present
 
-- name: Generate_csrs - Generate an OpenSSH keypair on {{ansible_hostname}}
+- name: Generate an OpenSSH keypair on {{ansible_hostname}}
   tags:
     - generate_csrs
   ansible.builtin.command:
@@ -51,7 +51,7 @@
     chdir: "{{ redpanda_certs_dir }}"
     cmd: openssl genrsa -out node.key 2048
 
-- name: Generate_csrs - Generate a Certificate Signing Request on {{ansible_hostname}}
+- name: Generate a Certificate Signing Request on {{ansible_hostname}}
   tags:
     - generate_csrs
   ansible.builtin.command:
@@ -59,7 +59,7 @@
     chdir: "{{ redpanda_certs_dir }}"
     cmd: openssl req -new -config node.conf -key node.key -out node.csr -batch
 
-- name: Generate_csrs - CHOWN to redpanda
+- name: CHOWN to redpanda
   tags:
     - generate_csrs
   ansible.builtin.file:
@@ -69,7 +69,7 @@
     group: redpanda
     recurse: true
 
-- name: Generate_csrs - Fetch CSRs
+- name: Fetch CSRs
   tags:
     - generate_csrs
   ansible.builtin.fetch:

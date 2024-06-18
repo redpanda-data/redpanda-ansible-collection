@@ -1,0 +1,16 @@
+log4j.rootLogger={{ log4j_log_level }}, stdout, syslogAppender
+
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+
+log4j.appender.syslogAppender=org.apache.log4j.net.SyslogAppender
+log4j.appender.syslogAppender.syslogHost=localhost
+log4j.appender.syslogAppender.facility=LOCAL0
+log4j.appender.syslogAppender.layout=org.apache.log4j.PatternLayout
+
+connect.log.pattern=[%d] %p %X{connector.context}%m (%c:%L)%n
+
+log4j.appender.stdout.layout.ConversionPattern=${connect.log.pattern}
+log4j.appender.syslogAppender.layout.ConversionPattern=${connect.log.pattern}
+
+log4j.logger.org.reflections=ERROR

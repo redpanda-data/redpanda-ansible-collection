@@ -1,0 +1,67 @@
+---
+- name: Set Redpanda RPM and GPG Key details
+  ansible.builtin.set_fact:
+    rp_key_rpm_actual: "{{ rp_key_rpm }}"
+    rp_standard_rpm_actual: "{{ rp_standard_rpm }}"
+    rp_noarch_rpm_actual: "{{ rp_noarch_rpm }}"
+    rp_source_rpm_actual: "{{ rp_source_rpm }}"
+    repo_name_prefix: "redpanda-redpanda"
+
+- name: Add redpanda-redpanda RPM repository
+  ansible.builtin.yum_repository:
+    name: "{{ repo_name_prefix }}"
+    description: "{{ repo_name_prefix }}"
+    baseurl: "{{ rp_standard_rpm_actual }}"
+    gpgkey: "{{ rp_key_rpm_actual }}"
+    repo_gpgcheck: true
+    gpgcheck: true
+    enabled: true
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: true
+    metadata_expire: 300
+    skip_if_unavailable: true
+    proxy: "{{ rpm_proxy | default('_none_') }}"
+
+- name: Add redpanda-redpanda-noarch RPM repository
+  ansible.builtin.yum_repository:
+    name: "{{ repo_name_prefix }}-noarch"
+    description: "{{ repo_name_prefix }}-noarch"
+    baseurl: "{{ rp_noarch_rpm_actual }}"
+    gpgkey: "{{ rp_key_rpm_actual }}"
+    repo_gpgcheck: true
+    gpgcheck: true
+    enabled: true
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: true
+    metadata_expire: 300
+    skip_if_unavailable: true
+    proxy: "{{ rpm_proxy | default('_none_') }}"
+
+- name: Add redpanda-redpanda-source RPM repository
+  ansible.builtin.yum_repository:
+    name: "{{ repo_name_prefix }}-source"
+    description: "{{ repo_name_prefix }}-source"
+    baseurl: "{{ rp_source_rpm_actual }}"
+    gpgkey: "{{ rp_key_rpm_actual }}"
+    repo_gpgcheck: true
+    gpgcheck: true
+    enabled: true
+    sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
+    sslverify: true
+    metadata_expire: 300
+    skip_if_unavailable: true
+    proxy: "{{ rpm_proxy | default('_none_') }}"
+
+- name: Install GPG key with proxy
+  environment:
+    https_proxy: "{{ rpm_proxy | default('') }}"
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ rp_key_rpm_actual }}"
+  when: https_proxy_value is defined and https_proxy_value | length > 0
+
+- name: Install GPG key
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ rp_key_rpm_actual }}"
+  when: (https_proxy_value is not defined or https_proxy_value | length == 0)

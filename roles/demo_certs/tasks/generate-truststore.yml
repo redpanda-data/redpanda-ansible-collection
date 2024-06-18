@@ -1,0 +1,28 @@
+---
+- name: Set facts
+  ansible.builtin.set_fact:
+    node_cert: tls/certs/{{ansible_hostname}}/node.crt
+    truststore_file: tls/certs/{{ansible_hostname}}/{{ truststore_file_name }}
+  delegate_to: localhost
+  tags: generate_truststore
+
+- name: Ensure the truststore file is absent
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "{{ truststore_file }}"
+    state: absent
+  tags: generate_truststore
+
+- name: Create the truststore
+  delegate_to: localhost
+  ansible.builtin.command:
+    cmd: |
+      keytool -importcert -noprompt -file {{ node_cert }} -alias {{ ansible_hostname }} -keystore {{ truststore_file }} -storepass {{ truststore_password }} -storetype {{ truststore_type }}
+  tags: generate_truststore
+
+- name: Import the CA certificate into the truststore
+  delegate_to: localhost
+  ansible.builtin.command:
+    cmd: |
+      keytool -importcert -noprompt -file {{ root_ca_dir }}/ca.crt -alias ca -keystore {{ truststore_file }} -storepass {{ truststore_password }} -storetype {{ truststore_type }}
+  tags: generate_truststore
