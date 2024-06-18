@@ -28,6 +28,19 @@
     loop_var: custom_config_template
   when: custom_config_template.condition | default(True)
 
+# Print the redpanda variable when -vvv is specified - hint, this is often malformed due to the difficulty in passing it in on the command line
+- name: Debug
+  ansible.builtin.debug:
+    var: redpanda
+    verbosity: 3
+  when: redpanda is defined
+
+- name: Debug
+  ansible.builtin.debug:
+    msg: "{{ redpanda | from_json }}"
+    verbosity: 3
+  when: redpanda is defined
+
 # merge in user's overrides of items in the templates
 - name: Merge with user-provided overrides (via redpanda variable)
   ansible.builtin.set_fact:
