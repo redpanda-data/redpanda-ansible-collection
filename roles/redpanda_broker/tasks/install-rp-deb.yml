@@ -29,6 +29,7 @@
     state: "{{ redpanda_install_status }}"
     update_cache: true
   when: https_proxy_value is not defined and (using_gcp | default(false)) is false
+  register: package_result
 
 - name: Install redpanda from repository (GCP)
   ansible.builtin.package:
@@ -38,7 +39,7 @@
     update_cache: true
     allow_unauthenticated: true
   when: (using_gcp | default(false)) is not false
-
+  register: package_result
 
 - name: Set data dir file perms
   ansible.builtin.file:
