@@ -9,6 +9,7 @@
       - "{{ redpanda_package_name }}"
     state: "{{ redpanda_install_status }}"
     update_cache: true
+  register: package_result
 
 - name: Set data dir file perms
   ansible.builtin.file:
