@@ -46,6 +46,24 @@
   ansible.builtin.set_fact:
     configuration: "{{ configuration | combine((redpanda | default('{}') | from_json), recursive=True) }}"
 
+# Print the host_specific_override variable when -vvv is specified - hint, this is often malformed due to the difficulty in passing it in on the command line
+- name: Debug
+  ansible.builtin.debug:
+    var: host_specific_override
+    verbosity: 3
+  when: redpanda is defined
+
+- name: Debug
+  ansible.builtin.debug:
+    msg: "{{ host_specific_override | from_json }}"
+    verbosity: 3
+  when: redpanda is defined
+
+# merge in user's overrides of items in the templates
+- name: Merge with user-provided host specific overrides (via host_specific_override variable)
+  ansible.builtin.set_fact:
+    configuration: "{{ configuration | combine((host_specific_override | default('{}') | from_json), recursive=True) }}"
+
 # on first startup, the redpanda process will create this directory and
 # populate.  we need to use this as a trigger to restart redpanda after
 # bootstrapping the first time.
