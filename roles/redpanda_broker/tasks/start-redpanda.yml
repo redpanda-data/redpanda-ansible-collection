@@ -45,7 +45,8 @@
 - name: Merge with user-provided overrides (via redpanda variable)
   ansible.builtin.set_fact:
     configuration: "{{ configuration | combine((redpanda | default('{}') | from_json), recursive=True) }}"
-
+  when: redpanda is defined
+  
 # on first startup, the redpanda process will create this directory and
 # populate.  we need to use this as a trigger to restart redpanda after
 # bootstrapping the first time.
