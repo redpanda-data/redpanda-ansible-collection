@@ -1,0 +1,14 @@
+agents:
+  queue: "k8s-builders"
+
+steps:
+  - label: "broker template tests"
+    plugins:
+      - docker-compose#v5.2.0:
+          config: roles/redpanda_broker/docker-compose.yml
+          run: testctr
+  - label: "connect template tests"
+    plugins:
+      - docker-compose#v5.2.0:
+          config: roles/redpanda_connect/docker-compose.yml
+          run: testctr
