@@ -28,43 +28,48 @@
     loop_var: custom_config_template
   when: custom_config_template.condition | default(True)
 
-# Print the redpanda variable when -vvv is specified - hint, this is often malformed due to the difficulty in passing it in on the command line
-- name: Debug
+- name: Debug redpanda variable
   ansible.builtin.debug:
     var: redpanda
     verbosity: 3
   when: redpanda is defined
 
-- name: Debug
-  ansible.builtin.debug:
-    msg: "{{ redpanda | from_json }}"
-    verbosity: 3
+- name: Parse redpanda variable
+  ansible.builtin.set_fact:
+    parsed_redpanda: "{{ redpanda if (redpanda is mapping) else (redpanda | from_json) }}"
   when: redpanda is defined
 
-# merge in user's overrides of items in the templates
-- name: Merge with user-provided overrides (via redpanda variable)
+- name: Set default empty dict if redpanda is not defined
   ansible.builtin.set_fact:
-    configuration: "{{ configuration | combine((redpanda | default('{}') | from_json), recursive=True) }}"
+    parsed_redpanda: {}
+  when: redpanda is not defined
 
-# Print the host_specific_override variable when -vvv is specified - hint, this is often malformed due to the difficulty in passing it in on the command line
-- name: Debug
+- name: Debug parsed redpanda
+  ansible.builtin.debug:
+    var: parsed_redpanda
+
+- name: Debug host_specific_override variable
   ansible.builtin.debug:
     var: host_specific_override
-    verbosity: 3
-  when: redpanda is defined
+  when: host_specific_override is defined
 
-- name: Debug
-  ansible.builtin.debug:
-    msg: "{{ host_specific_override | from_json }}"
-    verbosity: 3
-  when: redpanda is defined
-
-# merge in user's overrides of items in the templates
-- name: Merge with user-provided host specific overrides (via host_specific_override variable)
+- name: Set default empty dict if host_specific_override is not defined
   ansible.builtin.set_fact:
-    configuration: "{{ configuration | combine((host_specific_override | default('{}') | from_json), recursive=True) }}"
+    host_specific_override: {}
+  when: host_specific_override is not defined
 
-# on first startup, the redpanda process will create this directory and
+- name: Debug parsed host_specific_override
+  ansible.builtin.debug:
+    var: host_specific_override
+
+- name: Merge with user-provided overrides (via redpanda variable)
+  ansible.builtin.set_fact:
+    configuration: "{{ configuration | combine(parsed_redpanda, recursive=True) }}"
+
+- name: Merge with user-provided host specific overrides
+  ansible.builtin.set_fact:
+    configuration: "{{ configuration | combine(host_specific_override, recursive=True) }}"
+    # on first startup, the redpanda process will create this directory and
 # populate.  we need to use this as a trigger to restart redpanda after
 # bootstrapping the first time.
 #
