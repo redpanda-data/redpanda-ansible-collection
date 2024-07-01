@@ -28,12 +28,48 @@
     loop_var: custom_config_template
   when: custom_config_template.condition | default(True)
 
-# merge in user's overrides of items in the templates
+- name: Debug redpanda variable
+  ansible.builtin.debug:
+    var: redpanda
+    verbosity: 3
+  when: redpanda is defined
+
+- name: Parse redpanda variable
+  ansible.builtin.set_fact:
+    parsed_redpanda: "{{ redpanda if (redpanda is mapping) else (redpanda | from_json) }}"
+  when: redpanda is defined
+
+- name: Set default empty dict if redpanda is not defined
+  ansible.builtin.set_fact:
+    parsed_redpanda: {}
+  when: redpanda is not defined
+
+- name: Debug parsed redpanda
+  ansible.builtin.debug:
+    var: parsed_redpanda
+
+- name: Debug host_specific_override variable
+  ansible.builtin.debug:
+    var: host_specific_override
+  when: host_specific_override is defined
+
+- name: Set default empty dict if host_specific_override is not defined
+  ansible.builtin.set_fact:
+    host_specific_override: {}
+  when: host_specific_override is not defined
+
+- name: Debug parsed host_specific_override
+  ansible.builtin.debug:
+    var: host_specific_override
+
 - name: Merge with user-provided overrides (via redpanda variable)
   ansible.builtin.set_fact:
-    configuration: "{{ configuration | combine((redpanda | default('{}') | from_json), recursive=True) }}"
+    configuration: "{{ configuration | combine(parsed_redpanda, recursive=True) }}"
 
-# on first startup, the redpanda process will create this directory and
+- name: Merge with user-provided host specific overrides
+  ansible.builtin.set_fact:
+    configuration: "{{ configuration | combine(host_specific_override, recursive=True) }}"
+    # on first startup, the redpanda process will create this directory and
 # populate.  we need to use this as a trigger to restart redpanda after
 # bootstrapping the first time.
 #
