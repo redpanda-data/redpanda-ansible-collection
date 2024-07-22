@@ -10,15 +10,111 @@ os_distribution: ""
 os_distribution_major_version: ""
 rpm_or_deb: ""
 
+is_post_split: "{{ redpanda_version >= '24.2' or redpanda_version == 'latest' }}"
+
 # the rpms
-redpanda_package_name: "redpanda{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}.{{ basearch }}.rpm"
-rp_standard_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/{{ basearch }}/{{ redpanda_package_name }}"
-rp_standard_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/{{ basearch }}/{{ redpanda_package_name }}"
-rp_noarch_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/noarch/{{ redpanda_package_name }}"
-rp_noarch_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/noarch/{{ redpanda_package_name }}"
-rp_source_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/SRPMS/{{ redpanda_package_name }}"
-rp_source_rpm_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}/SRPMS/{{ redpanda_package_name }}"
+rpm_package_suffix: "{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}.{{ basearch }}"
+rpm_base_url: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}"
+rpm_unstable_base_url: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}"
+redpanda_package_name: "redpanda{{ rpm_package_suffix }}.rpm"
+redpanda_rpk_package_name: "redpanda-rpk{{ rpm_package_suffix }}.rpm"
+redpanda_tuner_package_name: "redpanda-tuner{{ rpm_package_suffix }}.rpm"
+
+rp_standard_rpm: "{{ rpm_base_url }}/{{ basearch }}/{{ redpanda_package_name }}"
+rp_standard_rpm_unstable: "{{ rpm_unstable_base_url }}/{{ basearch }}/{{ redpanda_package_name }}"
+rp_noarch_rpm: "{{ rpm_base_url }}/noarch/{{ redpanda_package_name }}"
+rp_noarch_rpm_unstable: "{{ rpm_unstable_base_url }}/noarch/{{ redpanda_package_name }}"
+rp_source_rpm: "{{ rpm_base_url }}/SRPMS/{{ redpanda_package_name }}"
+rp_source_rpm_unstable: "{{ rpm_unstable_base_url }}/SRPMS/{{ redpanda_package_name }}"
+
+rpk_standard_rpm: "{{ rpm_base_url }}/{{ basearch }}/{{ redpanda_rpk_package_name }}"
+rpk_standard_rpm_unstable: "{{ rpm_unstable_base_url }}/{{ basearch }}/{{ redpanda_rpk_package_name }}"
+rpk_noarch_rpm: "{{ rpm_base_url }}/noarch/{{ redpanda_rpk_package_name }}"
+rpk_noarch_rpm_unstable: "{{ rpm_unstable_base_url }}/noarch/{{ redpanda_rpk_package_name }}"
+rpk_source_rpm: "{{ rpm_base_url }}/SRPMS/{{ redpanda_rpk_package_name }}"
+rpk_source_rpm_unstable: "{{ rpm_unstable_base_url }}/SRPMS/{{ redpanda_rpk_package_name }}"
+
+tuner_standard_rpm: "{{ rpm_base_url }}/{{ basearch }}/{{ redpanda_tuner_package_name }}"
+tuner_standard_rpm_unstable: "{{ rpm_unstable_base_url }}/{{ basearch }}/{{ redpanda_tuner_package_name }}"
+tuner_noarch_rpm: "{{ rpm_base_url }}/noarch/{{ redpanda_tuner_package_name }}"
+tuner_noarch_rpm_unstable: "{{ rpm_unstable_base_url }}/noarch/{{ redpanda_tuner_package_name }}"
+tuner_source_rpm: "{{ rpm_base_url }}/SRPMS/{{ redpanda_tuner_package_name }}"
+tuner_source_rpm_unstable: "{{ rpm_unstable_base_url }}/SRPMS/{{ redpanda_tuner_package_name }}"
+
+pre_split_standard_rpms:
+  redpanda: "{{ rp_standard_rpm }}"
+
+pre_split_standard_rpms_unstable:
+  redpanda: "{{ rp_standard_rpm_unstable }}"
+
+pre_split_noarch_rpms:
+  redpanda: "{{ rp_noarch_rpm }}"
+
+pre_split_noarch_rpms_unstable:
+  redpanda: "{{ rp_noarch_rpm_unstable }}"
+
+pre_split_source_rpms:
+  redpanda: "{{ rp_source_rpm }}"
+
+pre_split_source_rpms_unstable:
+  redpanda: "{{ rp_source_rpm_unstable }}"
+
+post_split_standard_rpms:
+  redpanda: "{{ rp_standard_rpm }}"
+  redpanda-rpk: "{{ rpk_standard_rpm }}"
+  redpanda-tuner: "{{ tuner_standard_rpm }}"
+
+post_split_standard_rpms_unstable:
+  redpanda: "{{ rp_standard_rpm_unstable }}"
+  redpanda-rpk: "{{ rpk_standard_rpm_unstable }}"
+  redpanda-tuner: "{{ tuner_standard_rpm_unstable }}"
+
+post_split_noarch_rpms:
+  redpanda: "{{ rp_noarch_rpm }}"
+  redpanda-rpk: "{{ rpk_noarch_rpm }}"
+  redpanda-tuner: "{{ tuner_noarch_rpm }}"
+
+post_split_noarch_rpms_unstable:
+  redpanda: "{{ rp_noarch_rpm_unstable }}"
+  redpanda-rpk: "{{ rpk_noarch_rpm_unstable }}"
+  redpanda-tuner: "{{ tuner_noarch_rpm_unstable }}"
+
+post_split_source_rpms:
+  redpanda: "{{ rp_source_rpm }}"
+  redpanda-rpk: "{{ rpk_source_rpm }}"
+  redpanda-tuner: "{{ tuner_source_rpm }}"
+
+post_split_source_rpms_unstable:
+  redpanda: "{{ rp_source_rpm_unstable }}"
+  redpanda-rpk: "{{ rpk_source_rpm_unstable }}"
+  redpanda-tuner: "{{ tuner_source_rpm_unstable }}"
+
+rpm_standard_download_urls: "{{ post_split_standard_rpms if is_post_split else pre_split_standard_rpms }}"
+rpm_noarch_download_urls: "{{ post_split_noarch_rpms if is_post_split else pre_split_noarch_rpms }}"
+rpm_source_download_urls: "{{ post_split_source_rpms if is_post_split else pre_split_source_rpms }}"
+rpm_standard_unstable_download_urls: "{{ post_split_standard_rpms_unstable if is_post_split else pre_split_standard_rpms_unstable }}"
+rpm_noarch_unstable_download_urls: "{{ post_split_noarch_rpms_unstable if is_post_split else pre_split_noarch_rpms_unstable }}"
+rpm_source_unstable_download_urls: "{{ post_split_source_rpms_unstable if is_post_split else pre_split_source_rpms_unstable }}"
 
 # the debs
 deb_download_url: "https://dl.redpanda.com/public/redpanda/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda_{{ redpanda_version}}/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
 deb_unstable_download_url: "https://dl.redpanda.com/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda_{{ redpanda_version}}/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+
+pre_split_deb_download_urls:
+  redpanda: "{{ deb_download_url }}"
+
+pre_split_deb_unstable_download_urls:
+  redpanda: "{{ deb_unstable_download_url }}"
+
+post_split_deb_download_urls:
+  redpanda-rpk: "https://dl.redpanda.com/public/redpanda/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda-rpk_{{ redpanda_version}}/redpanda-rpk_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda-tuner: "https://dl.redpanda.com/public/redpanda/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda-tuner_{{ redpanda_version}}/redpanda-tuner_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda: "https://dl.redpanda.com/public/redpanda/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda_{{ redpanda_version}}/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+
+post_split_deb_unstable_download_urls:
+  redpanda-rpk: "https://dl.redpanda.com/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda-rpk_{{ redpanda_version}}/redpanda-rpk_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda-tuner: "https://dl.redpanda.com/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda-tuner_{{ redpanda_version}}/redpanda-tuner_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda: "https://dl.redpanda.com/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda_{{ redpanda_version}}/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+
+deb_download_urls: "{{ post_split_deb_download_urls if is_post_split else pre_split_deb_download_urls }}"
+deb_unstable_download_urls: "{{ post_split_deb_unstable_download_urls if is_post_split else post_split_deb_unstable_download_urls }}"
