@@ -9,6 +9,10 @@
   register: rp_ver_output
   when: rp_exists_check.stat.exists
 
+- name: redpanda_version is post packaging split or not
+  ansible.builtin.set_fact:
+    is_post_split: "{{ redpanda_version == 'latest' or redpanda_version >= '24.2' }}"
+
 - name: Check if redpanda_version is set to latest
   ansible.builtin.set_fact:
     needs_update: true
@@ -29,7 +33,7 @@
   tags:
     - airgap-tarball-install
   when:
-    - (needs_update | default(false)) or not rp_exists_check.stat.exists
+   - (needs_update | default(false)) or not rp_exists_check.stat.exists
 
 - name: Unpack Redpanda RPMs on host
   ansible.builtin.unarchive:
@@ -40,7 +44,7 @@
   when:
     - (needs_update | default(false)) or not rp_exists_check.stat.exists
 
-- name: Install Redpanda RPMs
+- name: Install Redpanda RPMs (pre package split)
   ansible.builtin.shell: "rpm -Uvh --force {{ airgap_copy_dest }}/*.rpm"
   register: rpm_result
   failed_when: rpm_result.rc != 2 and rpm_result.rc != 0
@@ -49,3 +53,20 @@
     - airgap-tarball-install
   when:
     - (needs_update | default(false)) or not rp_exists_check.stat.exists
+    - not is_post_split
+
+- name: Install Redpanda RPMs (post package split)
+  ansible.builtin.shell: "rpm -Uvh --force {{ airgap_copy_dest }}/{{item}}*__*.rpm"
+  register: rpm_result
+  failed_when: rpm_result.rc != 2 and rpm_result.rc != 0
+  become: true
+  tags:
+    - airgap-tarball-install
+  when:
+    - (needs_update | default(false)) or not rp_exists_check.stat.exists
+    - is_post_split
+  loop:
+    - redpanda-rpk
+    - redpanda-tuner
+    - redpanda
+

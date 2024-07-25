@@ -9,6 +9,10 @@
   register: rp_ver_output
   when: rp_exists_check.stat.exists
 
+- name: redpanda_version is post packaging split or not
+  ansible.builtin.set_fact:
+    is_post_split: "{{ redpanda_version == 'latest' or redpanda_version >= '24.2' }}"
+
 - name: If redpanda_version is latest set needs_update to true
   ansible.builtin.set_fact:
     needs_update: true
@@ -40,13 +44,27 @@
   when:
     - (needs_update | default(false)) or not rp_exists_check.stat.exists
 
-- name: Install Redpanda DEBs
-  ansible.builtin.shell: "dpkg -i --force-confold {{ airgap_copy_dest }}/*.deb"
+- name: Install Redpanda DEBs (pre-package split)
+  ansible.builtin.shell: "dpkg -i --force-confold {{ airgap_copy_dest }}/redpanda_*.deb"
   become: true
   tags:
     - airgap-tarball-install
   when:
     - (needs_update | default(false)) or not rp_exists_check.stat.exists
+    - not is_post_split
+
+- name: Install Redpanda DEBs (post-package split)
+  ansible.builtin.shell: "dpkg -i --force-confold {{ airgap_copy_dest }}/{{ item }}_*.deb"
+  become: true
+  tags:
+    - airgap-tarball-install
+  when:
+    - ((needs_update | default(false)) or not rp_exists_check.stat.exists)
+    - is_post_split
+  loop:
+    - redpanda-rpk
+    - redpanda-tuner
+    - redpanda
 
 - name: Ensure /var/lib/redpanda and all contents are owned by redpanda:redpanda
   become: true

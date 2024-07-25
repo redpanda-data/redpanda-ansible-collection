@@ -22,37 +22,37 @@
   ansible.builtin.include_tasks: configure-rpm-repository.yml
   when:
     - ansible_os_family == 'RedHat'
-    - enable_airgap is false
+    - not (enable_airgap | bool)
 
 - name: Configure Redpanda DEB Repository
   ansible.builtin.include_tasks: configure-deb-repository.yml
   when:
     - ansible_os_family == 'Debian'
-    - enable_airgap is false
+    - not (enable_airgap | bool)
 
 - name: Install Redpanda RPM
   ansible.builtin.include_tasks: install-rp-rpm.yml
   when:
     - ansible_os_family == 'RedHat'
-    - enable_airgap is false
+    - not (enable_airgap | bool)
 
 - name: Install Redpanda DEB
   ansible.builtin.include_tasks: install-rp-deb.yml
   when:
     - ansible_os_family == 'Debian'
-    - enable_airgap is false
+    - not (enable_airgap | bool)
 
 - name: Install Redpanda RPM Airgap
   ansible.builtin.include_tasks: install-rp-rpm-airgap.yml
   when:
     - ansible_os_family == 'RedHat'
-    - enable_airgap is true
+    - enable_airgap | bool
 
 - name: Install Redpanda DEB Airgap
   ansible.builtin.include_tasks: install-rp-deb-airgap.yml
   when:
     - ansible_os_family == 'Debian'
-    - enable_airgap is true
+    - enable_airgap | bool
 
 - name: Start Redpanda
   ansible.builtin.include_tasks: start-redpanda.yml

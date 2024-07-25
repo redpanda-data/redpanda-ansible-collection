@@ -1,18 +1,19 @@
 ---
-- name: Set Redpanda RPM
+- name: Set Redpanda DEB
   ansible.builtin.set_fact:
-    deb_link_actual: "{{ is_using_unstable | bool | ternary(deb_unstable_download_url, deb_download_url) }}"
+    deb_links_actual: "{{ is_using_unstable | bool | ternary(deb_unstable_download_urls, deb_download_urls) }}"
   tags:
     - airgap-tarball-install
 
 - name: Download Redpanda DEBs to local machine
   ansible.builtin.get_url:
-    url: "{{ deb_link_actual }}"
+    url: "{{ item.value }}"
     dest: "{{ download_directory }}"
     mode: '0644'
   delegate_to: localhost
   tags:
     - airgap-tarball-install
+  loop: "{{ deb_links_actual | dict2items }}"
 
 - name: Create tarball of Redpanda DEBs
   community.general.archive:
