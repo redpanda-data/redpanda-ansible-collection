@@ -23,6 +23,10 @@
   ansible.builtin.include_tasks: install-node-deps-rpm.yml
   when: ansible_facts['os_family']|lower == 'redhat'
 
+- name: Create Redpanda User
+  ansible.builtin.include_tasks: create-redpanda-user.yml
+  when:
+    - prep_data_dir | default(true) | bool
 
 # configures the data dir. won't work if Install dependencies isn't run first
 - name: Prep data dir
