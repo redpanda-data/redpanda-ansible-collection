@@ -1,0 +1,47 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    is_initialized: false
+    nodeconfig_result:
+      changed: false
+    package_result:
+      results: []
+    restart_node: true
+    mock_shell_stdout: "false"
+    mock_shell_rc: 0
+    redpanda_rpk_opts: "test"
+    node_id: "0"
+    no_log: false
+
+  tasks:
+    - name: Set is_initialized fact based on controller_stat
+      ansible.builtin.set_fact:
+        is_initialized: "{{ controller_stat.stat.isdir is defined and controller_stat.stat.isdir }}"
+    - name: Generate Node config - post-bootstrap runs
+      mock_ansible_module:
+        mock_type: template
+        src: redpanda.yml
+        dest: /etc/redpanda/redpanda.yaml
+        owner: redpanda
+        group: redpanda
+        mode: "0644"
+        mock_changed: "{{ mock_template_changed }}"
+      check_mode: true
+      register: nodeconfig_result
+      when: is_initialized
+    - name: Check if restart needed
+      mock_ansible_module:
+        mock_type: shell
+        cmd: "rpk cluster config status {{ redpanda_rpk_opts }} | grep '^{{ node_id }} ' | awk '{ print $3 }' |  grep -E 'true|false'"
+        mock_stdout: "{{ mock_shell_stdout }}"
+        mock_rc: "{{ mock_shell_rc }}"
+      register: restart_required_rc
+      changed_when: false
+      no_log: "{{ no_log }}"
+    - name: Establish whether restart required
+      ansible.builtin.set_fact:
+        restart_required: '{{ ("true" in restart_required_rc.stdout or (is_initialized and (nodeconfig_result.changed or package_result.results is defined and ("Removed" in package_result.results or "1 upgraded" in package_result.results)))) and (restart_node | default("true") | bool) }}'
+    - name: Debug restart_required
+      ansible.builtin.debug:
+        var: restart_required

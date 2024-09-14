@@ -1,5 +1,3 @@
-.PHONY: test reqs do
-
 PYTHON ?= python
 PIP ?= pip
 
@@ -7,16 +5,22 @@ DIR := tests
 SCRIPTS := $(wildcard $(DIR)/*_test.py)
 
 # Target to process each file
+.PHONY: all
 all: $(FILES)
 
-do: reqs test
+.PHONY: do
+do: mocks test
 
+.PHONY: mocks
+mocks:
+	mkdir -p /app/library && \
+	cp tests/mocks/* /app/library
+
+.PHONY: test
 test: $(SCRIPTS)
 	echo "running $(DIR) $(SCRIPTS)"
 	$(foreach FILE,$(SCRIPTS), $(PYTHON) $(FILE);)
 
-reqs:
-	$(PIP) install --no-cache-dir -r tests/requirements.txt
-
+.PHONY: up
 up:
 	docker-compose up --build
