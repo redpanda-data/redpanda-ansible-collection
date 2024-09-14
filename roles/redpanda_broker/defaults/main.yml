@@ -66,3 +66,5 @@ rp_repo_signing_deb: "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-archi
 rp_repo_signing_deb_unstable: "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-unstable-archive-keyring.gpg] {{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
 rp_repo_signing_src_deb: "deb-src [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] {{ redpanda_base_url }}/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
 rp_repo_signing_src_deb_unstable: "deb-src [signed-by=/usr/share/keyrings/redpanda-redpanda-unstable-archive-keyring.gpg] {{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
+
+redpanda_broker_no_log: true

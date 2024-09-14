@@ -164,7 +164,7 @@
   register: config_version
   changed_when: false
   run_once: true
-  no_log: true
+  no_log: "{{ redpanda_broker_no_log }}"
 
 # set cluster-wide configurations
 #
@@ -189,7 +189,7 @@
 - name: Set cluster config
   ansible.builtin.command: rpk cluster config set {{ item.key }} {{ item.value }} {{ redpanda_rpk_opts }}
   loop: "{{ configuration.cluster | dict2items }}"
-  no_log: true
+  no_log: "{{ redpanda_broker_no_log }}"
 
 # Set Redpanda license
 #
@@ -209,7 +209,7 @@
     cmd: rpk cluster config status {{ redpanda_rpk_opts }} | grep '^{{ node_id }} ' | awk '{ print $3 }' |  grep -E 'true|false'
   register: restart_required_rc
   changed_when: false
-  no_log: true
+  no_log: "{{ redpanda_broker_no_log }}"
 
 # this instance of node config generation only runs after a cluster has been
 # initialized. This is used to update configurations post-cluster setup when
