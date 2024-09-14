@@ -3,8 +3,8 @@
     dest: "{{ redpanda_base_dir }}"
     src: "{{ repdanda_mount_dir }}"
     state: link
-    owner: root
-    group: root
-    mode: "0775"
+    owner: redpanda
+    group: redpanda
+    mode: "0755"
   tags:
     - data_dir_perms

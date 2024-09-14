@@ -90,8 +90,8 @@
   ansible.builtin.file:
     path: "{{ repdanda_mount_dir }}"
     state: directory
-    owner: root
-    group: root
-    mode: "0775"
+    owner: redpanda
+    group: redpanda
+    mode: "0755"
   tags:
     - prep_data_dir

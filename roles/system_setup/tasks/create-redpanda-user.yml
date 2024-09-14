@@ -1,0 +1,14 @@
+- name: Create Redpanda group
+  group:
+    name: redpanda
+    state: present
+    system: yes
+  become: yes
+
+- name: Create Redpanda user
+  user:
+    name: redpanda
+    group: redpanda
+    state: present
+    system: yes
+  become: yes
