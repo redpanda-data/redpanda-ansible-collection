@@ -6,7 +6,7 @@
 - name: Enable Maintenance Mode
   ansible.builtin.command:
     cmd: rpk cluster maintenance enable {{ node_id }} --wait {{ redpanda_rpk_opts }}
-  no_log: true
+  no_log: "{{ redpanda_broker_no_log }}"
   when:
     - restart_required
     - inventory_hostname == cluster_host
@@ -19,7 +19,7 @@
     dest: /etc/redpanda/redpanda.yaml
     owner: redpanda
     group: redpanda
-    mode: "0755"
+    mode: "0644"
   register: nodeconfig_result
   when:
     - is_initialized
@@ -36,7 +36,7 @@
 - name: Disable Maintenance Mode
   ansible.builtin.command:
     cmd: rpk cluster maintenance disable {{ node_id }} {{ redpanda_rpk_opts }}
-  no_log: true
+  no_log: "{{ redpanda_broker_no_log }}"
   when:
     - restart_required
     - inventory_hostname == cluster_host
