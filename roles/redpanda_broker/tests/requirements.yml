@@ -1,0 +1,12 @@
+collections:
+  - name: community.general
+  - name: redpanda.cluster
+    type: galaxy
+  - name: ansible.posix
+  - name: grafana.grafana
+  - name: prometheus.prometheus
+
+roles:
+  - src: mrlesmithjr.mdadm
+  - src: mrlesmithjr.squid
+  - src: geerlingguy.node_exporter
