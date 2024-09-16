@@ -10,6 +10,7 @@
   when:
     - restart_required
     - inventory_hostname == cluster_host
+    - ansible_play_hosts > 1
 
 # We need to (actually) generate the node config once the node is in MM, otherwise the `rpk cluster maintenance` command
 # will fail
@@ -40,3 +41,4 @@
   when:
     - restart_required
     - inventory_hostname == cluster_host
+    - ansible_play_hosts > 1
