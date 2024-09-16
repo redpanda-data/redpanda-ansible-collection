@@ -2,6 +2,7 @@
 exclude_paths:
   - .github/**
   - Taskfile.yaml
+  - tests/**
 
 enable_list:
   - yaml
