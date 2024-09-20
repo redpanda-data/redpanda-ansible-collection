@@ -51,3 +51,10 @@ lint-sysctl_setup:
 lint-system_setup:
 	@echo "Running ansible-lint on system_setup role"
 	@ansible-lint -c .ansible-lint roles/system_setup
+
+ANSIBLE_GALAXY_API_KEY ?= $(shell bash -c 'read -p "Enter your API key: " api_key; echo $$api_key')
+.PHONY: publish
+publish:
+	@rm redpanda-cluster-*.tar.gz
+	ansible-galaxy collection build && \
+	ansible-galaxy collection publish redpanda-cluster-*.tar.gz --token $(ANSIBLE_GALAXY_API_KEY) -s https://galaxy.ansible.com/api/
