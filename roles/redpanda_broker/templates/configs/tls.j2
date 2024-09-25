@@ -3,21 +3,21 @@
     "redpanda": {
       "admin_api_tls": {
         "enabled": true,
-        "require_client_auth": false,
+        "require_client_auth": {{ require_client_auth }},
         "key_file": "{{ redpanda_key_file }}",
         "cert_file": "{{ redpanda_cert_file }}",
         "truststore_file": "{{ redpanda_truststore_file }}"
       },
       "kafka_api_tls": {
         "enabled": true,
-        "require_client_auth": false,
+        "require_client_auth": {{ require_client_auth }},
         "key_file": "{{ redpanda_key_file }}",
         "cert_file": "{{ redpanda_cert_file }}",
         "truststore_file": "{{ redpanda_truststore_file }}"
       },
       "rpc_server_tls": {
         "enabled": true,
-        "require_client_auth": false,
+        "require_client_auth": {{ require_client_auth }},
         "key_file": "{{ redpanda_key_file }}",
         "cert_file": "{{ redpanda_cert_file }}",
         "truststore_file": "{{ redpanda_truststore_file }}"
@@ -39,7 +39,7 @@
       "pandaproxy_api_tls": [
         {
           "enabled": true,
-          "require_client_auth": false,
+          "require_client_auth": {{ require_client_auth }},
           "key_file": "{{ redpanda_key_file }}",
           "cert_file": "{{ redpanda_cert_file }}",
           "truststore_file": "{{ redpanda_truststore_file }}"
@@ -50,7 +50,7 @@
       "schema_registry_api_tls": [
         {
           "enabled": true,
-          "require_client_auth": false,
+          "require_client_auth": {{ require_client_auth }},
           "key_file": "{{ redpanda_key_file }}",
           "cert_file": "{{ redpanda_cert_file }}",
           "truststore_file": "{{ redpanda_truststore_file }}"
