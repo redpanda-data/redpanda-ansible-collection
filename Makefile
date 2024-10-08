@@ -55,6 +55,7 @@ lint-system_setup:
 ANSIBLE_GALAXY_API_KEY ?= $(shell bash -c 'read -p "Enter your API key: " api_key; echo $$api_key')
 .PHONY: publish
 publish:
-	@rm redpanda-cluster-*.tar.gz
+	rm -f redpanda-cluster-*.tar.gz 2>/dev/null && \
 	ansible-galaxy collection build && \
-	ansible-galaxy collection publish redpanda-cluster-*.tar.gz --token $(ANSIBLE_GALAXY_API_KEY) -s https://galaxy.ansible.com/api/
+	ansible-galaxy collection publish redpanda-cluster-*.tar.gz --token $(ANSIBLE_GALAXY_API_KEY) -s https://galaxy.ansible.com/api/ && \
+	rm -f redpanda-cluster-*.tar.gz 2>/dev/null
