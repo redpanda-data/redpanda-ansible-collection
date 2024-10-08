@@ -52,9 +52,3 @@
     - not (node_key_file | default('') == '')
     - handle_cert_install | default(false) | bool
     - not (create_demo_certs | default(false) | bool)
-
-- name: Install_certs - Set Redpanda config
-  tags:
-    - install_certs
-  ansible.builtin.set_fact:
-    tls: true
