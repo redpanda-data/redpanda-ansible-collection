@@ -1,0 +1,44 @@
+---
+- name: Set distribution-specific variables
+  set_fact:
+    distro: "{{ ansible_distribution | lower }}"
+    codename: "{{ ansible_distribution_release }}"
+    arch: "{{ ansible_architecture }}"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install required packages
+  apt:
+    name:
+      - debian-keyring
+      - debian-archive-keyring
+      - apt-transport-https
+      - gnupg
+    state: present
+
+- name: Download Cloudsmith GPG key
+  get_url:
+    url: "{{ cloudsmith_gpg_key_url }}"
+    dest: /tmp/cloudsmith_gpg.key
+    mode: '0644'
+
+- name: Dearmor and add Cloudsmith GPG key
+  ansible.builtin.shell: gpg --dearmor < /tmp/cloudsmith_gpg.key > {{ keyring_location }}
+  args:
+    creates: "{{ keyring_location }}"
+  become: true
+
+- name: Set correct permissions for the keyring file
+  file:
+    path: "{{ keyring_location }}"
+    mode: '0644'
+  become: true
+
+- name: Add Cloudsmith repository configuration
+  get_url:
+    url: "{{ cloudsmith_config_url }}?distro={{ distro }}&codename={{ codename }}&arch={{ arch }}&component=main"
+    dest: /etc/apt/sources.list.d/redpanda-redpanda-nightly.list
+    mode: '0644'
+  become: true
