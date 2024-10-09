@@ -23,12 +23,21 @@
   when:
     - ansible_os_family == 'RedHat'
     - not (enable_airgap | bool)
+    - not (development_build | bool)
 
 - name: Configure Redpanda DEB Repository
   ansible.builtin.include_tasks: configure-deb-repository.yml
   when:
     - ansible_os_family == 'Debian'
     - not (enable_airgap | bool)
+    - not (development_build | bool)
+
+- name: Configure Redpanda DEB Repository Development
+  ansible.builtin.include_tasks: install-nightly-build.yml
+  when:
+    - ansible_os_family == 'Debian'
+    - not (enable_airgap | bool)
+    - development_build | bool
 
 - name: Install Redpanda RPM
   ansible.builtin.include_tasks: install-rp-rpm.yml
