@@ -13,3 +13,5 @@ redpanda_truststores_dir: /etc/redpanda/truststores
 truststore_type: PKCS12
 keystore_file_name: keystore.p12
 keystores_type: PKCS12
+redpanda_user: redpanda
+redpanda_group: redpanda
