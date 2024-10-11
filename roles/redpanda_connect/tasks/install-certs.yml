@@ -1,10 +1,24 @@
 ---
+- name: Create redpanda group
+  ansible.builtin.group:
+    name: "{{ redpanda_group }}"
+    state: present
+    system: true
+  become: true
+  tags:
+    - install_certs
+
 - name: Create redpanda user if it doesn't exist already
   tags:
     - install_certs
   ansible.builtin.user:
-    name: redpanda
+    name: "{{ redpanda_user }}"
+    group: "{{ redpanda_group }}"
     system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+    state: present
+  become: true
 
 - name: Ensure /etc/redpanda/certs exists
   tags:
