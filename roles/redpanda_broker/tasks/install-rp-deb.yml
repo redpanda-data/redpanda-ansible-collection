@@ -4,21 +4,46 @@
     using_gcp: true
   when: ansible_system_vendor == 'Google'
 
-- name: Set fact for package name
+- name: Set fact for package names
   ansible.builtin.set_fact:
-    redpanda_package_name: "redpanda{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}"
+    redpanda_version_suffix: "{{ '' if redpanda_version == 'latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}"
+    needs_split_packages: >-
+      {{ redpanda_version == 'latest' or 
+         (redpanda_version is version('24.2.0', '>=')) or
+      development_build | default(false) | bool }}
 
-- name: Install redpanda from repository
-  ansible.builtin.package:
-    name:
-      - "{{ redpanda_package_name }}"
+- name: Install redpanda (pre 24.2)
+  ansible.builtin.apt:
+    name: "redpanda{{ redpanda_version_suffix }}"
     state: "{{ redpanda_install_status }}"
     update_cache: true
     allow_unauthenticated: "{{ using_gcp | default(false) }}"
+    allow_downgrade: "{{ allow_downgrade | default(false) }}"
+    install_recommends: "{{ install_recommends | default(false) }}"
+    force: yes
   environment:
     https_proxy: "{{ https_proxy_value | default('') }}"
     http_proxy: "{{ https_proxy_value | default('') }}"
   register: package_result
+  when: not needs_split_packages
+
+- name: Install redpanda (post 24.2)
+  ansible.builtin.apt:
+    name:
+      - "redpanda{{ redpanda_version_suffix }}"
+      - "redpanda-rpk{{ redpanda_version_suffix }}"
+      - "redpanda-tuner{{ redpanda_version_suffix }}"
+    state: "{{ redpanda_install_status }}"
+    update_cache: true
+    allow_unauthenticated: "{{ using_gcp | default(false) }}"
+    allow_downgrade: "{{ allow_downgrade | default(false) }}"
+    install_recommends: "{{ install_recommends | default(false) }}"
+    force: yes
+  environment:
+    https_proxy: "{{ https_proxy_value | default('') }}"
+    http_proxy: "{{ https_proxy_value | default('') }}"
+  register: package_result
+  when: needs_split_packages
 
 - name: Set data dir file perms
   ansible.builtin.file:
