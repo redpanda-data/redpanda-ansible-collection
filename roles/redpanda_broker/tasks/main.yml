@@ -33,9 +33,16 @@
     - not (development_build | bool)
 
 - name: Configure Redpanda DEB Repository Development
-  ansible.builtin.include_tasks: install-nightly-build.yml
+  ansible.builtin.include_tasks: install-nightly-build-deb.yml
   when:
     - ansible_os_family == 'Debian'
+    - not (enable_airgap | bool)
+    - development_build | bool
+
+- name: Configure Redpanda DEB Repository Development
+  ansible.builtin.include_tasks: install-nightly-build-rpm.yml
+  when:
+    - ansible_os_family == 'RedHat'
     - not (enable_airgap | bool)
     - development_build | bool
 
