@@ -38,7 +38,7 @@
 
 - name: Add Cloudsmith repository configuration
   get_url:
-    url: "{{ cloudsmith_config_url }}?distro={{ distro }}&codename={{ codename }}&arch={{ arch }}&component=main"
+    url: "{{ cloudsmith_config_url_deb }}?distro={{ distro }}&codename={{ codename }}&arch={{ arch }}&component=main"
     dest: /etc/apt/sources.list.d/redpanda-redpanda-nightly.list
     mode: '0644'
   become: true
