@@ -75,6 +75,7 @@ redpanda_broker_no_log: true
 # used for installing the nightly build
 cloudsmith_token: "{{ lookup('env', 'CLOUDSMITH_API_KEY') }}"
 cloudsmith_gpg_key_url: "https://dl.redpanda.com/{{ cloudsmith_token }}/redpanda-nightly/gpg.E2242C4583FC4E52.key"
-cloudsmith_config_url: "https://dl.redpanda.com/{{ cloudsmith_token }}/redpanda-nightly/config.deb.txt"
+cloudsmith_config_url_deb: "https://dl.redpanda.com/{{ cloudsmith_token }}/redpanda-nightly/config.deb.txt"
+cloudsmith_config_url_rpm: "https://dl.redpanda.com/{{ cloudsmith_token }}/redpanda-nightly/config.rpm.txt"
 keyring_location: '/usr/share/keyrings/redpanda-redpanda-nightly-archive-keyring.gpg'
 development_build: false
