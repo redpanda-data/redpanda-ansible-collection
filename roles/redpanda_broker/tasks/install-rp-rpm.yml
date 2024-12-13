@@ -23,8 +23,11 @@
 - name: Install redpanda (post 24.2 or development)
   dnf:
     name:
+      - "redpanda-rpk{{ '' if enable_fips == 'disabled' else '-fips'}}{{ redpanda_version_suffix }}"
       - "redpanda{{ redpanda_version_suffix }}"
-      - "redpanda-rpk{{ redpanda_version_suffix }}"
+      {% if enable_fips != 'disabled' %}
+      - "redpanda-fips{{ redpanda_version_suffix }}"
+      {% endif %}
       - "redpanda-tuner{{ redpanda_version_suffix }}"
     state: "{{ redpanda_install_status }}"
     update_cache: true

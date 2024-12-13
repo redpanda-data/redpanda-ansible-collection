@@ -79,3 +79,20 @@ cloudsmith_config_url_deb: "https://dl.redpanda.com/{{ cloudsmith_token }}/redpa
 cloudsmith_config_url_rpm: "https://dl.redpanda.com/{{ cloudsmith_token }}/redpanda-nightly/config.rpm.txt"
 keyring_location: '/usr/share/keyrings/redpanda-redpanda-nightly-archive-keyring.gpg'
 development_build: false
+
+
+
+# enable fips. requires an enterprise license.
+# see https://docs.redpanda.com/current/manage/security/fips-compliance/
+enable_fips: false
+fips_mode: disabled
+fips_openssl_config_file: "/opt/redpanda/openssl/openssl.cnf"
+fips_openssl_module_directory: "/opt/redpanda/lib/ossl-modules/"
+
+
+# fips vars for checking status
+fips_check_exit_codes:
+  - 0  # fips-mode-setup is enabled
+  - 1  # fips-mode-setup is inconsistent
+  - 2  # fips-mode-setup is disabled
+fips_disabled_code: 2
