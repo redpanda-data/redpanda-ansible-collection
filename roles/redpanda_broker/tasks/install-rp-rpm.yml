@@ -8,6 +8,19 @@
          development_build | default(false) | bool }}
     allow_lower_version: "{{ development_build | default(false) | bool }}"
 
+- name: check OS FIPS mode state to see if configured and safe for Redpanda to proceed with fips_mode=enabled
+  ansible.builtin.include_tasks: fips-assert.yml
+  when:
+   - enable_fips | default(false) | bool
+
+- name: generate package list to install
+  ansible.builtin.set_fact:
+    redpanda_package_list: "{{ ['redpanda-rpk-fips', 'redpanda', 'redpanda-fips', 'redpanda-tuner'] if enable_fips | bool else ['redpanda-rpk','redpanda','redpanda-tuners']  }}"
+
+- name: generate versioned package list to install
+  ansible.builtin.set_fact:
+    redpanda_package_list_versioned: "{{ redpanda_package_list | product([redpanda_version_suffix]) | map('join') | list }}"
+
 - name: Install redpanda (pre 24.2)
   dnf:
     name: "redpanda{{ redpanda_version_suffix }}"
@@ -20,15 +33,10 @@
   register: package_result
   when: not needs_split_packages
 
+
 - name: Install redpanda (post 24.2 or development)
   dnf:
-    name:
-      - "redpanda-rpk{{ '' if enable_fips == 'disabled' else '-fips'}}{{ redpanda_version_suffix }}"
-      - "redpanda{{ redpanda_version_suffix }}"
-      {% if enable_fips != 'disabled' %}
-      - "redpanda-fips{{ redpanda_version_suffix }}"
-      {% endif %}
-      - "redpanda-tuner{{ redpanda_version_suffix }}"
+    name: "{{item}}"
     state: "{{ redpanda_install_status }}"
     update_cache: true
     allow_downgrade: "{{ allow_lower_version }}"
@@ -37,6 +45,7 @@
     http_proxy: "{{ https_proxy_value | default('') }}"
   register: package_result
   when: needs_split_packages
+  loop: "{{ redpanda_package_list }}"
 
 - name: Set data dir file perms
   ansible.builtin.file:
