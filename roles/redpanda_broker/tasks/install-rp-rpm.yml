@@ -15,7 +15,7 @@
 
 - name: generate package list to install
   ansible.builtin.set_fact:
-    redpanda_package_list: "{{ ['redpanda-rpk-fips', 'redpanda', 'redpanda-fips', 'redpanda-tuner'] if enable_fips | bool else ['redpanda-rpk','redpanda','redpanda-tuners']  }}"
+    redpanda_package_list: "{{ ['redpanda-rpk-fips', 'redpanda', 'redpanda-fips', 'redpanda-tuner'] if enable_fips | bool else ['redpanda-rpk','redpanda','redpanda-tuner']  }}"
 
 - name: generate versioned package list to install
   ansible.builtin.set_fact:
