@@ -10,9 +10,9 @@
       groups['redpanda'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_ips | default(False) | bool) else 'private_ip') | list
     }}"
 
-- name: Create list of connect_advertised_ips
+- name: Create list of kafka_connect_advertised_ips
   ansible.builtin.set_fact:
-    connect_advertised_ips: "{{
+    kafka_connect_advertised_ips: "{{
       groups['connect'] | map('extract', hostvars) | map(attribute='inventory_hostname' if (advertise_public_ips | default(False) | bool) else 'private_ip') | list
     }}"
   when: "'connect' in groups"
