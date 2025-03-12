@@ -1,9 +1,16 @@
+---
 - name: Ensure redpanda_version is defined
   ansible.builtin.assert:
     that:
       - redpanda_version != ''
     fail_msg: "Variable 'redpanda_version' must be defined!"
   when: not (install_certs_only | default(false) | bool)
+
+# Set fact for package version suffix
+- name: Set fact for package version suffix
+  ansible.builtin.set_fact:
+    redpanda_version_suffix: "{{ '' if redpanda_version == 'latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}"
+    use_pre_v3_template: "{{ redpanda_version != 'latest' and redpanda_version is version('3.0.0', '<') }}"
 
 # Copies certs set in ca_cert_file and node_cert_file into the redpanda nodes. see defaults for the default values
 # only necessary when TLS is enabled
@@ -31,6 +38,7 @@
   when:
     - ansible_os_family == 'Debian'
     - enable_airgap is false
+
 - name: Install Redpanda Console
   ansible.builtin.include_tasks: install-console-deb.yml
   when:

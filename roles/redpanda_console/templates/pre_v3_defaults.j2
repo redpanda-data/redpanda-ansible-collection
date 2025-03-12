@@ -1,8 +1,15 @@
 {
   "kafka": {
-      "brokers": [
+    "brokers": [
         {% for host in advertised_ips %}
         "{{ host }}:{{ redpanda_kafka_port }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
+    "schemaRegistry": {
+      "enabled": true,
+      "urls": [
+        {% for host in advertised_ips %}
+        "{% if enable_tls | default(false) %}https{% else %}http{% endif %}://{{ host }}:{{ redpanda_schema_registry_port }}"{% if not loop.last %},{% endif %}
         {% endfor %}
       ]{% if enable_tls | default(false) %},
       "tls": {
@@ -11,8 +18,23 @@
         "certFilepath": "{{ redpanda_cert_file }}",
         "keyFilepath": "{{ redpanda_key_file }}",
         "insecureSkipTlsVerify": false
+      }{% endif %}
+    },
+    "protobuf": {
+      "enabled": true,
+      "schemaRegistry": {
+        "enabled": true,
+        "refreshInterval": "5m"
       }
-      {% endif %}
+    }{% if enable_tls | default(false) %},
+  "tls": {
+    "enabled": true,
+    "caFilepath": "{{ redpanda_truststore_file }}",
+    "certFilepath": "{{ redpanda_cert_file }}",
+    "keyFilepath": "{{ redpanda_key_file }}",
+    "insecureSkipTlsVerify": false
+    }
+  {% endif %}
   },
   "redpanda": {
     "adminApi": {
@@ -31,7 +53,7 @@
       }
       {% endif %}
     }
-  },{% if enable_tls | default(false) %}
+  }{% if enable_tls | default(false) %},
   "server": {
     "listenPort": {{ http_port }},
     "httpsListenPort": {{ https_port }},
@@ -40,10 +62,11 @@
       "certFilepath": "{{ console_cert_file }}",
       "keyFilepath": "{{ console_key_file }}"
     }
-  },{% endif %}{% if kafka_connect_advertised_ips is defined %}
-  "kafkaConnect": {
+  }{% endif %}{% if kafka_connect_advertised_ips is defined %},
+    "connect": {
     "enabled": true,
-    "clusters": [
+    "clusters":
+    [
       {
         "name": "Connect",
         "url": "{% if enable_tls | default(false) %}https{% else %}http{% endif %}://{{ kafka_connect_advertised_ips[0] }}:{{ kafka_connect_port }}"
@@ -56,32 +79,6 @@
           "insecureSkipTlsVerify": false
         }
         {% endif %}
-      }
-    ]
-  },{% endif %}
-  "schemaRegistry": {
-    "enabled": true,
-    "urls": [
-      {% for host in advertised_ips %}
-      "{% if enable_tls | default(false) %}https{% else %}http{% endif %}://{{ host }}:{{ redpanda_schema_registry_port }}"{% if not loop.last %},{% endif %}
-      {% endfor %}
-    ]{% if enable_tls | default(false) %},
-    "tls": {
-      "enabled": true,
-      "caFilepath": "{{ redpanda_truststore_file }}",
-      "certFilepath": "{{ redpanda_cert_file }}",
-      "keyFilepath": "{{ redpanda_key_file }}",
-      "insecureSkipTlsVerify": false
-    }
-    {% endif %}
-  },
-  "serde": {
-    "protobuf": {
-      "enabled": true,
-      "schemaRegistry": {
-        "enabled": true,
-        "refreshInterval": "5m"
-      }
-    }
-  }
+    }]
+}{% endif %}
 }

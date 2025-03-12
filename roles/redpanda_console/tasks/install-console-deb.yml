@@ -1,18 +1,32 @@
 - name: Install redpanda console (deb)
   ansible.builtin.package:
     name:
-      - redpanda-console
+      - redpanda-console{{ redpanda_version_suffix }}
     state: "{{ redpanda_install_status }}"
     update_cache: true
   environment:
     https_proxy: "{{ https_proxy_value | default('') }}"
     http_proxy: "{{ https_proxy_value | default('') }}"
+  register: console_install_result
   when: https_proxy_value is defined and https_proxy_value | length > 0
 
 - name: Install redpanda console (deb)
   ansible.builtin.package:
     name:
-      - redpanda-console
+      - redpanda-console{{ redpanda_version_suffix }}
     state: "{{ redpanda_install_status }}"
     update_cache: true
+  register: console_install_result
   when: https_proxy_value is not defined or https_proxy_value | length == 0
+
+# Get installed version if 'latest' was requested
+- name: Get installed console version
+  ansible.builtin.shell: dpkg-query -W -f='${Version}' redpanda-console
+  register: console_version_result
+  changed_when: false
+  when: redpanda_version == 'latest'
+
+- name: Update template choice based on installed version
+  ansible.builtin.set_fact:
+    use_pre_v3_template: "{{ console_version_result.stdout is version('3.0.0', '<') }}"
+  when: redpanda_version == 'latest'

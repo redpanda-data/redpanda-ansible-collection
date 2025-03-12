@@ -1,3 +1,6 @@
 ---
 console_config_templates:
+  - template: pre_v3_defaults.j2
+    condition: "{{ use_pre_v3_template | default(false) }}"
   - template: defaults.j2
+    condition: "{{ not (use_pre_v3_template | default(false)) }}"
