@@ -11,10 +11,15 @@ all: $(FILES)
 
 do: reqs test
 
+.PHONY: test
 test: $(SCRIPTS)
-	echo "running $(DIR) $(SCRIPTS)"
-	$(foreach FILE,$(SCRIPTS), $(PYTHON) $(FILE);)
-
+	@echo "running $(DIR) $(SCRIPTS)"
+	@EXIT_CODE=0; \
+	for FILE in $(SCRIPTS); do \
+		echo "Running $$FILE"; \
+		$(PYTHON) $$FILE || EXIT_CODE=1; \
+	done; \
+	exit $$EXIT_CODE
 reqs:
 	$(PIP) install --no-cache-dir -r tests/requirements.txt
 
