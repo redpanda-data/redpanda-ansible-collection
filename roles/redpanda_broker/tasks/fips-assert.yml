@@ -9,9 +9,8 @@
   failed_when:
     - os_fips_mode.rc not in fips_check_exit_codes
 
-- name: Ensure FIPS not disabled"
+- name: Ensure FIPS not disabled
   ansible.builtin.assert:
     that:
-      - os_fips_mode.rc == 2 and fips_mode != "enabled"
+      - not (os_fips_mode.rc == 2 and fips_mode != "enabled")
     fail_msg: "OS does not have FIPS correctly enabled (fips-mode-setup exit code == {{os_fips_mode.rc}}) and Redpanda Ansible 'fips_mode' setting is possibly enabled (currently set to {{fips_mode}}); this will cause Redpanda startup failures. set fips_mode=permissive for unsafe bypass"
-
