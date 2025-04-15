@@ -15,23 +15,23 @@
         }
       ],
       "advertised_rpc_api": {
-        "address": "{{ hostvars[inventory_hostname].private_ip }}",
+        "address": "{{ hostvars[inventory_hostname].connection_address }}",
         "port": "{{ redpanda_rpc_port }}"
       },
       "data_directory": "{{ redpanda_data_directory }}",
       "rpc_server": {
-        "address": "{{ hostvars[inventory_hostname].private_ip }}",
+        "address": "{{ hostvars[inventory_hostname].listen_address }}",
         "port": "{{ redpanda_rpc_port }}"
       },
       "kafka_api": [
         {
-          "address": "{{ hostvars[inventory_hostname].private_ip }}",
+          "address": "{{ hostvars[inventory_hostname].listen_address }}",
           "port": "{{ redpanda_kafka_port }}"
         }
       ],
       "admin": [
         {
-          "address": "{{ hostvars[inventory_hostname].private_ip }}",
+          "address": "{{ hostvars[inventory_hostname].listen_address }}",
           "port": "{{ redpanda_admin_api_port }}"
         }
       ],
@@ -40,7 +40,7 @@
         {% for host in groups['redpanda'] %}
         {
           "host": {
-            "address": "{{ hostvars[host]['private_ip'] }}",
+            "address": "{{ hostvars[host]['connection_address'] }}",
             "port": "{{ redpanda_rpc_port }}"
           }
         }{% if not loop.last %},{% endif %}
@@ -51,14 +51,14 @@
       "kafka_api": {
         "brokers": [
         {% for host in groups['redpanda'] %}
-        "{{ hostvars[host]['private_ip'] }}:{{ redpanda_kafka_port }}"{% if not loop.last %},{% endif %}
+        "{{ hostvars[host]['connection_address'] }}:{{ redpanda_kafka_port }}"{% if not loop.last %},{% endif %}
         {% endfor %}
         ]
       },
       "admin_api": {
         "addresses": [
           {% for host in groups['redpanda'] %}
-          "{{ hostvars[host]['private_ip'] }}:{{ redpanda_admin_api_port }}"{% if not loop.last %},{% endif %}
+          "{{ hostvars[host]['connection_address'] }}:{{ redpanda_admin_api_port }}"{% if not loop.last %},{% endif %}
           {% endfor %}
         ]
       },
