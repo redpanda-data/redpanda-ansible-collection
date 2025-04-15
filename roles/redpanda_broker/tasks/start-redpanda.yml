@@ -9,6 +9,14 @@
   ansible.builtin.set_fact:
     advertised_ip: "{{ inventory_hostname if (advertise_public_ips | d() | bool) else private_ip }}"
 
+- name: Identify listen address
+  ansible.builtin.set_fact:
+    listen_address: "{{ redpanda_listen_address | default(private_ip) }}"
+
+- name: Identify connection address for other nodes
+  ansible.builtin.set_fact:
+    connection_address: "{{ redpanda_connection_address | default(private_ip) }}"
+
 # start out with an empty configuration object so we can fill in later based on
 # jinja templates or ansible variables defined by the user in
 # custom_config_template

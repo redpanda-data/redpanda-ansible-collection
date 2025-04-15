@@ -39,6 +39,7 @@
     owner: redpanda
     group: redpanda
     force: "{{ overwrite_certs | default('no') | bool }}"
+    remote_src: "{{ remote_src_certs | default('no') | bool }}"
     mode: "0644"
 
 - name: Install_certs - Copy Node Certs
@@ -50,6 +51,7 @@
     owner: redpanda
     group: redpanda
     force: "{{ overwrite_certs | default('no') | bool }}"
+    remote_src: "{{ remote_src_certs | default('no') | bool }}"
     mode: "0644"
 
 - name: Install_certs - Copy Node Keys
@@ -61,6 +63,7 @@
     owner: redpanda
     group: redpanda
     force: "{{ overwrite_certs | default('no') | bool }}"
+    remote_src: "{{ remote_src_certs | default('no') | bool }}"
     mode: "0644"
   when:
     - not (node_key_file | default('') == '')
