@@ -6,3 +6,10 @@
 # Adjust upwards as necessary. An upper limit has not been established. Increasing
 # this excessively can increase kernel memory usage. 
 max_user_instances: 8192
+
+
+# fs.file-max sets the max system-wide open file handles. This is necessary for
+# redpanda which can have a large number of active files and tcp connections 
+# open on a broker to service client requests. If set too low, redpanda will
+# fail with "too many open files" errors.
+max_open_filehandles: 1048576

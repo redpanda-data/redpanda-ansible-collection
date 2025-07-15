@@ -6,3 +6,14 @@
     state: present
     reload: true
   become: true
+
+# configure max open file handles since some distros may no longer be 
+# setting this high by default.
+- name: configure fs.file-max for redpanda
+  ansible.posix.sysctl:
+    name: fs.file-max
+    value: "{{ max_open_filehandles }}"
+    sysctl_set: true
+    state: present
+    reload: true
+  become: true
