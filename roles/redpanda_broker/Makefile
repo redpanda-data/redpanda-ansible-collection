@@ -28,4 +28,8 @@ test: $(SCRIPTS)
 
 .PHONY: up
 up:
-	docker-compose up --build
+	docker build -t redpanda-broker-test . && docker run redpanda-broker-test
+
+.PHONY: compose-up
+compose-up:
+	docker compose up --build
