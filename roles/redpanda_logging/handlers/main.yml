@@ -1,0 +1,24 @@
+---
+# Handlers for redpanda_logging role
+
+- name: restart rsyslog
+  ansible.builtin.systemd:
+    name: rsyslog
+    state: restarted
+  become: true
+
+- name: reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
+- name: restart redpanda services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: restarted
+  become: true
+  loop:
+    - redpanda
+    - redpanda-connect
+    - redpanda-console
+  failed_when: false  # Don't fail if service doesn't exist

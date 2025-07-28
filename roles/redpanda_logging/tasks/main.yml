@@ -1,0 +1,92 @@
+---
+# Main tasks for redpanda_logging role
+
+- name: Check if logging is enabled
+  ansible.builtin.debug:
+    msg: "Redpanda logging configuration is {{ 'enabled' if redpanda_logging_enabled else 'disabled' }}"
+
+- name: Configure Redpanda logging
+  when: redpanda_logging_enabled
+  block:
+    - name: Create log directory if needed
+      ansible.builtin.file:
+        path: "{{ redpanda_logging_log_file | dirname }}"
+        state: directory
+        owner: "{{ redpanda_logging_owner }}"
+        group: "{{ redpanda_logging_group }}"
+        mode: "{{ redpanda_logging_dir_mode }}"
+      become: true
+      when: (redpanda_logging_log_file | dirname) != '/var/log'
+    - name: Configure rsyslog for Redpanda
+      when: redpanda_logging_rsyslog_enabled
+      block:
+        - name: Deploy rsyslog configuration
+          ansible.builtin.template:
+            src: redpanda-rsyslog.conf.j2
+            dest: "/etc/rsyslog.d/{{ redpanda_logging_rsyslog_priority }}-redpanda.conf"
+            owner: root
+            group: root
+            mode: '0644'
+          become: true
+          notify: restart rsyslog
+
+        - name: Ensure rsyslog service is running
+          ansible.builtin.systemd:
+            name: rsyslog
+            state: started
+            enabled: true
+          become: true
+
+    - name: Configure logrotate for Redpanda logs
+      when: redpanda_logging_logrotate_enabled
+      block:
+        - name: Deploy logrotate configuration
+          ansible.builtin.template:
+            src: redpanda-logrotate.conf.j2
+            dest: /etc/logrotate.d/redpanda
+            owner: root
+            group: root
+            mode: '0644'
+          become: true
+
+    - name: Create initial log file with correct permissions
+      ansible.builtin.file:
+        path: "{{ redpanda_logging_log_file }}"
+        state: touch
+        owner: "{{ redpanda_logging_owner }}"
+        group: "{{ redpanda_logging_group }}"
+        mode: "{{ redpanda_logging_file_mode }}"
+        modification_time: preserve
+        access_time: preserve
+      become: true
+
+    - name: Configure systemd logging (if enabled)
+      when: redpanda_logging_systemd_enabled
+      block:
+        - name: Create systemd drop-in directory for Redpanda service
+          ansible.builtin.file:
+            path: "/etc/systemd/system/redpanda.service.d"
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+          become: true
+
+        - name: Create systemd logging override
+          ansible.builtin.copy:
+            content: |
+              [Service]
+              StandardOutput=journal
+              StandardError=journal
+              SyslogIdentifier={{ redpanda_logging_program }}
+            dest: "/etc/systemd/system/redpanda.service.d/logging.conf"
+            owner: root
+            group: root
+            mode: '0644'
+          become: true
+          notify: reload systemd
+
+- name: Display logging configuration status
+  ansible.builtin.debug:
+    msg: "Redpanda logs will be written to: {{ redpanda_logging_log_file }}"
+  when: redpanda_logging_enabled
