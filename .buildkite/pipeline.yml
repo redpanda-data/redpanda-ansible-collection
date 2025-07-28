@@ -17,3 +17,8 @@ steps:
       - docker-compose#v5.2.0:
           config: roles/redpanda_console/docker-compose.yml
           run: testctr
+  - label: "logging template tests"
+    plugins:
+      - docker-compose#v5.2.0:
+          config: roles/redpanda_logging/docker-compose.yml
+          run: testctr
