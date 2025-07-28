@@ -23,5 +23,10 @@ test: $(SCRIPTS)
 reqs:
 	$(PIP) install --no-cache-dir -r tests/requirements.txt
 
+.PHONY: up
 up:
-	docker-compose up --build
+	docker build -t redpanda-connect-test . && docker run redpanda-connect-test
+
+.PHONY: compose-up
+compose-up:
+	docker compose up --build
