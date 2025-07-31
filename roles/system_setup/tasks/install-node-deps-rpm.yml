@@ -42,5 +42,6 @@
   become: true
   ansible.builtin.package:
     name: "{{ rpm_prerequisite_packages }}"
+    allowerasing: true
     state: present
     update_cache: true
