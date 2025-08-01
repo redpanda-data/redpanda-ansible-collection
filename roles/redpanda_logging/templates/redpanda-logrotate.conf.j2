@@ -1,0 +1,24 @@
+{{ redpanda_logging_log_file }} {
+    {{ redpanda_logging_logrotate_frequency }}
+    rotate {{ redpanda_logging_logrotate_rotate }}
+    maxsize {{ redpanda_logging_logrotate_maxsize }}
+    su {{ redpanda_logging_owner }} {{ redpanda_logging_group }}
+    {% if redpanda_logging_logrotate_compress %}
+    compress
+    {% endif %}
+    {% if redpanda_logging_logrotate_delaycompress %}
+    delaycompress
+    {% endif %}
+    {% if redpanda_logging_logrotate_notifempty %}
+    notifempty
+    {% endif %}
+    {% if redpanda_logging_logrotate_create %}
+    create {{ redpanda_logging_file_mode }} {{ redpanda_logging_owner }} {{ redpanda_logging_group }}
+    {% endif %}
+    {% if redpanda_logging_logrotate_sharedscripts %}
+    sharedscripts
+    {% endif %}
+    postrotate
+        {{ redpanda_logging_logrotate_postrotate_command | indent(8) }}
+    endscript
+}

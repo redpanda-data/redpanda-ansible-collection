@@ -1,0 +1,33 @@
+---
+galaxy_info:
+  author: Redpanda Data
+  description: Configure logging for Redpanda services to dedicated log files with rotation
+  company: Redpanda Data
+  license: Apache-2.0
+  min_ansible_version: 2.9
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: Debian
+      versions:
+        - buster
+        - bullseye
+    - name: EL
+      versions:
+        - 7
+        - 8
+        - 9
+    - name: Fedora
+      versions:
+        - all
+  galaxy_tags:
+    - redpanda
+    - logging
+    - syslog
+    - logrotate
+    - kafka
+    - streaming
+
+dependencies: []

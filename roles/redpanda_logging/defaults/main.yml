@@ -1,0 +1,44 @@
+---
+# Redpanda Logging Configuration
+
+# Enable logging configuration
+redpanda_logging_enabled: true
+
+redpanda_logging_log_file: /var/log/redpanda.log
+
+# Log directory ownership (OS-specific defaults)
+redpanda_logging_owner: "{{ 'root' if ansible_os_family == 'RedHat' else 'syslog' }}"
+redpanda_logging_group: "{{ 'root' if ansible_os_family == 'RedHat' else 'adm' }}"
+redpanda_logging_dir_mode: '0755'
+redpanda_logging_file_mode: '0640'
+
+# Rsyslog configuration
+redpanda_logging_rsyslog_enabled: true
+redpanda_logging_rsyslog_priority: 40  # Priority for rsyslog config file
+
+redpanda_logging_program: rpk
+
+# Logrotate configuration
+redpanda_logging_logrotate_enabled: true
+redpanda_logging_logrotate_frequency: daily
+redpanda_logging_logrotate_rotate: 7  # Keep 7 rotated logs
+redpanda_logging_logrotate_maxsize: 100M
+redpanda_logging_logrotate_compress: true
+redpanda_logging_logrotate_delaycompress: true
+redpanda_logging_logrotate_notifempty: true
+redpanda_logging_logrotate_create: true
+redpanda_logging_logrotate_sharedscripts: true
+
+# Additional logrotate options
+redpanda_logging_logrotate_postrotate_command: |
+  for pidfile in /var/run/rsyslogd.pid /run/rsyslogd.pid; do
+    if [ -f "$pidfile" ]; then
+      /bin/kill -HUP `cat "$pidfile" 2> /dev/null` 2> /dev/null || true
+      break
+    fi
+  done
+
+# Systemd logging configuration
+redpanda_logging_systemd_enabled: false  # Enable systemd-specific logging config
+redpanda_logging_systemd_max_level: info  # MaxLevelStore for journald
+redpanda_logging_systemd_forward_to_syslog: true
