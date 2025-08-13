@@ -22,3 +22,10 @@
     - redpanda-connect
     - redpanda-console
   failed_when: false  # Don't fail if service doesn't exist
+
+- name: reload syslog-ng
+  service:
+    name: syslog-ng
+    state: reloaded
+  when: logging_backend == 'syslog-ng'
+

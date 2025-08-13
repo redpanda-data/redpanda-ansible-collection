@@ -1,0 +1,12 @@
+{{ syslog_ng_log_path }}/redpanda.log {
+    daily
+    rotate 7
+    compress
+    missingok
+    notifempty
+    create 0640 root root
+    postrotate
+        systemctl reload syslog-ng > /dev/null 2>&1 || true
+    endscript
+}
+

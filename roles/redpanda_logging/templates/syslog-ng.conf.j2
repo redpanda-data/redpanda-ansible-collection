@@ -1,0 +1,31 @@
+@version: 3.33
+
+options {
+    chain_hostnames(no);
+    flush_lines(0);
+    use_dns(no);
+    use_fqdn(no);
+    owner("root");
+    group("root");
+    perm(0644);
+    stats_freq(0);
+    bad_hostname("^gconfd$");
+};
+
+source s_local {
+    system();
+    internal();
+};
+
+destination d_redpanda {
+    file("{{ syslog_ng_log_path }}/redpanda.log"
+         template("${ISODATE} ${HOST} ${PROGRAM} ${MSG}\n")
+         log_fifo_size(1000)
+         create_dirs(yes));
+};
+
+log {
+    source(s_local);
+    destination(d_redpanda);
+};
+
