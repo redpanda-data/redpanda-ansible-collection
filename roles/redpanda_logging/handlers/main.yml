@@ -1,9 +1,9 @@
 ---
 # Handlers for redpanda_logging role
 
-- name: restart rsyslog
+- name: restart syslog-ng
   ansible.builtin.systemd:
-    name: rsyslog
+    name: syslog-ng
     state: restarted
   become: true
 
