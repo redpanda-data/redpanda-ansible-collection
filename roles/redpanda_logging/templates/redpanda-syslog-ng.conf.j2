@@ -1,0 +1,3 @@
+filter f_redpanda { program("{{ redpanda_logging_program }}"); };
+destination d_redpanda { file("{{ redpanda_logging_log_file }}"); };
+log { source({{ redpanda_logging_syslog_ng_source }}); filter(f_redpanda); destination(d_redpanda); flags(final); };

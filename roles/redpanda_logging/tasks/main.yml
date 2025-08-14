@@ -17,22 +17,28 @@
         mode: "{{ redpanda_logging_dir_mode }}"
       become: true
       when: (redpanda_logging_log_file | dirname) != '/var/log'
-    - name: Configure rsyslog for Redpanda
-      when: redpanda_logging_rsyslog_enabled
+    - name: Configure syslog-ng for Redpanda
+      when: redpanda_logging_syslog_ng_enabled
       block:
-        - name: Deploy rsyslog configuration
+        - name: Install syslog-ng package
+          ansible.builtin.package:
+            name: "{{ redpanda_logging_syslog_ng_package }}"
+            state: present
+          become: true
+
+        - name: Deploy syslog-ng configuration
           ansible.builtin.template:
-            src: redpanda-rsyslog.conf.j2
-            dest: "/etc/rsyslog.d/{{ redpanda_logging_rsyslog_priority }}-redpanda.conf"
+            src: redpanda-syslog-ng.conf.j2
+            dest: "/etc/syslog-ng/conf.d/{{ redpanda_logging_syslog_ng_priority }}-redpanda.conf"
             owner: root
             group: root
             mode: '0644'
           become: true
-          notify: restart rsyslog
+          notify: restart syslog-ng
 
-        - name: Ensure rsyslog service is running
+        - name: Ensure syslog-ng service is running
           ansible.builtin.systemd:
-            name: rsyslog
+            name: syslog-ng
             state: started
             enabled: true
           become: true

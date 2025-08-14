@@ -12,9 +12,11 @@ redpanda_logging_group: "{{ 'root' if ansible_os_family == 'RedHat' else 'adm' }
 redpanda_logging_dir_mode: '0755'
 redpanda_logging_file_mode: '0640'
 
-# Rsyslog configuration
-redpanda_logging_rsyslog_enabled: true
-redpanda_logging_rsyslog_priority: 40  # Priority for rsyslog config file
+# Syslog-ng configuration
+redpanda_logging_syslog_ng_enabled: true
+redpanda_logging_syslog_ng_priority: 40  # Priority for syslog-ng config file
+redpanda_logging_syslog_ng_package: "{{ 'syslog-ng-core' if ansible_os_family == 'Debian' else 'syslog-ng' }}"
+redpanda_logging_syslog_ng_source: "{{ 's_src' if ansible_os_family == 'Debian' else 's_sys' }}"
 
 redpanda_logging_program: rpk
 
@@ -31,7 +33,7 @@ redpanda_logging_logrotate_sharedscripts: true
 
 # Additional logrotate options
 redpanda_logging_logrotate_postrotate_command: |
-  for pidfile in /var/run/rsyslogd.pid /run/rsyslogd.pid; do
+  for pidfile in /var/run/syslog-ng.pid /run/syslog-ng.pid; do
     if [ -f "$pidfile" ]; then
       /bin/kill -HUP `cat "$pidfile" 2> /dev/null` 2> /dev/null || true
       break
