@@ -42,3 +42,10 @@ redpanda_logging_logrotate_postrotate_command: |
 redpanda_logging_systemd_enabled: false  # Enable systemd-specific logging config
 redpanda_logging_systemd_max_level: info  # MaxLevelStore for journald
 redpanda_logging_systemd_forward_to_syslog: true
+
+# Logging backend selection: "rsyslog" or "syslog-ng"
+logging_backend: rsyslog
+
+# Syslog-ng specific defaults
+syslog_ng_log_path: /var/log/redpanda
+syslog_ng_log_rotate_enabled: true

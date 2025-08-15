@@ -8,6 +8,7 @@
 - name: Configure Redpanda logging
   when: redpanda_logging_enabled
   block:
+
     - name: Create log directory if needed
       ansible.builtin.file:
         path: "{{ redpanda_logging_log_file | dirname }}"
@@ -17,8 +18,10 @@
         mode: "{{ redpanda_logging_dir_mode }}"
       become: true
       when: (redpanda_logging_log_file | dirname) != '/var/log'
+
+    # rsyslog support
     - name: Configure rsyslog for Redpanda
-      when: redpanda_logging_rsyslog_enabled
+      when: logging_backend == 'rsyslog'
       block:
         - name: Deploy rsyslog configuration
           ansible.builtin.template:
@@ -30,6 +33,17 @@
           become: true
           notify: restart rsyslog
 
+        - name: Unmask rsyslog service
+          ansible.builtin.command:
+            cmd: systemctl unmask rsyslog.service
+          become: true
+
+        - name: Ensure rsyslog is installed
+          ansible.builtin.package:
+            name: rsyslog
+            state: present
+          become: true
+
         - name: Ensure rsyslog service is running
           ansible.builtin.systemd:
             name: rsyslog
@@ -37,8 +51,47 @@
             enabled: true
           become: true
 
+    # syslog-ng support
+    - name: Configure syslog-ng for Redpanda
+      when: logging_backend == 'syslog-ng'
+      block:
+        - name: Install syslog-ng
+          ansible.builtin.package:
+            name: syslog-ng
+            state: present
+          become: true
+
+        - name: Ensure syslog-ng log directory exists
+          ansible.builtin.file:
+            path: "{{ redpanda_logging_log_file | dirname }}"
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+          become: true
+
+        - name: Deploy syslog-ng config file
+          ansible.builtin.template:
+            src: syslog-ng.conf.j2
+            dest: /etc/syslog-ng/syslog-ng.conf
+            owner: root
+            group: root
+            mode: '0644'
+          notify: reload syslog-ng
+          become: true
+
+        - name: Deploy logrotate config for syslog-ng
+          ansible.builtin.template:
+            src: logrotate-syslog-ng.j2
+            dest: /etc/logrotate.d/syslog-ng
+            owner: root
+            group: root
+            mode: '0644'
+          when: syslog_ng_log_rotate_enabled | default(false)
+          become: true
+
     - name: Configure logrotate for Redpanda logs
-      when: redpanda_logging_logrotate_enabled
+      when: redpanda_logging_logrotate_enabled | default(true)
       block:
         - name: Deploy logrotate configuration
           ansible.builtin.template:
@@ -61,7 +114,7 @@
       become: true
 
     - name: Configure systemd logging (if enabled)
-      when: redpanda_logging_systemd_enabled
+      when: redpanda_logging_systemd_enabled | default(false)
       block:
         - name: Create systemd drop-in directory for Redpanda service
           ansible.builtin.file:
@@ -90,3 +143,4 @@
   ansible.builtin.debug:
     msg: "Redpanda logs will be written to: {{ redpanda_logging_log_file }}"
   when: redpanda_logging_enabled
+
