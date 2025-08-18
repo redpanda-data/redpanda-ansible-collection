@@ -7,6 +7,12 @@
     state: restarted
   become: true
 
+- name: restart syslog-ng
+  ansible.builtin.systemd:
+    name: syslog-ng
+    state: restarted
+  become: true
+
 - name: reload systemd
   ansible.builtin.systemd:
     daemon_reload: true

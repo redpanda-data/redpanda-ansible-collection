@@ -5,6 +5,10 @@
   ansible.builtin.debug:
     msg: "Redpanda logging configuration is {{ 'enabled' if redpanda_logging_enabled else 'disabled' }}"
 
+- name: Debug backend selection
+  ansible.builtin.debug:
+    msg: "Selected backend: '{{ redpanda_logging_backend }}' (type: {{ redpanda_logging_backend | type_debug }})"
+
 - name: Configure Redpanda logging
   when: redpanda_logging_enabled
   block:
@@ -18,8 +22,45 @@
       become: true
       when: (redpanda_logging_log_file | dirname) != '/var/log'
     - name: Configure rsyslog for Redpanda
-      when: redpanda_logging_rsyslog_enabled
+      when: redpanda_logging_backend == 'rsyslog'
       block:
+        - name: Debug rsyslog block execution
+          ansible.builtin.debug:
+            msg: "Executing rsyslog block with backend: '{{ redpanda_logging_backend }}'"
+        - name: Check if syslog-ng is installed (conflicting backend)
+          ansible.builtin.command: systemctl list-unit-files syslog-ng.service
+          register: syslog_ng_conflict_check
+          failed_when: false
+          changed_when: false
+
+        - name: Stop and disable syslog-ng if present
+          ansible.builtin.systemd:
+            name: syslog-ng
+            state: stopped
+            enabled: false
+          become: true
+          when: syslog_ng_conflict_check.rc == 0
+
+        - name: Remove conflicting syslog-ng package
+          ansible.builtin.package:
+            name: syslog-ng
+            state: absent
+          become: true
+          when: syslog_ng_conflict_check.rc == 0
+
+        - name: Check if rsyslog is installed
+          ansible.builtin.command: systemctl list-unit-files rsyslog.service
+          register: rsyslog_check
+          failed_when: false
+          changed_when: false
+
+        - name: Install rsyslog package
+          ansible.builtin.package:
+            name: rsyslog
+            state: present
+          become: true
+          when: rsyslog_check.rc != 0
+
         - name: Deploy rsyslog configuration
           ansible.builtin.template:
             src: redpanda-rsyslog.conf.j2
@@ -33,6 +74,83 @@
         - name: Ensure rsyslog service is running
           ansible.builtin.systemd:
             name: rsyslog
+            state: started
+            enabled: true
+          become: true
+
+    - name: Configure syslog-ng for Redpanda
+      when: redpanda_logging_backend == 'syslog-ng'
+      block:
+        - name: Debug syslog-ng block execution
+          ansible.builtin.debug:
+            msg: "Executing syslog-ng block with backend: '{{ redpanda_logging_backend }}'"
+        - name: Check if rsyslog is installed (conflicting backend)
+          ansible.builtin.command: systemctl list-unit-files rsyslog.service
+          register: rsyslog_conflict_check
+          failed_when: false
+          changed_when: false
+
+        - name: Stop and disable rsyslog if present
+          ansible.builtin.systemd:
+            name: rsyslog
+            state: stopped
+            enabled: false
+          become: true
+          when: rsyslog_conflict_check.rc == 0
+
+        - name: Remove conflicting rsyslog package
+          ansible.builtin.package:
+            name: rsyslog
+            state: absent
+          become: true
+          when: rsyslog_conflict_check.rc == 0
+
+        - name: Check if syslog-ng is installed
+          ansible.builtin.command: systemctl list-unit-files syslog-ng.service
+          register: syslog_ng_check
+          failed_when: false
+          changed_when: false
+
+        - name: Install syslog-ng package
+          ansible.builtin.package:
+            name: syslog-ng
+            state: present
+          become: true
+          when: syslog_ng_check.rc != 0
+
+        - name: Create syslog-ng conf.d directory
+          ansible.builtin.file:
+            path: /etc/syslog-ng/conf.d
+            state: directory
+            owner: root
+            group: root
+            mode: '0755'
+          become: true
+
+        - name: Deploy modified main syslog-ng configuration to exclude redpanda from system logs
+          ansible.builtin.template:
+            src: syslog-ng.conf.j2
+            dest: /etc/syslog-ng/syslog-ng.conf
+            owner: root
+            group: root
+            mode: '0644'
+            backup: yes
+          become: true
+          notify: restart syslog-ng
+
+        - name: Deploy syslog-ng configuration
+          ansible.builtin.template:
+            src: redpanda-syslog-ng.conf.j2
+            dest: "/etc/syslog-ng/conf.d/{{ redpanda_logging_syslog_ng_priority }}-redpanda.conf"
+            owner: root
+            group: root
+            mode: '0644'
+          become: true
+          notify: restart syslog-ng
+
+        - name: Ensure syslog-ng service is running
+          ansible.builtin.systemd:
+            name: syslog-ng
             state: started
             enabled: true
           become: true
@@ -88,5 +206,5 @@
 
 - name: Display logging configuration status
   ansible.builtin.debug:
-    msg: "Redpanda logs will be written to: {{ redpanda_logging_log_file }}"
+    msg: "Redpanda logs will be written to: {{ redpanda_logging_log_file }} via {{ redpanda_logging_backend }}"
   when: redpanda_logging_enabled

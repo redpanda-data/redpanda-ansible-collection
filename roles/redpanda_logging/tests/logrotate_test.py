@@ -36,7 +36,7 @@ class TestRedpandaLogrotateTemplate(unittest.TestCase):
             'redpanda_logging_file_mode': self.defaults['redpanda_logging_file_mode'],
             'redpanda_logging_owner': 'syslog',  # Debian default
             'redpanda_logging_group': 'adm',     # Debian default
-            'redpanda_logging_logrotate_postrotate_command': self.defaults['redpanda_logging_logrotate_postrotate_command'],
+            'redpanda_logging_logrotate_postrotate_command': self.defaults['redpanda_logging_logrotate_postrotate_rsyslog'],
             'ansible_os_family': 'Debian'  # Mock OS family
         }
         
@@ -74,7 +74,7 @@ class TestRedpandaLogrotateTemplate(unittest.TestCase):
             'redpanda_logging_file_mode': self.defaults['redpanda_logging_file_mode'],
             'redpanda_logging_owner': 'root',    # RedHat default
             'redpanda_logging_group': 'root',    # RedHat default
-            'redpanda_logging_logrotate_postrotate_command': self.defaults['redpanda_logging_logrotate_postrotate_command'],
+            'redpanda_logging_logrotate_postrotate_command': self.defaults['redpanda_logging_logrotate_postrotate_rsyslog'],
             'ansible_os_family': 'RedHat'  # Mock OS family
         }
         
