@@ -12,9 +12,10 @@ redpanda_logging_group: "{{ 'root' if ansible_os_family == 'RedHat' else 'adm' }
 redpanda_logging_dir_mode: '0755'
 redpanda_logging_file_mode: '0640'
 
-# Rsyslog configuration
-redpanda_logging_rsyslog_enabled: true
+# Logging backend configuration
+redpanda_logging_backend: rsyslog  # Options: rsyslog, syslog-ng
 redpanda_logging_rsyslog_priority: 40  # Priority for rsyslog config file
+redpanda_logging_syslog_ng_priority: 01  # Priority for syslog-ng config file (very early to prevent duplicate logging)
 
 redpanda_logging_program: rpk
 
@@ -29,14 +30,25 @@ redpanda_logging_logrotate_notifempty: true
 redpanda_logging_logrotate_create: true
 redpanda_logging_logrotate_sharedscripts: true
 
-# Additional logrotate options
-redpanda_logging_logrotate_postrotate_command: |
+# Backend-specific postrotate commands
+redpanda_logging_logrotate_postrotate_rsyslog: |
   for pidfile in /var/run/rsyslogd.pid /run/rsyslogd.pid; do
     if [ -f "$pidfile" ]; then
       /bin/kill -HUP `cat "$pidfile" 2> /dev/null` 2> /dev/null || true
       break
     fi
   done
+
+redpanda_logging_logrotate_postrotate_syslog_ng: |
+  for pidfile in /var/run/syslog-ng.pid /run/syslog-ng.pid; do
+    if [ -f "$pidfile" ]; then
+      /bin/kill -HUP `cat "$pidfile" 2> /dev/null` 2> /dev/null || true
+      break
+    fi
+  done
+
+# Dynamic postrotate command selection
+redpanda_logging_logrotate_postrotate_command: "{{ redpanda_logging_logrotate_postrotate_rsyslog if redpanda_logging_backend == 'rsyslog' else redpanda_logging_logrotate_postrotate_syslog_ng }}"
 
 # Systemd logging configuration
 redpanda_logging_systemd_enabled: false  # Enable systemd-specific logging config

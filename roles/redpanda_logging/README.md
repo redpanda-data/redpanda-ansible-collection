@@ -14,8 +14,10 @@ The role addresses the issue of Redpanda logs mixing with system logs by:
 
 - Ansible 2.9 or higher
 - Target systems running systemd
-- rsyslog installed on target systems (for rsyslog-based logging)
+- Package manager (apt, yum, dnf, etc.) available for installing logging backends
 - logrotate installed on target systems (for log rotation)
+
+Note: The role will automatically install rsyslog or syslog-ng as needed based on the selected backend.
 
 ## Role Variables
 

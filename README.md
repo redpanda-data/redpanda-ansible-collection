@@ -27,6 +27,36 @@ ansible-galaxy collection build
 ansible-galaxy collection publish redpanda-cluster-*.tar.gz --token <YOUR_API_KEY> -s https://galaxy.ansible.com/api/
 ```
 
+## Testing
+
+### Running Tests
+
+Python tests are located in `roles/*/tests/` directories. To run all tests:
+
+```shell
+# Install test dependencies (only needed once)
+pipx install --include-deps pytest
+
+# Run tests for specific roles
+python3 roles/redpanda_broker/tests/defaults_test.py
+python3 roles/redpanda_connect/tests/jmx-exporter-config_test.py
+python3 roles/redpanda_console/tests/defaults_test.py
+python3 roles/redpanda_logging/tests/backend_test.py
+
+# For tests requiring pytest framework
+pytest roles/redpanda_broker/tests/restart_required_test.py -v
+```
+
+### Test Dependencies
+
+Some tests require additional dependencies beyond the basic Python standard library:
+- `pytest` - Required for certain broker tests
+- `jinja2` - Template rendering 
+- `pyyaml` - YAML parsing
+- `ansible-runner` - For integration tests
+
+Install all test dependencies using the requirements files in each role's test directory.
+
 ## Troubleshooting
 
 ### On Mac OS X, Python unable to fork workers

@@ -1,0 +1,20 @@
+# Redpanda logging configuration - isolates redpanda logs to dedicated file
+filter f_redpanda { program("{{ redpanda_logging_program }}"); };
+
+destination d_redpanda {
+    file("{{ redpanda_logging_log_file }}"
+         owner("{{ redpanda_logging_owner }}")
+         group("{{ redpanda_logging_group }}")
+         perm({{ redpanda_logging_file_mode }})
+         create-dirs(yes)
+         dir-perm({{ redpanda_logging_dir_mode }})
+    );
+};
+
+# Dedicated log for redpanda - processed first with flags(final)
+log {
+    source(s_src);
+    filter(f_redpanda);
+    destination(d_redpanda);
+    flags(final);
+};
