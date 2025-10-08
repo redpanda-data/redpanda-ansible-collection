@@ -10,4 +10,4 @@ max_user_instances: 8192
 # kernel.panic_on_oops controls whether the kernel will panic when it detects
 # an oops (kernel error). Setting to 0 means the kernel will try to continue
 # running after an oops. Setting to 1 causes an immediate kernel panic.
-kernel_panic_on_oops: 0
+kernel_panic_on_oops: 1
