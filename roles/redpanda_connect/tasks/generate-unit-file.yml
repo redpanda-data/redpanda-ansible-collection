@@ -6,6 +6,7 @@
     group: "root"
     mode: '0644'
   become: true
+  register: systemd_unit_result
 
 - name: Chown /opt/kafka
   ansible.builtin.file:

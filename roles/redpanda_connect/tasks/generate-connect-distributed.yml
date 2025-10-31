@@ -33,3 +33,4 @@
     group: "{{ redpanda_group }}"
     mode: '0644'
     force: true
+  register: connect_distributed_config_result

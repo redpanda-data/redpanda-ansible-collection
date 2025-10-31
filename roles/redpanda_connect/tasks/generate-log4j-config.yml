@@ -7,6 +7,7 @@
     mode: '0644'
     force: true
   when: log4j_config_override_content is defined
+  register: log4j_user_config_result
 
 - name: Use default logging config if user-provided content is not defined
   ansible.builtin.template:
@@ -17,3 +18,4 @@
     mode: '0644'
     force: true
   when: log4j_config_override_content is not defined
+  register: log4j_default_config_result
