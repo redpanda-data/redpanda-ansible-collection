@@ -107,3 +107,11 @@ redpanda_connect_group: "connect"
 
 # restart control - set to false to prevent automatic restarts
 restart_connect_node: true
+
+# restart-only mode - set to true to skip installation/config and only restart
+restart_only: false
+
+# health check settings for safe rolling restarts
+connect_restart_health_check_timeout: 120  # total seconds to wait for API
+connect_restart_health_check_retries: 24   # number of health check attempts
+connect_restart_health_check_delay: 5      # seconds between retries
