@@ -1,0 +1,24 @@
+---
+- name: Restart Redpanda Connect
+  ansible.builtin.systemd_service:
+    name: redpanda-connect
+    state: restarted
+  when:
+    - restart_required | bool
+    - inventory_hostname == cluster_host
+
+- name: Wait for Kafka Connect REST API to be healthy
+  ansible.builtin.uri:
+    url: "{{ 'https' if connect_tls_enabled else 'http' }}://localhost:{{ rest_port }}/connectors"
+    method: GET
+    status_code: 200
+    validate_certs: false
+  register: health_check_result
+  until: health_check_result.status == 200
+  retries: "{{ connect_restart_health_check_retries }}"
+  delay: "{{ connect_restart_health_check_delay }}"
+  when:
+    - restart_required | bool
+    - inventory_hostname == cluster_host
+    - ansible_play_hosts | length > 1
+  ignore_errors: false

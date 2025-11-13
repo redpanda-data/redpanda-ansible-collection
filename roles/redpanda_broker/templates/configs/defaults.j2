@@ -45,7 +45,7 @@
           }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
-      ],
+      ]
     },
     "rpk": {
       "kafka_api": {
@@ -62,16 +62,16 @@
           {% endfor %}
         ]
       },
-      "tune_network": {{ enable_tune_network | default(true) }},
-      "tune_disk_scheduler": {{ enable_tune_disk_scheduler | default(true) }},
-      "tune_disk_nomerges": {{ enable_tune_disk_nomerges | default(true) }},
-      "tune_disk_write_cache": {{ enable_tune_disk_write_cache | default(true) }},
-      "tune_disk_irq": {{ enable_tune_disk_irq | default(true) }},
-      "tune_cpu": {{ enable_tune_cpu | default(true) }},
-      "tune_aio_events": {{ enable_tune_aio_events | default(true) }},
-      "tune_clocksource": {{ enable_tune_clocksource | default(true) }},
-      "tune_swappiness": {{ enable_tune_swappiness | default(true) }},
-      "tune_ballast_file": {{ enable_tune_ballast_file | default(true) }}
+      "tune_network": {{ enable_tune_network | default(true) | lower }},
+      "tune_disk_scheduler": {{ enable_tune_disk_scheduler | default(true) | lower }},
+      "tune_disk_nomerges": {{ enable_tune_disk_nomerges | default(true) | lower }},
+      "tune_disk_write_cache": {{ enable_tune_disk_write_cache | default(true) | lower }},
+      "tune_disk_irq": {{ enable_tune_disk_irq | default(true) | lower }},
+      "tune_cpu": {{ enable_tune_cpu | default(true) | lower }},
+      "tune_aio_events": {{ enable_tune_aio_events | default(true) | lower }},
+      "tune_clocksource": {{ enable_tune_clocksource | default(true) | lower }},
+      "tune_swappiness": {{ enable_tune_swappiness | default(true) | lower }},
+      "tune_ballast_file": {{ enable_tune_ballast_file | default(true) | lower }}
     },
     "pandaproxy": {
         "pandaproxy_api": {
