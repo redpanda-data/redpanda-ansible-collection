@@ -21,8 +21,10 @@
 # template, but coalesce into a single configuration object
 #
 - name: Generate configurations
+  vars:
+    tpl: "{{ lookup('template', custom_config_template.template) }}"
   ansible.builtin.set_fact:
-    configuration: "{{ configuration | combine(lookup('template', custom_config_template.template), recursive=True) }}"
+    configuration: "{{ configuration | combine(tpl if (tpl is mapping) else (tpl | from_json), recursive=True) }}"
   loop: "{{ custom_config_templates }}"
   loop_control:
     loop_var: custom_config_template

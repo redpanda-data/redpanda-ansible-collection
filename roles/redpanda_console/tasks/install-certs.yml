@@ -1,68 +1,91 @@
 ---
-- name: Create redpanda group
+- name: Check if redpanda process is running
+  ansible.builtin.command:
+    cmd: pgrep -x redpanda
+  register: redpanda_console_redpanda_process
+  changed_when: false
+  failed_when: false
+  tags: [install_certs]
+
+# Set owner vars based on whether redpanda is running
+- name: Set cert owner to redpanda (co-located)
+  ansible.builtin.set_fact:
+    redpanda_console_cert_owner: "{{ redpanda_user }}"
+    redpanda_console_cert_group: "{{ redpanda_group }}"
+    redpanda_console_key_mode: "0640"
+  when: redpanda_console_redpanda_process.rc == 0
+  tags: [install_certs]
+
+- name: Set cert owner to console (console-only)
+  ansible.builtin.set_fact:
+    redpanda_console_cert_owner: "{{ redpanda_console_user }}"
+    redpanda_console_cert_group: "{{ redpanda_console_group }}"
+    redpanda_console_key_mode: "0600"
+  when: redpanda_console_redpanda_process.rc != 0
+  tags: [install_certs]
+
+- name: Create redpanda-console group
   ansible.builtin.group:
-    name: "{{ redpanda_group }}"
+    name: "{{ redpanda_console_group }}"
     state: present
     system: true
   become: true
-  tags:
-    - install_certs
+  tags: [install_certs]
 
-- name: Install certs - create redpanda user if it doesn't exist already
-  tags:
-    - install_certs
+- name: Create redpanda-console user
   ansible.builtin.user:
-    name: "{{ redpanda_user }}"
-    group: "{{ redpanda_group }}"
+    name: "{{ redpanda_console_user }}"
+    group: "{{ redpanda_console_group }}"
     system: true
     shell: /usr/sbin/nologin
     create_home: false
     state: present
   become: true
+  tags: [install_certs]
 
-- name: Install certs - ensure /etc/redpanda/certs exists
-  tags:
-    - install_certs
+- name: Ensure certs directory exists
   ansible.builtin.file:
     path: "{{ redpanda_certs_dir }}"
     state: directory
-    owner: redpanda
-    group: redpanda
+    owner: "{{ redpanda_console_cert_owner }}"
+    group: "{{ redpanda_console_cert_group }}"
     mode: "0755"
+  become: true
+  tags: [install_certs]
 
-- name: Install_certs - Copy CA Certs
-  tags:
-    - install_certs
+- name: Copy CA cert
   ansible.builtin.copy:
     src: "{{ ca_cert_file }}"
     dest: "{{ redpanda_truststore_file }}"
-    owner: redpanda
-    group: redpanda
+    owner: "{{ redpanda_console_cert_owner }}"
+    group: "{{ redpanda_console_cert_group }}"
     force: "{{ overwrite_certs | default('no') | bool }}"
     mode: "0644"
+  become: true
+  tags: [install_certs]
 
-- name: Install_certs - Copy Node Certs
-  tags:
-    - install_certs
+- name: Copy node cert
   ansible.builtin.copy:
     src: "{{ node_cert_file }}"
     dest: "{{ redpanda_cert_file }}"
-    owner: redpanda
-    group: redpanda
+    owner: "{{ redpanda_console_cert_owner }}"
+    group: "{{ redpanda_console_cert_group }}"
     force: "{{ overwrite_certs | default('no') | bool }}"
     mode: "0644"
+  become: true
+  tags: [install_certs]
 
-- name: Install_certs - Copy Node Keys
-  tags:
-    - install_certs
+- name: Copy node key
   ansible.builtin.copy:
     src: "{{ node_key_file }}"
     dest: "{{ redpanda_key_file }}"
-    owner: redpanda
-    group: redpanda
+    owner: "{{ redpanda_console_cert_owner }}"
+    group: "{{ redpanda_console_cert_group }}"
     force: "{{ overwrite_certs | default('no') | bool }}"
-    mode: "0644"
+    mode: "{{ redpanda_console_key_mode }}"
+  become: true
   when:
-    - not (node_key_file | default('') == '')
+    - (node_key_file | default('')) != ''
     - handle_cert_install | default(false) | bool
     - not (create_demo_certs | default(false) | bool)
+  tags: [install_certs]

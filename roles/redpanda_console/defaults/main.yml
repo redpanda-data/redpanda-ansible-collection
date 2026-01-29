@@ -12,6 +12,9 @@ https_port: 443
 redpanda_group: redpanda
 redpanda_user: redpanda
 
+redpanda_console_group: redpanda-console
+redpanda_console_user: redpanda-console
+
 redpanda_base_url: "https://dl.redpanda.com"
 
 redpanda_install_status: present # If redpanda_version is set to latest, changing redpanda_install_status to latest will effect an upgrade, otherwise the currently installed version will remain

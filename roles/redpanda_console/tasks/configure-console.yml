@@ -22,8 +22,10 @@
     console_config: { }
 
 - name: Generate configurations
+  vars:
+    tpl: "{{ lookup('template', console_config_template.template) }}"
   ansible.builtin.set_fact:
-    console_config: "{{ console_config | combine(lookup('template', console_config_template.template), recursive=True) }}"
+    console_config: "{{ console_config | combine(tpl if (tpl is mapping) else (tpl | from_json), recursive=True) }}"
   loop: "{{ console_config_templates }}"
   loop_control:
     loop_var: console_config_template
@@ -37,6 +39,6 @@
   ansible.builtin.template:
     src: console.yml
     dest: /etc/redpanda/redpanda-console-config.yaml
-    owner: redpanda
-    group: redpanda
+    owner: "{{ redpanda_console_user }}"
+    group: "{{ redpanda_console_group }}"
     mode: "0644"

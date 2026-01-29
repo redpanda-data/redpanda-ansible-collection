@@ -1,3 +1,4 @@
+---
 - name: Create redpanda group
   ansible.builtin.group:
     name: "{{ redpanda_group }}"
@@ -14,3 +15,37 @@
     create_home: false
     state: present
   become: true
+
+- name: Create redpanda-console group
+  ansible.builtin.group:
+    name: "{{ redpanda_console_group }}"
+    state: present
+    system: true
+  become: true
+
+- name: Create redpanda-console user
+  ansible.builtin.user:
+    name: "{{ redpanda_console_user }}"
+    group: "{{ redpanda_console_group }}"
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+    state: present
+  become: true
+
+- name: Check if redpanda process is running
+  ansible.builtin.command:
+    cmd: pgrep -x redpanda
+  register: redpanda_console_redpanda_process
+  changed_when: false
+  failed_when: false
+
+- name: Add redpanda-console user to redpanda group for cert access
+  ansible.builtin.user:
+    name: "{{ redpanda_console_user }}"
+    groups: "{{ redpanda_group }}"
+    append: true
+  become: true
+  when:
+    - handle_cert_install | default(false) | bool
+    - redpanda_console_redpanda_process.rc == 0

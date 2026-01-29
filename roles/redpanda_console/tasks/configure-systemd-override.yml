@@ -1,0 +1,19 @@
+---
+- name: Create systemd override directory for redpanda-console
+  ansible.builtin.file:
+    path: /etc/systemd/system/redpanda-console.service.d
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Configure systemd override for console user/group
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/redpanda-console.service.d/user-override.conf
+    content: |
+      [Service]
+      User={{ redpanda_console_user }}
+      Group={{ redpanda_console_group }}
+      AmbientCapabilities=CAP_NET_BIND_SERVICE
+    mode: "0644"
+  become: true
+  notify: Reload systemd and restart console
