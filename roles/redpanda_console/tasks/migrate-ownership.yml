@@ -1,0 +1,59 @@
+---
+- name: Check if console config file exists
+  ansible.builtin.stat:
+    path: /etc/redpanda/redpanda-console-config.yaml
+  register: redpanda_console_config_stat
+
+- name: Migrate console config ownership to console user
+  ansible.builtin.file:
+    path: /etc/redpanda/redpanda-console-config.yaml
+    owner: "{{ redpanda_console_user }}"
+    group: "{{ redpanda_console_group }}"
+  become: true
+  when: redpanda_console_config_stat.stat.exists
+
+# Only handle cert permissions if handle_cert_install is true
+- name: Handle TLS cert permissions
+  when: handle_cert_install | default(false) | bool
+  block:
+    - name: Check if redpanda process is running
+      ansible.builtin.command:
+        cmd: pgrep -x redpanda
+      register: redpanda_console_redpanda_process
+      changed_when: false
+      failed_when: false
+
+    - name: Check if TLS cert files exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ redpanda_key_file }}"
+        - "{{ redpanda_cert_file }}"
+        - "{{ redpanda_truststore_file }}"
+      register: redpanda_console_cert_files_stat
+
+    # Redpanda running: set 0640 so console can read via group
+    - name: Set TLS key file group readable (redpanda co-located)
+      ansible.builtin.file:
+        path: "{{ redpanda_key_file }}"
+        mode: "0640"
+      become: true
+      when:
+        - redpanda_console_cert_files_stat.results[0].stat.exists | default(false)
+        - redpanda_console_redpanda_process.rc == 0
+
+    # Console only: change ownership to console user
+    - name: Change TLS cert ownership to console (console-only node)
+      ansible.builtin.file:
+        path: "{{ item.item }}"
+        owner: "{{ redpanda_console_user }}"
+        group: "{{ redpanda_console_group }}"
+      become: true
+      loop: "{{ redpanda_console_cert_files_stat.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when:
+        - item.stat.exists | default(false)
+        - redpanda_console_redpanda_process.rc != 0
+        - redpanda_console_config_stat.stat.exists | default(false)
+      notify: Reload systemd and restart console

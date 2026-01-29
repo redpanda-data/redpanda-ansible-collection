@@ -10,3 +10,4 @@
 .idea/misc.xml
 .idea/redpanda-ansible-collection.iml
 roles/redpanda_broker/tests/inventory
+/.ansible
