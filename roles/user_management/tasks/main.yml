@@ -1,0 +1,305 @@
+---
+- name: Get existing users
+  ansible.builtin.command:
+    cmd: rpk security user list --format json {{ redpanda_rpk_kafka_opts }}
+  register: existing_users_result
+  changed_when: false
+  run_once: true
+
+- name: Parse existing users
+  ansible.builtin.set_fact:
+    existing_users: "{{ (existing_users_result.stdout | from_json) | default([]) }}"
+  run_once: true
+
+- name: Extract existing usernames
+  ansible.builtin.set_fact:
+    existing_usernames: "{{ existing_users }}"
+  run_once: true
+
+- name: Get existing roles
+  ansible.builtin.command:
+    cmd: rpk security role list --format json {{ redpanda_rpk_kafka_opts }}
+  register: existing_roles_result
+  changed_when: false
+  run_once: true
+  ignore_errors: true  # May fail if RBAC not enabled
+
+- name: Parse existing roles
+  ansible.builtin.set_fact:
+    existing_roles: "{{ ((existing_roles_result.stdout | from_json).roles) | default([]) }}"
+  run_once: true
+  when: existing_roles_result.rc == 0
+
+- name: Set empty roles if RBAC not available
+  ansible.builtin.set_fact:
+    existing_roles: []
+  run_once: true
+  when: existing_roles_result.rc != 0
+
+- name: Extract existing role names
+  ansible.builtin.set_fact:
+    existing_role_names: "{{ existing_roles | map(attribute='name') | default([]) | list }}"
+  run_once: true
+
+- name: Get existing ACLs
+  ansible.builtin.command:
+    cmd: rpk security acl list --format json {{ redpanda_rpk_kafka_opts }}
+  register: existing_acls_result
+  changed_when: false
+  run_once: true
+
+- name: Parse existing ACLs
+  ansible.builtin.set_fact:
+    existing_acls: "{{ ((existing_acls_result.stdout | from_json).matches) | default([]) }}"
+  run_once: true
+
+- name: Create users that should exist but don't
+  ansible.builtin.command:
+    cmd: >
+      rpk security user create {{ item.username }}
+      --password {{ item.password }}
+      --mechanism {{ item.mechanism | default(sasl_mechanism) }}
+      {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'eq', 'present') | list }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when:
+    - item.username not in existing_usernames
+    - item.username != sasl_admin_username  # Don't try to create admin user
+  run_once: true
+  no_log: true
+  register: user_create_result
+  changed_when: user_create_result.rc == 0
+
+- name: Update passwords for existing users
+  ansible.builtin.command:
+    cmd: >
+      rpk security user update {{ item.username }}
+      --new-password {{ item.password }}
+      --new-mechanism {{ item.mechanism | default(sasl_mechanism) }}
+      {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'eq', 'present') | list }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when:
+    - item.username in existing_usernames
+    - item.username != sasl_admin_username
+    - item.update_password | default(false) | bool  # Only update if explicitly requested
+  run_once: true
+  no_log: true
+  register: user_update_result
+  changed_when: user_update_result.rc == 0
+
+- name: Delete users that should be absent
+  ansible.builtin.command:
+    cmd: >
+      rpk security user delete {{ item.username }}
+      {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ sasl_users | selectattr('state', 'defined') | selectattr('state', 'eq', 'absent') | list }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when:
+    - item.username in existing_usernames
+    - item.username != sasl_admin_username  # Never delete admin user
+  run_once: true
+  no_log: true
+  register: user_delete_result
+  changed_when: user_delete_result.rc == 0
+
+- name: Create roles that should exist but don't
+  ansible.builtin.command:
+    cmd: >
+      rpk security role create {{ item.name }}
+      {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.name not in existing_role_names
+    - existing_roles_result.rc == 0  # Only if RBAC is available
+  run_once: true
+  register: role_create_result
+  changed_when: role_create_result.rc == 0
+
+- name: Delete roles that should be absent
+  ansible.builtin.command:
+    cmd: >
+      rpk security role delete {{ item.name }}
+      {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ sasl_roles | selectattr('state', 'defined') | selectattr('state', 'eq', 'absent') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.name in existing_role_names
+    - existing_roles_result.rc == 0
+  run_once: true
+  register: role_delete_result
+  changed_when: role_delete_result.rc == 0
+
+- name: Get role members for each role
+  ansible.builtin.command:
+    cmd: rpk security role describe {{ item.name }} --format json {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: role_members_result
+  changed_when: false
+  run_once: true
+  when:
+    - item.members is defined
+    - existing_roles_result.rc == 0
+  ignore_errors: true
+
+- name: Assign members to roles
+  ansible.builtin.command:
+    cmd: >
+      rpk security role assign {{ item.0.name }}
+      --principal User:{{ item.1 }}
+      {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list | subelements('members', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.0.name }} <- {{ item.1 }}"
+  run_once: true
+  when:
+    - existing_roles_result.rc == 0
+  register: role_assign_result
+  changed_when: role_assign_result.rc == 0
+  failed_when:
+    - role_assign_result.rc != 0
+    - "'already assigned' not in (role_assign_result.stderr | default(''))"
+
+- name: Build ACL identifier for existing ACLs
+  ansible.builtin.set_fact:
+    existing_acl_ids: >-
+      {{ existing_acls | map(attribute='principal') | zip(
+         existing_acls | map(attribute='resource_type'),
+         existing_acls | map(attribute='resource_name'),
+         existing_acls | map(attribute='resource_pattern_type'),
+         existing_acls | map(attribute='operation'),
+         existing_acls | map(attribute='permission')
+      ) | map('join', '|') | list }}
+  run_once: true
+
+- name: Create ACLs that should exist
+  ansible.builtin.command:
+    cmd: >
+      rpk security acl create
+      {% if item.role is defined %}
+      --{{ item.permission | default('allow') }}-role {{ item.role }}
+      {% else %}
+      --{{ item.permission | default('allow') }}-principal {{ item.principal }}
+      {% endif %}
+      --operation {{ item.operation if item.operation is string else item.operation | join(',') }}
+      {% if item.resource_type == 'topic' %}--topic {{ item.resource_name | default('*') if item.resource_name is string or item.resource_name is not defined else item.resource_name | join(',') }}{% endif %}
+      {% if item.resource_type == 'group' %}--group {{ item.resource_name | default('*') if item.resource_name is string or item.resource_name is not defined else item.resource_name | join(',') }}{% endif %}
+      {% if item.resource_type == 'cluster' %}--cluster{% endif %}
+      {% if item.resource_type == 'transactional-id' %}--transactional-id {{ item.resource_name if item.resource_name is string else item.resource_name | join(',') }}{% endif %}
+      {% if item.pattern_type | default('literal') == 'prefixed' %}--resource-pattern-type prefixed{% endif %}
+      --{{ item.permission | default('allow') }}-host {{ item.host | default('*') }}
+      {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ sasl_acls | selectattr('state', 'undefined') | list + sasl_acls | selectattr('state', 'eq', 'present') | list }}"
+  loop_control:
+    label: "{{ item.role | default(item.principal) }} {{ item.operation }} on {{ item.resource_type }}:{{ item.resource_name | default('*') }}"
+  run_once: true
+  register: acl_create_result
+  changed_when: acl_create_result.rc == 0
+  failed_when:
+    - acl_create_result.rc != 0
+    - "'already exists' not in (acl_create_result.stderr | default(''))"
+
+- name: Delete ACLs that should be absent
+  ansible.builtin.command:
+    cmd: >
+      rpk security acl delete
+      {% if item.role is defined %}
+      --{{ item.permission | default('allow') }}-role {{ item.role }}
+      {% else %}
+      --{{ item.permission | default('allow') }}-principal {{ item.principal }}
+      {% endif %}
+      --operation {{ item.operation if item.operation is string else item.operation | join(',') }}
+      {% if item.resource_type == 'topic' %}--topic {{ item.resource_name | default('*') if item.resource_name is string or item.resource_name is not defined else item.resource_name | join(',') }}{% endif %}
+      {% if item.resource_type == 'group' %}--group {{ item.resource_name | default('*') if item.resource_name is string or item.resource_name is not defined else item.resource_name | join(',') }}{% endif %}
+      {% if item.resource_type == 'cluster' %}--cluster{% endif %}
+      {% if item.resource_type == 'transactional-id' %}--transactional-id {{ item.resource_name if item.resource_name is string else item.resource_name | join(',') }}{% endif %}
+      {% if item.pattern_type | default('literal') == 'prefixed' %}--resource-pattern-type prefixed{% endif %}
+      --{{ item.permission | default('allow') }}-host {{ item.host | default('*') }}
+      --no-confirm
+      {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ sasl_acls | selectattr('state', 'defined') | selectattr('state', 'eq', 'absent') | list }}"
+  loop_control:
+    label: "{{ item.role | default(item.principal) }} {{ item.operation }} on {{ item.resource_type }}:{{ item.resource_name | default('*') }}"
+  run_once: true
+  register: acl_delete_result
+  changed_when: acl_delete_result.rc == 0
+  failed_when:
+    - acl_delete_result.rc != 0
+    - "'not found' not in (acl_delete_result.stderr | default(''))"
+
+- name: Create Schema Registry ACLs
+  ansible.builtin.command:
+    cmd: >
+      rpk security acl create
+      {% if item.role is defined %}
+      --{{ item.permission | default('allow') }}-role {{ item.role }}
+      {% else %}
+      --{{ item.permission | default('allow') }}-principal {{ item.principal }}
+      {% endif %}
+      --operation {{ item.operation if item.operation is string else item.operation | join(',') }}
+      {% if item.resource_type == 'subject' %}
+      --registry-subject {{ item.resource_name if item.resource_name is string else item.resource_name | join(',') }}
+      {% if item.pattern_type | default('literal') == 'prefixed' %}--resource-pattern-type prefixed{% endif %}
+      {% elif item.resource_type == 'global' %}
+      --registry-global
+      {% endif %}
+      {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ schema_registry_acls | selectattr('state', 'undefined') | list + schema_registry_acls | selectattr('state', 'eq', 'present') | list }}"
+  loop_control:
+    label: "{{ item.role | default(item.principal) }} {{ item.operation }} on SR {{ item.resource_type }}:{{ item.resource_name | default('global') }}"
+  run_once: true
+  register: sr_acl_create_result
+  changed_when: sr_acl_create_result.rc == 0
+  failed_when:
+    - sr_acl_create_result.rc != 0
+    - "'already exists' not in (sr_acl_create_result.stderr | default(''))"
+  when: schema_registry_acls | length > 0
+
+- name: Delete Schema Registry ACLs that should be absent
+  ansible.builtin.command:
+    cmd: >
+      rpk security acl delete
+      {% if item.role is defined %}
+      --{{ item.permission | default('allow') }}-role {{ item.role }}
+      {% else %}
+      --{{ item.permission | default('allow') }}-principal {{ item.principal }}
+      {% endif %}
+      --operation {{ item.operation if item.operation is string else item.operation | join(',') }}
+      {% if item.resource_type == 'subject' %}
+      --registry-subject {{ item.resource_name if item.resource_name is string else item.resource_name | join(',') }}
+      {% if item.pattern_type | default('literal') == 'prefixed' %}--resource-pattern-type prefixed{% endif %}
+      {% elif item.resource_type == 'global' %}
+      --registry-global
+      {% endif %}
+      --no-confirm
+      {{ redpanda_rpk_kafka_opts }}
+  loop: "{{ schema_registry_acls | selectattr('state', 'defined') | selectattr('state', 'eq', 'absent') | list }}"
+  loop_control:
+    label: "{{ item.role | default(item.principal) }} {{ item.operation }} on SR {{ item.resource_type }}:{{ item.resource_name | default('global') }}"
+  run_once: true
+  register: sr_acl_delete_result
+  changed_when: sr_acl_delete_result.rc == 0
+  failed_when:
+    - sr_acl_delete_result.rc != 0
+    - "'not found' not in (sr_acl_delete_result.stderr | default(''))"
+  when: schema_registry_acls | length > 0
+
+- name: Display management summary
+  ansible.builtin.debug:
+    msg: |
+      User Management Summary:
+      - Existing users: {{ existing_usernames | join(', ') }}
+      - Existing roles: {{ existing_role_names | join(', ') if existing_role_names else 'N/A (RBAC not enabled)' }}
+      - Users to manage: {{ sasl_users | map(attribute='username') | list | join(', ') if sasl_users else 'none' }}
+      - Roles to manage: {{ sasl_roles | map(attribute='name') | list | join(', ') if sasl_roles else 'none' }}
+      - ACLs to manage: {{ sasl_acls | length }}
+      - SR ACLs to manage: {{ schema_registry_acls | length }}
+  run_once: true

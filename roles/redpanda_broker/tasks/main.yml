@@ -72,3 +72,6 @@
 
 - name: Start Redpanda
   ansible.builtin.include_tasks: start-redpanda.yml
+
+- name: Create SASL Service Accounts
+  ansible.builtin.include_tasks: create-sasl-service-accounts.yml

@@ -27,6 +27,43 @@ ansible-galaxy collection build
 ansible-galaxy collection publish redpanda-cluster-*.tar.gz --token <YOUR_API_KEY> -s https://galaxy.ansible.com/api/
 ```
 
+## SASL Authentication
+
+```yaml
+kafka_enable_authorization: true
+sasl_superuser_username: "admin"
+sasl_superuser_password: "secure-password"
+
+schema_registry_service_user: "schema_registry_client"
+schema_registry_service_password: "secure-password"
+pandaproxy_service_user: "pandaproxy_client"
+pandaproxy_service_password: "secure-password"
+```
+
+Mixed authentication (internal no-auth, external SASL):
+
+```yaml
+redpanda_kafka_listeners:
+  - address: "{{ private_ip }}"
+    port: 9092
+    name: "internal"
+    authentication_method: "none"
+  - address: "0.0.0.0"
+    port: 9093
+    name: "external"
+    authentication_method: "sasl"
+```
+
+Enterprise features (requires license):
+
+```yaml
+schema_registry_enable_authorization: true
+redpanda_license_file: "{{ playbook_dir }}/redpanda.license"
+admin_api_require_auth: true
+```
+
+See `user_management` role for managing users and ACLs.
+
 ## Troubleshooting
 
 ### On Mac OS X, Python unable to fork workers

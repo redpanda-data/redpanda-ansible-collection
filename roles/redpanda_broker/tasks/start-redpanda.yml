@@ -113,6 +113,22 @@
     mode: "0644"
   when: not is_initialized
 
+# Bootstrap superuser setup (SASL Method 2)
+# The RP_BOOTSTRAP_USER environment variable creates the initial superuser
+# This only runs on first initialization when kafka_enable_authorization is enabled
+
+- name: Create bootstrap superuser config file
+  ansible.builtin.copy:
+    dest: "/etc/redpanda.d/bootstrap-superuser.conf"
+    content: "RP_BOOTSTRAP_USER={{ sasl_superuser_username }}:{{ sasl_superuser_password }}\n"
+    owner: "redpanda"
+    group: "redpanda"
+    mode: "0600"
+  when:
+    - not is_initialized
+    - kafka_enable_authorization | bool
+  no_log: true
+
 # This starts up the tuner process which modifies various redpanda items and
 # os-level sysctls to optimize the node.
 #
@@ -129,16 +145,29 @@
     rp_tuner
 
 # ensure that systemd starts up redpanda
-- name: Start redpanda
+# When SASL is enabled on first startup, set RP_BOOTSTRAP_USER environment variable
+- name: Start redpanda (with bootstrap user for SASL)
   ansible.builtin.systemd:
     name: redpanda
     state: started
+  environment:
+    RP_BOOTSTRAP_USER: "{{ sasl_superuser_username }}:{{ sasl_superuser_password }}"
+  when:
+    - not is_initialized
+    - kafka_enable_authorization | bool
+  no_log: true
+
+- name: Start redpanda (standard)
+  ansible.builtin.systemd:
+    name: redpanda
+    state: started
+  when: is_initialized or not (kafka_enable_authorization | bool)
 
 # every node must have a unique node id. we extract it for use elsewhere
 #
 - name: Establish node id
   ansible.builtin.shell:
-    cmd: rpk cluster status {{ redpanda_rpk_opts }} | sed 's/*//g' | grep {{ hostvars[inventory_hostname].private_ip }} | awk '{ print $1;}'
+    cmd: rpk cluster status {{ redpanda_rpk_kafka_opts }} | sed 's/*//g' | grep {{ hostvars[inventory_hostname].private_ip }} | awk '{ print $1;}'
   register: node_id_out
   changed_when: false
 
@@ -161,6 +190,9 @@
 - name: Establish Redpanda's current config version
   ansible.builtin.shell:
     cmd: rpk cluster config status {{ redpanda_rpk_opts }} | awk 'BEGIN{NR!=1}{a=0}{if ($2>a) a=$2} END {print a}'
+  environment:
+    RPK_USER: "{{ sasl_superuser_username if (kafka_enable_authorization | default(false) | bool) else '' }}"
+    RPK_PASS: "{{ sasl_superuser_password if (kafka_enable_authorization | default(false) | bool) else '' }}"
   register: config_version
   changed_when: false
   run_once: true
@@ -186,10 +218,76 @@
 #   rpk cluster config set enable_rack_awareness=false
 #     Successfully updated configuration. New configuration version is 4.
 #
-- name: Set cluster config
+# Set cluster config - only needed for updates to running clusters
+# Initial cluster config is handled by bootstrap.yaml
+- name: Set cluster config (for running cluster updates)
   ansible.builtin.command: rpk cluster config set {{ item.key }} {{ item.value }} {{ redpanda_rpk_opts }}
   loop: "{{ configuration.cluster | dict2items }}"
   no_log: "{{ redpanda_broker_no_log }}"
+  run_once: true
+  when: is_initialized
+
+# Apply Redpanda Enterprise License
+# This enables enterprise features like Schema Registry Authorization and OIDC
+# The license file should be provided via redpanda_license_file variable
+
+- name: Check if license file exists
+  ansible.builtin.stat:
+    path: "{{ redpanda_license_file }}"
+  delegate_to: localhost
+  register: license_file_stat
+  become: false
+  when: redpanda_license_file is defined and redpanda_license_file != ""
+
+- name: Read license file content
+  ansible.builtin.slurp:
+    src: "{{ redpanda_license_file }}"
+  delegate_to: localhost
+  register: license_content
+  become: false
+  when:
+    - redpanda_license_file is defined
+    - redpanda_license_file != ""
+    - license_file_stat.stat.exists | default(false)
+
+- name: Copy license to remote temp file
+  ansible.builtin.copy:
+    content: "{{ license_content.content | b64decode }}"
+    dest: /tmp/redpanda.license
+    mode: '0600'
+  when:
+    - redpanda_license_file is defined
+    - redpanda_license_file != ""
+    - license_content.content is defined
+  run_once: true
+
+- name: Apply Redpanda license
+  ansible.builtin.command:
+    cmd: rpk cluster license set --path /tmp/redpanda.license --config /etc/redpanda/redpanda.yaml
+  environment:
+    RPK_USER: "{{ sasl_superuser_username }}"
+    RPK_PASS: "{{ sasl_superuser_password }}"
+  run_once: true
+  when:
+    - redpanda_license_file is defined
+    - redpanda_license_file != ""
+    - license_content.content is defined
+
+- name: Remove temporary license file
+  ansible.builtin.file:
+    path: /tmp/redpanda.license
+    state: absent
+  when:
+    - redpanda_license_file is defined
+    - redpanda_license_file != ""
+    - license_content.content is defined
+  run_once: true
+
+- name: Clean up bootstrap superuser config file
+  ansible.builtin.file:
+    path: "/etc/redpanda.d/bootstrap-superuser.conf"
+    state: absent
+  when: kafka_enable_authorization | bool
 
 # Set Redpanda license
 #
@@ -212,9 +310,21 @@
 - name: Check if restart needed
   ansible.builtin.shell:
     cmd: rpk cluster config status {{ redpanda_rpk_opts }} | grep '^{{ node_id }} ' | awk '{ print $3 }' |  grep -E 'true|false'
+  environment:
+    RPK_USER: "{{ sasl_superuser_username }}"
+    RPK_PASS: "{{ sasl_superuser_password }}"
   register: restart_required_rc
   changed_when: false
   no_log: "{{ redpanda_broker_no_log }}"
+  when: kafka_enable_authorization | default(false) | bool
+
+- name: Check if restart needed (no auth)
+  ansible.builtin.shell:
+    cmd: rpk cluster config status {{ redpanda_rpk_opts }} | grep '^{{ node_id }} ' | awk '{ print $3 }' |  grep -E 'true|false'
+  register: restart_required_rc
+  changed_when: false
+  no_log: "{{ redpanda_broker_no_log }}"
+  when: not (kafka_enable_authorization | default(false) | bool)
 
 # this instance of node config generation only runs after a cluster has been
 # initialized. This is used to update configurations post-cluster setup when
@@ -268,7 +378,7 @@
 #
 - name: Establish whether restart required
   ansible.builtin.set_fact:
-    restart_required: '{{ ("true" in restart_required_rc.stdout or (is_initialized and (nodeconfig_result.changed or package_result.results is defined and ("Removed"
+    restart_required: '{{ ("true" in (restart_required_rc.stdout | default("")) or (is_initialized and (nodeconfig_result.changed or package_result.results is defined and ("Removed"
       in package_result.results or "1 upgraded" in package_result.results)))) and (restart_node | default("true") | bool) }}'
 
 # serial: 1 would be the proper solution here, but that can only be set on play level

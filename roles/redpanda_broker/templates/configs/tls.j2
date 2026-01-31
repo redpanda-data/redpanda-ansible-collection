@@ -8,13 +8,29 @@
         "cert_file": "{{ redpanda_cert_file }}",
         "truststore_file": "{{ redpanda_truststore_file }}"
       },
-      "kafka_api_tls": {
-        "enabled": true,
-        "require_client_auth": {{ require_client_auth }},
-        "key_file": "{{ redpanda_key_file }}",
-        "cert_file": "{{ redpanda_cert_file }}",
-        "truststore_file": "{{ redpanda_truststore_file }}"
-      },
+      "kafka_api_tls": [
+        {% if redpanda_kafka_listeners is defined %}
+          {% for listener in redpanda_kafka_listeners %}
+        {
+          "name": "{{ listener.name }}",
+          "enabled": true,
+          "require_client_auth": {{ require_client_auth }},
+          "key_file": "{{ redpanda_key_file }}",
+          "cert_file": "{{ redpanda_cert_file }}",
+          "truststore_file": "{{ redpanda_truststore_file }}"
+        }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        {% else %}
+        {
+          {% if kafka_enable_authorization | default(false) | bool %}"name": "default",{% endif %}
+          "enabled": true,
+          "require_client_auth": {{ require_client_auth }},
+          "key_file": "{{ redpanda_key_file }}",
+          "cert_file": "{{ redpanda_cert_file }}",
+          "truststore_file": "{{ redpanda_truststore_file }}"
+        }
+        {% endif %}
+      ],
       "rpc_server_tls": {
         "enabled": true,
         "require_client_auth": {{ require_client_auth }},
@@ -24,13 +40,21 @@
       }
     },
     "rpk": {
+      "tls": {
+        "enabled": true,
+        "ca": "{{ redpanda_truststore_file }}"
+      },
       "admin_api": {
         "tls": {
+          "enabled": true,
+          "ca_file": "{{ redpanda_truststore_file }}",
           "truststore_file": "{{ redpanda_truststore_file }}"
         }
       },
       "kafka_api": {
         "tls": {
+          "enabled": true,
+          "ca_file": "{{ redpanda_truststore_file }}",
           "truststore_file": "{{ redpanda_truststore_file }}"
         }
       }
