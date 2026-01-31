@@ -1,0 +1,29 @@
+---
+# connection settings
+redpanda_kafka_port: 9092
+redpanda_schema_registry_port: 8081
+enable_tls: false
+redpanda_truststore_file: "/etc/redpanda/certs/truststore.pem"
+
+# admin credentials
+sasl_admin_username: "admin"
+sasl_admin_password: "change-me"
+sasl_mechanism: "SCRAM-SHA-256"
+
+redpanda_rpk_kafka_opts: >-
+  -X brokers={{ groups['redpanda'] | map('extract', hostvars, 'private_ip') | map('regex_replace', '^(.*)$', '\1:' + (redpanda_kafka_port | string)) | join(',') }}
+  {% if enable_tls | default(false) %}-X tls.enabled=true -X tls.ca={{ redpanda_truststore_file }}{% endif %}
+  -X user={{ sasl_admin_username }} -X pass={{ sasl_admin_password }} -X sasl.mechanism={{ sasl_mechanism }}
+  {% if enable_tls | default(false) %}-X registry.hosts={{ groups['redpanda'] | map('extract', hostvars, 'private_ip') | map('regex_replace', '^(.*)$', '\1:' + (redpanda_schema_registry_port | string)) | join(',') }} -X registry.tls.enabled=true -X registry.tls.ca={{ redpanda_truststore_file }}{% endif %}
+
+# users (state: present or absent)
+sasl_users: []
+
+# roles (enterprise RBAC)
+sasl_roles: []
+
+# kafka ACLs (principal or role, operation/resource_name can be lists)
+sasl_acls: []
+
+# schema registry ACLs (enterprise)
+schema_registry_acls: []

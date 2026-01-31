@@ -1,0 +1,58 @@
+{
+  "cluster": {
+    "kafka_enable_authorization": {{ kafka_enable_authorization | bool | lower }}{% if kafka_enable_authorization | bool %},
+    "superusers": {{ sasl_superusers | default([sasl_superuser_username]) | to_json }},
+    "admin_api_require_auth": {{ admin_api_require_auth | default(kafka_enable_authorization) | bool | lower }},
+    "http_authentication": {{ http_authentication | default('["BASIC"]') }}{% if schema_registry_enable_authorization | default(false) | bool %},
+    "schema_registry_enable_authorization": true{% endif %}{% endif %}
+  },
+  "node": {
+    {% if kafka_enable_authorization | bool %}
+    "rpk": {
+      "user": "{{ sasl_superuser_username }}",
+      "pass": "{{ sasl_superuser_password }}",
+      "sasl": {
+        "mechanism": "SCRAM-SHA-256"
+      }
+    }{% if kafka_enable_authorization | bool %},{% endif %}
+    {% endif %}
+    {% if kafka_enable_authorization | bool %}
+    "schema_registry_client": {
+      "brokers": [
+        {% for host in groups['redpanda'] %}
+        {
+          "address": "{{ hostvars[host]['private_ip'] }}",
+          "port": {{ redpanda_kafka_port }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ]{% if sasl_use_explicit_service_accounts | default(false) | bool %},
+      "scram_username": "{{ schema_registry_service_user }}",
+      "scram_password": "{{ schema_registry_service_password }}",
+      "sasl_mechanism": "SCRAM-SHA-256"{% endif %}{% if enable_tls | default(false) | bool %},
+      "broker_tls": {
+        "enabled": true,
+        "require_client_auth": {{ require_client_auth | default(false) | lower }},
+        "truststore_file": "{{ redpanda_truststore_file }}"
+      }{% endif %}
+    },
+    "pandaproxy_client": {
+      "brokers": [
+        {% for host in groups['redpanda'] %}
+        {
+          "address": "{{ hostvars[host]['private_ip'] }}",
+          "port": {{ redpanda_kafka_port }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ]{% if sasl_use_explicit_service_accounts | default(false) | bool %},
+      "scram_username": "{{ pandaproxy_service_user }}",
+      "scram_password": "{{ pandaproxy_service_password }}",
+      "sasl_mechanism": "SCRAM-SHA-256"{% endif %}{% if enable_tls | default(false) | bool %},
+      "broker_tls": {
+        "enabled": true,
+        "require_client_auth": {{ require_client_auth | default(false) | lower }},
+        "truststore_file": "{{ redpanda_truststore_file }}"
+      }{% endif %}
+    }
+    {% endif %}
+  }
+}

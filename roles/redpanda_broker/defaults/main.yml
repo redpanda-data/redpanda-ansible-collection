@@ -17,7 +17,16 @@ redpanda_use_staging_repo: false
 redpanda_base_url: "https://dl.redpanda.com"
 
 redpanda_install_status: present # If redpanda_version is set to latest, changing redpanda_install_status to latest will effect an upgrade, otherwise the currently installed version will remain
-redpanda_rpk_opts: ""
+
+# rpk options for admin API commands (reads auth from redpanda.yaml)
+redpanda_rpk_opts: >-
+  --config /etc/redpanda/redpanda.yaml
+
+# rpk options for kafka API commands (uses -X format to avoid --password flag conflicts)
+redpanda_rpk_kafka_opts: >-
+  -X brokers={{ groups['redpanda'] | map('extract', hostvars, 'private_ip') | map('regex_replace', '^(.*)$', '\1:' + (redpanda_kafka_port | string)) | join(',') }}
+  {% if enable_tls | default(false) %}-X tls.enabled=true -X tls.ca={{ redpanda_truststore_file }}{% endif %}
+  {% if kafka_enable_authorization | default(false) %}-X user={{ sasl_superuser_username }} -X pass={{ sasl_superuser_password }} -X sasl.mechanism=SCRAM-SHA-256{% endif %}
 
 redpanda_base_dir: /var/lib/redpanda
 redpanda_data_directory: "{{ redpanda_base_dir }}/data"
@@ -96,3 +105,49 @@ fips_check_exit_codes:
   - 1  # fips-mode-setup is inconsistent
   - 2  # fips-mode-setup is disabled
 fips_disabled_code: 2
+
+
+# SASL authentication
+kafka_enable_authorization: false
+admin_api_require_auth: false
+schema_registry_enable_authorization: false  # requires enterprise license
+
+# enterprise license file path
+redpanda_license_file: ""
+
+# http auth methods: BASIC, OIDC (OIDC requires enterprise)
+http_authentication: '["BASIC"]'
+sasl_mechanisms: '["SCRAM"]'
+
+# bootstrap superuser (override in production with vault)
+sasl_superuser_username: "admin"
+sasl_superuser_password: "change-me-in-production"
+
+# Redpanda uses internal mechanisms (ephemeral user for schema registry,
+# internal RPCs for pandaproxy) to authenticate internal services to the
+# Kafka API. Set to true to override with explicit service accounts instead.
+# When true, schema_registry_service_user/password and pandaproxy_service_user/password
+# will be configured in redpanda.yaml and the users will be created with ACLs.
+sasl_use_explicit_service_accounts: false
+
+# Force clear data directory for SASL bootstrap even if cluster data exists
+# WARNING: Setting this to true will destroy existing cluster data
+sasl_force_clear_data_directory: false
+
+# schema registry client credentials
+schema_registry_service_user: "schema_registry_client"
+schema_registry_service_password: "change-me-in-production"
+
+# http proxy client credentials
+pandaproxy_service_user: "pandaproxy_client"
+pandaproxy_service_password: "change-me-in-production"
+
+# kafka listeners (supports mixed auth when kafka_enable_authorization=true)
+redpanda_kafka_listeners:
+  - address: "{{ hostvars[inventory_hostname].private_ip }}"
+    port: "{{ redpanda_kafka_port }}"
+    name: "internal"
+
+# http api authentication methods (none or http_basic)
+schema_registry_authn_method: none
+pandaproxy_authn_method: none
