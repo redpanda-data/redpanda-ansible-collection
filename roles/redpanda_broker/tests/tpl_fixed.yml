@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    test_templates: []
+
+  tasks:
+    - name: Reset configuration
+      ansible.builtin.set_fact:
+        configuration: {}
+
+    - name: Generate configurations
+      vars:
+        tpl: "{{ lookup('template', item.template) }}"
+      ansible.builtin.set_fact:
+        configuration: "{{ configuration | combine(tpl if (tpl is mapping) else (tpl | from_json), recursive=True) }}"
+      loop: "{{ test_templates }}"
+      when: item.condition | default(True)
+
+    - name: Debug final configuration
+      ansible.builtin.debug:
+        var: configuration
