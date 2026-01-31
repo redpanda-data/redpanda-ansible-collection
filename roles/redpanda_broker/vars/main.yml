@@ -5,5 +5,7 @@ custom_config_templates:
     condition: "{{ enable_tls | default(False) | bool }}"
   - template: configs/tiered_storage.j2
     condition: "{{ tiered_storage_bucket_name is defined | default(False) | bool }}"
+  - template: configs/sasl.j2
+    condition: "{{ kafka_enable_authorization | default(False) | bool }}"
   - template: configs/fips.j2
     condition: "{{ enable_fips | default(False) | bool}}"

@@ -45,8 +45,22 @@
   register: package_result
   when: needs_split_packages
 
+# Stop redpanda if it auto-started after package installation
+# This prevents it from initializing before we can configure SASL
+- name: Stop redpanda after installation (for SASL bootstrap)
+  ansible.builtin.systemd:
+    name: redpanda
+    state: stopped
+  when:
+    - kafka_enable_authorization | default(false) | bool
+    - package_result.changed | default(false)
+
+- name: Clear data directory for SASL bootstrap if needed
+  ansible.builtin.include_tasks: clear-data-for-sasl.yml
+
 - name: Set data dir file perms
   ansible.builtin.file:
     path: "{{ redpanda_data_directory }}"
     owner: redpanda
     group: redpanda
+    state: directory

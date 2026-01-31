@@ -9,30 +9,65 @@
     "redpanda": {
       "empty_seed_starts_cluster": false,
       "advertised_kafka_api": [
+        {% if redpanda_advertised_kafka_listeners is defined %}
+          {% for listener in redpanda_advertised_kafka_listeners %}
+        {
+          "address": "{{ listener.address }}",
+          "port": {{ listener.port }},
+          "name": "{{ listener.name }}"{% if kafka_enable_authorization | bool %},
+          "authentication_method": "{{ listener.authentication_method | default('sasl') }}"{% endif %}
+        }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        {% elif redpanda_kafka_listeners is defined %}
+          {% for listener in redpanda_kafka_listeners %}
         {
           "address": "{{ hostvars[inventory_hostname].advertised_ip }}",
-          "port": "{{ redpanda_kafka_port }}"
+          "port": {{ listener.port }},
+          "name": "{{ listener.name }}"{% if kafka_enable_authorization | bool %},
+          "authentication_method": "{{ listener.authentication_method | default('sasl') }}"{% endif %}
+        }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        {% else %}
+        {
+          "address": "{{ hostvars[inventory_hostname].advertised_ip }}",
+          "port": {{ redpanda_kafka_port }},
+          "name": "default"{% if kafka_enable_authorization | bool %},
+          "authentication_method": "sasl"{% endif %}
         }
+        {% endif %}
       ],
       "advertised_rpc_api": {
         "address": "{{ hostvars[inventory_hostname].private_ip }}",
-        "port": "{{ redpanda_rpc_port }}"
+        "port": {{ redpanda_rpc_port }}
       },
       "data_directory": "{{ redpanda_data_directory }}",
       "rpc_server": {
         "address": "{{ hostvars[inventory_hostname].private_ip }}",
-        "port": "{{ redpanda_rpc_port }}"
+        "port": {{ redpanda_rpc_port }}
       },
       "kafka_api": [
+        {% if redpanda_kafka_listeners is defined %}
+          {% for listener in redpanda_kafka_listeners %}
+        {
+          "address": "{{ listener.address }}",
+          "port": {{ listener.port }},
+          "name": "{{ listener.name }}"{% if kafka_enable_authorization | bool %},
+          "authentication_method": "{{ listener.authentication_method | default('sasl') }}"{% endif %}
+        }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        {% else %}
         {
           "address": "{{ hostvars[inventory_hostname].private_ip }}",
-          "port": "{{ redpanda_kafka_port }}"
+          "port": {{ redpanda_kafka_port }},
+          "name": "default"{% if kafka_enable_authorization | bool %},
+          "authentication_method": "sasl"{% endif %}
         }
+        {% endif %}
       ],
       "admin": [
         {
           "address": "{{ hostvars[inventory_hostname].private_ip }}",
-          "port": "{{ redpanda_admin_api_port }}"
+          "port": {{ redpanda_admin_api_port }}
         }
       ],
       {% if rack is defined and rack != ''  %}"rack": "{{ rack | default('null') }}",{% endif %}
@@ -41,7 +76,7 @@
         {
           "host": {
             "address": "{{ hostvars[host]['private_ip'] }}",
-            "port": "{{ redpanda_rpc_port }}"
+            "port": {{ redpanda_rpc_port }}
           }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
@@ -76,14 +111,16 @@
     "pandaproxy": {
         "pandaproxy_api": {
           "address": "0.0.0.0",
-          "port": "{{ redpanda_pandaproxy_port }}"
+          "port": {{ redpanda_pandaproxy_port }}{% if kafka_enable_authorization | bool and pandaproxy_authn_method != 'none' %},
+          "authentication_method": "{{ pandaproxy_authn_method }}"{% endif %}
         }
     },
     "schema_registry": {
         "schema_registry_api": [
         {
           "address": "0.0.0.0",
-          "port": "{{ redpanda_schema_registry_port }}"
+          "port": {{ redpanda_schema_registry_port }}{% if kafka_enable_authorization | bool and schema_registry_authn_method != 'none' %},
+          "authentication_method": "{{ schema_registry_authn_method }}"{% endif %}
         }
       ],
       "schema_registry_replication_factor": {{schema_registry_replication_factor | default(1)}}

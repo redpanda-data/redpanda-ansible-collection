@@ -70,5 +70,16 @@
     - ansible_os_family == 'Debian'
     - enable_airgap | bool
 
-- name: Start Redpanda
-  ansible.builtin.include_tasks: start-redpanda.yml
+- name: Start Redpanda and create SASL service accounts
+  block:
+    - name: Start Redpanda
+      ansible.builtin.include_tasks: start-redpanda.yml
+
+    - name: Create SASL Service Accounts
+      ansible.builtin.include_tasks: create-sasl-service-accounts.yml
+  always:
+    - name: Clean up bootstrap superuser config file
+      ansible.builtin.file:
+        path: "/etc/redpanda.d/bootstrap-superuser.conf"
+        state: absent
+      when: kafka_enable_authorization | default(false) | bool

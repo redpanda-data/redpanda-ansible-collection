@@ -20,6 +20,7 @@
     - node_deps
   ansible.builtin.apt:
     update_cache: true
+    cache_valid_time: 3600
     force_apt_get: true
   environment:
     https_proxy: "{{ https_proxy_value | default('') }}"

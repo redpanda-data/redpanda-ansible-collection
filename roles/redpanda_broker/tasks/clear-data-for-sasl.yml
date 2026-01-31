@@ -1,0 +1,17 @@
+---
+# Extracted data clearing logic for SASL bootstrap
+# This file is included by install-rp-deb.yml and tested directly
+
+- name: Check if data directory has existing cluster data
+  ansible.builtin.stat:
+    path: "{{ redpanda_data_directory }}/redpanda/controller"
+  register: controller_dir
+
+- name: Clear data directory for fresh SASL bootstrap
+  ansible.builtin.file:
+    path: "{{ redpanda_data_directory }}"
+    state: absent
+  when:
+    - kafka_enable_authorization | default(false) | bool
+    - package_result.changed | default(false)
+    - not controller_dir.stat.exists or (sasl_force_clear_data_directory | default(false) | bool)
