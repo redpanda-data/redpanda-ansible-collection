@@ -8,8 +8,16 @@ SCRIPTS := $(wildcard $(DIR)/*_test.py)
 .PHONY: all
 all: $(FILES)
 
+.PHONY: shellcheck
+shellcheck:
+	shellcheck files/idempotent-config-set.sh
+
+.PHONY: bats
+bats:
+	bats tests/*.bats
+
 .PHONY: do
-do: mocks test
+do: mocks shellcheck bats test
 
 .PHONY: mocks
 mocks:

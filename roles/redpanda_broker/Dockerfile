@@ -9,6 +9,8 @@ COPY tests/requirements.txt /app/requirements.txt
 # Install Ansible and other dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN apt-get update && apt-get install -y shellcheck bats && rm -rf /var/lib/apt/lists/*
+
 COPY tests/requirements.yml /app/requirements.yml
 RUN ansible-galaxy collection install -r requirements.yml --force
 RUN ansible-galaxy role install -r requirements.yml --force
