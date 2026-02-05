@@ -1,4 +1,6 @@
 
+.ansible/
+.claude/
 *.gz
 *.xml
 *.iml

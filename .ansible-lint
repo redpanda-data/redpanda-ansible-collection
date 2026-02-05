@@ -17,3 +17,4 @@ skip_list:
   - yaml[brackets]
   - yaml[line-length]
   - yaml[trailing-spaces]
+  - var-naming[no-role-prefix]
