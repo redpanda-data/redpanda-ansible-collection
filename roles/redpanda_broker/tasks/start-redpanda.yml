@@ -22,9 +22,10 @@
 #
 - name: Generate configurations
   vars:
-    tpl: "{{ lookup('template', custom_config_template.template) }}"
+    _tpl_result: "{{ lookup('template', custom_config_template.template) }}"
+    _tpl_dict: "{{ _tpl_result if (_tpl_result is mapping) else (_tpl_result | from_json) }}"
   ansible.builtin.set_fact:
-    configuration: "{{ configuration | combine(tpl if (tpl is mapping) else (tpl | from_json), recursive=True) }}"
+    configuration: "{{ configuration | combine(_tpl_dict, recursive=True) }}"
   loop: "{{ custom_config_templates }}"
   loop_control:
     loop_var: custom_config_template
@@ -129,7 +130,7 @@
   when:
     - not is_initialized
     - kafka_enable_authorization | bool
-  no_log: true
+  no_log: "{{ redpanda_broker_no_log }}"
 
 # This starts up the tuner process which modifies various redpanda items and
 # os-level sysctls to optimize the node.
@@ -157,7 +158,7 @@
   when:
     - not is_initialized
     - kafka_enable_authorization | bool
-  no_log: true
+  no_log: "{{ redpanda_broker_no_log }}"
 
 - name: Start redpanda (standard)
   ansible.builtin.systemd:
@@ -169,7 +170,7 @@
 #
 - name: Establish node id
   ansible.builtin.shell:
-    cmd: rpk cluster status {{ redpanda_rpk_kafka_opts }} | sed 's/*//g' | grep {{ hostvars[inventory_hostname].private_ip }} | awk '{ print $1;}'
+    cmd: rpk cluster status {{ redpanda_rpk_kafka_opts }} | sed 's/*//g' | grep "{{ hostvars[inventory_hostname].private_ip }}" | awk '{ print $1;}'
   register: node_id_out
   changed_when: false
 
@@ -192,9 +193,7 @@
 - name: Establish Redpanda's current config version
   ansible.builtin.shell:
     cmd: rpk cluster config status {{ redpanda_rpk_opts }} | awk 'BEGIN{NR!=1}{a=0}{if ($2>a) a=$2} END {print a}'
-  environment:
-    RPK_USER: "{{ sasl_superuser_username if (kafka_enable_authorization | default(false) | bool) else '' }}"
-    RPK_PASS: "{{ sasl_superuser_password if (kafka_enable_authorization | default(false) | bool) else '' }}"
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   register: config_version
   changed_when: false
   run_once: true
@@ -220,11 +219,25 @@
 #   rpk cluster config set enable_rack_awareness=false
 #     Successfully updated configuration. New configuration version is 4.
 #
-# Set cluster config - only needed for updates to running clusters
-# Initial cluster config is handled by bootstrap.yaml
+# Set cluster config idempotently — only when values actually differ
+#
+# rpk cluster config set always reports success even on no-op, so we must
+# get-then-compare before setting. This avoids unnecessary config version
+# bumps and the rolling restarts they trigger.
+#
+# Normalization handles type mismatches between Ansible and rpk:
+#   Booleans:  Ansible True/False → rpk true/false (case-insensitive compare)
+#   Arrays:    rpk YAML multiline "- item" vs Ansible JSON ["item"] (sorted compare)
+#   null:      rpk returns 'null' for unset → always set
+#   Scalars:   case-insensitive string compare
 - name: Set cluster config (for running cluster updates)
-  ansible.builtin.command: rpk cluster config set {{ item.key }} {{ item.value }} {{ redpanda_rpk_opts }}
+  ansible.builtin.script:
+    cmd: idempotent-config-set.sh
+  environment: "{{ {'CONFIG_KEY': item.key, 'CONFIG_VALUE': item.value | string, 'RPK_OPTS': redpanda_rpk_opts} | combine({'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {}) }}"
   loop: "{{ configuration.cluster | dict2items }}"
+  register: cluster_config_result
+  changed_when: "'RESULT:CHANGED' in cluster_config_result.stdout"
+  failed_when: "'RESULT:ERROR' in cluster_config_result.stdout or cluster_config_result.rc != 0"
   no_log: "{{ redpanda_broker_no_log }}"
   run_once: true
   when: is_initialized
@@ -263,17 +276,29 @@
     - license_content.content is defined
   run_once: true
 
+- name: Check Redpanda license status
+  ansible.builtin.command: rpk cluster license info {{ redpanda_rpk_opts }}
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
+  register: license_status
+  changed_when: false
+  failed_when: false
+  run_once: true
+
+- name: Determine if license update is needed
+  ansible.builtin.set_fact:
+    redpanda_license_loaded: "{{ license_status.rc == 0 and (license_status.stdout | default('')) is search('(?i)status.*valid') }}"
+  run_once: true
+
 - name: Apply Redpanda license
   ansible.builtin.command:
     cmd: rpk cluster license set --path /tmp/redpanda.license --config /etc/redpanda/redpanda.yaml
-  environment:
-    RPK_USER: "{{ sasl_superuser_username }}"
-    RPK_PASS: "{{ sasl_superuser_password }}"
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   run_once: true
   when:
     - redpanda_license_file is defined
     - redpanda_license_file != ""
     - license_content.content is defined
+    - not redpanda_license_loaded | default(false) | bool
 
 - name: Remove temporary license file
   ansible.builtin.file:
@@ -285,27 +310,25 @@
     - license_content.content is defined
   run_once: true
 
-- name: Clean up bootstrap superuser config file
-  ansible.builtin.file:
-    path: "/etc/redpanda.d/bootstrap-superuser.conf"
-    state: absent
-  when: kafka_enable_authorization | bool
-
 # Set Redpanda license
 #
 # Sets the redpanda license when redpanda_license is defined
 #
 - name: Set Redpanda license (string)
-  ansible.builtin.command: rpk cluster license set {{ redpanda_license }}
+  ansible.builtin.command: rpk cluster license set {{ redpanda_license }} {{ redpanda_rpk_opts }}
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   run_once: true
   when:
     - redpanda_license is defined
+    - not redpanda_license_loaded | default(false) | bool
 
 - name: Set Redpanda license (path)
-  ansible.builtin.command: rpk cluster license set --path {{ redpanda_license_path }}
+  ansible.builtin.command: rpk cluster license set --path {{ redpanda_license_path }} {{ redpanda_rpk_opts }}
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   run_once: true
   when:
     - redpanda_license_path is defined
+    - not redpanda_license_loaded | default(false) | bool
 # see if a cluster config operation should trigger ansible to restart each
 # redpanda instance in the cluster
 #
