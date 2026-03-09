@@ -1,7 +1,10 @@
 ---
 - name: Get existing users
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: rpk security user list --format json {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   register: existing_users_result
   changed_when: false
   run_once: true
@@ -17,8 +20,11 @@
   run_once: true
 
 - name: Get existing roles
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: rpk security role list --format json {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   register: existing_roles_result
   changed_when: false
   run_once: true
@@ -42,8 +48,11 @@
   run_once: true
 
 - name: Get existing ACLs
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: rpk security acl list --format json {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   register: existing_acls_result
   changed_when: false
   run_once: true
@@ -54,12 +63,16 @@
   run_once: true
 
 - name: Create users that should exist but don't
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >
       rpk security user create {{ item.username }}
-      --password {{ item.password }}
+      --password "$USER_PASSWORD"
       --mechanism {{ item.mechanism | default(sasl_mechanism) }}
       {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
+    USER_PASSWORD: "{{ item.password }}"
   loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.username }}"
@@ -72,12 +85,16 @@
   changed_when: user_create_result.rc == 0
 
 - name: Update passwords for existing users
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >
       rpk security user update {{ item.username }}
-      --new-password {{ item.password }}
+      --new-password "$USER_PASSWORD"
       --new-mechanism {{ item.mechanism | default(sasl_mechanism) }}
       {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
+    USER_PASSWORD: "{{ item.password }}"
   loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.username }}"
@@ -91,10 +108,13 @@
   changed_when: user_update_result.rc == 0
 
 - name: Delete users that should be absent
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >
       rpk security user delete {{ item.username }}
       {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   loop: "{{ sasl_users | selectattr('state', 'defined') | selectattr('state', 'eq', 'absent') | list }}"
   loop_control:
     label: "{{ item.username }}"
@@ -107,10 +127,13 @@
   changed_when: user_delete_result.rc == 0
 
 - name: Create roles that should exist but don't
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >
       rpk security role create {{ item.name }}
       {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.name }}"
@@ -122,10 +145,13 @@
   changed_when: role_create_result.rc == 0
 
 - name: Delete roles that should be absent
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >
       rpk security role delete {{ item.name }}
       {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   loop: "{{ sasl_roles | selectattr('state', 'defined') | selectattr('state', 'eq', 'absent') | list }}"
   loop_control:
     label: "{{ item.name }}"
@@ -137,8 +163,11 @@
   changed_when: role_delete_result.rc == 0
 
 - name: Get role members for each role
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: rpk security role describe {{ item.name }} --format json {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.name }}"
@@ -151,11 +180,14 @@
   ignore_errors: true
 
 - name: Assign members to roles
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >
       rpk security role assign {{ item.0.name }}
       --principal User:{{ item.1 }}
       {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list | subelements('members', skip_missing=True) }}"
   loop_control:
     label: "{{ item.0.name }} <- {{ item.1 }}"
@@ -169,7 +201,7 @@
     - "'already assigned' not in (role_assign_result.stderr | default(''))"
 
 - name: Create ACLs that should exist
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >
       rpk security acl create
       {% if item.role is defined %}
@@ -185,6 +217,9 @@
       {% if item.pattern_type | default('literal') == 'prefixed' %}--resource-pattern-type prefixed{% endif %}
       --{{ item.permission | default('allow') }}-host {{ item.host | default('*') }}
       {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   loop: "{{ sasl_acls | selectattr('state', 'undefined') | list + sasl_acls | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.role | default(item.principal) }} {{ item.operation }} on {{ item.resource_type }}:{{ item.resource_name | default('*') }}"
@@ -196,7 +231,7 @@
     - "'already exists' not in (acl_create_result.stderr | default(''))"
 
 - name: Delete ACLs that should be absent
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >
       rpk security acl delete
       {% if item.role is defined %}
@@ -213,6 +248,9 @@
       --{{ item.permission | default('allow') }}-host {{ item.host | default('*') }}
       --no-confirm
       {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   loop: "{{ sasl_acls | selectattr('state', 'defined') | selectattr('state', 'eq', 'absent') | list }}"
   loop_control:
     label: "{{ item.role | default(item.principal) }} {{ item.operation }} on {{ item.resource_type }}:{{ item.resource_name | default('*') }}"
@@ -224,7 +262,7 @@
     - "'not found' not in (acl_delete_result.stderr | default(''))"
 
 - name: Create Schema Registry ACLs
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >
       rpk security acl create
       {% if item.role is defined %}
@@ -240,6 +278,9 @@
       --registry-global
       {% endif %}
       {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   loop: "{{ schema_registry_acls | selectattr('state', 'undefined') | list + schema_registry_acls | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.role | default(item.principal) }} {{ item.operation }} on SR {{ item.resource_type }}:{{ item.resource_name | default('global') }}"
@@ -252,7 +293,7 @@
   when: schema_registry_acls | length > 0
 
 - name: Delete Schema Registry ACLs that should be absent
-  ansible.builtin.command:
+  ansible.builtin.shell:
     cmd: >
       rpk security acl delete
       {% if item.role is defined %}
@@ -269,6 +310,9 @@
       {% endif %}
       --no-confirm
       {{ redpanda_rpk_kafka_opts }}
+  environment:
+    RPK_USER: "{{ sasl_admin_username }}"
+    RPK_PASS: "{{ sasl_admin_password }}"
   loop: "{{ schema_registry_acls | selectattr('state', 'defined') | selectattr('state', 'eq', 'absent') | list }}"
   loop_control:
     label: "{{ item.role | default(item.principal) }} {{ item.operation }} on SR {{ item.resource_type }}:{{ item.resource_name | default('global') }}"
