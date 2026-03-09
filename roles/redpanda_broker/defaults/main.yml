@@ -26,7 +26,6 @@ redpanda_rpk_opts: >-
 redpanda_rpk_kafka_opts: >-
   -X brokers={{ groups['redpanda'] | map('extract', hostvars, 'private_ip') | map('regex_replace', '^(.*)$', '\1:' + (redpanda_kafka_port | string)) | join(',') }}
   {% if enable_tls | default(false) %}-X tls.enabled=true -X tls.ca={{ redpanda_truststore_file }}{% endif %}
-  {% if kafka_enable_authorization | default(false) %}-X user={{ sasl_superuser_username }} -X pass={{ sasl_superuser_password }} -X sasl.mechanism=SCRAM-SHA-256{% endif %}
 
 redpanda_base_dir: /var/lib/redpanda
 redpanda_data_directory: "{{ redpanda_base_dir }}/data"
