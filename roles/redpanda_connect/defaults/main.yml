@@ -22,7 +22,8 @@ redpanda_connect_config_dir: "/opt/kafka/config"
 redpanda_user: redpanda
 redpanda_group: redpanda
 
-java_home: /usr/lib/jvm/java-17-openjdk
+java_package: "{{ 'java-21-openjdk' if (ansible_distribution == 'Fedora' and ansible_distribution_major_version | int >= 43) else 'java-17-openjdk' }}"
+java_home: "/usr/lib/jvm/{{ java_package }}"
 
 # required binary install values
 redpanda_connect_rpm: "redpanda-connect.x86_64.rpm"
