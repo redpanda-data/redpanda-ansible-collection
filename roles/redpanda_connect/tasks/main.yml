@@ -4,7 +4,7 @@
 
 - name: Install JVM
   ansible.builtin.package:
-      name: java-17-openjdk
+      name: "{{ java_package }}"
       state: present
   when:
     - not use_existing_jvm | default(false)
