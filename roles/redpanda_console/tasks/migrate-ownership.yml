@@ -16,12 +16,9 @@
 - name: Handle TLS cert permissions
   when: handle_cert_install | default(false) | bool
   block:
-    - name: Check if redpanda process is running
-      ansible.builtin.command:
-        cmd: pgrep -x redpanda
-      register: redpanda_console_redpanda_process
-      changed_when: false
-      failed_when: false
+    - name: Check if broker is co-located
+      ansible.builtin.set_fact:
+        redpanda_console_broker_colocated: "{{ inventory_hostname in groups['redpanda'] | default([]) }}"
 
     - name: Check if TLS cert files exist
       ansible.builtin.stat:
@@ -32,7 +29,7 @@
         - "{{ redpanda_truststore_file }}"
       register: redpanda_console_cert_files_stat
 
-    # Redpanda running: set 0640 so console can read via group
+    # Broker co-located: set 0640 so console can read via group
     - name: Set TLS key file group readable (redpanda co-located)
       ansible.builtin.file:
         path: "{{ redpanda_key_file }}"
@@ -40,7 +37,7 @@
       become: true
       when:
         - redpanda_console_cert_files_stat.results[0].stat.exists | default(false)
-        - redpanda_console_redpanda_process.rc == 0
+        - redpanda_console_broker_colocated
 
     # Console only: change ownership to console user
     - name: Change TLS cert ownership to console (console-only node)
@@ -54,6 +51,6 @@
         label: "{{ item.item }}"
       when:
         - item.stat.exists | default(false)
-        - redpanda_console_redpanda_process.rc != 0
+        - not redpanda_console_broker_colocated
         - redpanda_console_config_stat.stat.exists | default(false)
       notify: Reload systemd and restart console

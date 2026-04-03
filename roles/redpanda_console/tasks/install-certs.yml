@@ -1,19 +1,16 @@
 ---
-- name: Check if redpanda process is running
-  ansible.builtin.command:
-    cmd: pgrep -x redpanda
-  register: redpanda_console_redpanda_process
-  changed_when: false
-  failed_when: false
+- name: Check if broker is co-located
+  ansible.builtin.set_fact:
+    redpanda_console_broker_colocated: "{{ inventory_hostname in groups['redpanda'] | default([]) }}"
   tags: [install_certs]
 
-# Set owner vars based on whether redpanda is running
+# Set owner vars based on whether broker is co-located
 - name: Set cert owner to redpanda (co-located)
   ansible.builtin.set_fact:
     redpanda_console_cert_owner: "{{ redpanda_user }}"
     redpanda_console_cert_group: "{{ redpanda_group }}"
     redpanda_console_key_mode: "0640"
-  when: redpanda_console_redpanda_process.rc == 0
+  when: redpanda_console_broker_colocated
   tags: [install_certs]
 
 - name: Set cert owner to console (console-only)
@@ -21,7 +18,7 @@
     redpanda_console_cert_owner: "{{ redpanda_console_user }}"
     redpanda_console_cert_group: "{{ redpanda_console_group }}"
     redpanda_console_key_mode: "0600"
-  when: redpanda_console_redpanda_process.rc != 0
+  when: not redpanda_console_broker_colocated
   tags: [install_certs]
 
 - name: Create redpanda-console group
