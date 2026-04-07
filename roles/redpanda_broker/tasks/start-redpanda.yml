@@ -4,10 +4,12 @@
     path: /etc/redpanda
     state: directory
     mode: "0755"
+  tags: [broker_ensure_dir]
 
 - name: Identify advertised ip address
   ansible.builtin.set_fact:
     advertised_ip: "{{ inventory_hostname if (advertise_public_ips | d() | bool) else private_ip }}"
+  tags: [broker_advertised_ip]
 
 # start out with an empty configuration object so we can fill in later based on
 # jinja templates or ansible variables defined by the user in
@@ -16,6 +18,7 @@
 - name: Reset configuration
   ansible.builtin.set_fact:
     configuration: { }
+  tags: [broker_reset_config]
 # fill out the empty configuration object and merge all appropriate templates
 # together this is used to make it easier to have the tls details in a separate
 # template, but coalesce into a single configuration object
@@ -30,48 +33,58 @@
   loop_control:
     loop_var: custom_config_template
   when: custom_config_template.condition | default(True)
+  tags: [broker_generate_config]
 
 - name: Debug redpanda variable
   ansible.builtin.debug:
     var: redpanda
     verbosity: 3
   when: redpanda is defined
+  tags: [broker_debug_redpanda]
 
 - name: Parse redpanda variable
   ansible.builtin.set_fact:
     parsed_redpanda: "{{ redpanda if (redpanda is mapping) else (redpanda | from_json) }}"
   when: redpanda is defined
+  tags: [broker_parse_redpanda]
 
 - name: Set default empty dict if redpanda is not defined
   ansible.builtin.set_fact:
     parsed_redpanda: {}
   when: redpanda is not defined
+  tags: [broker_default_redpanda]
 
 - name: Debug parsed redpanda
   ansible.builtin.debug:
     var: parsed_redpanda
+  tags: [broker_debug_parsed_redpanda]
 
 - name: Debug host_specific_override variable
   ansible.builtin.debug:
     var: host_specific_override
   when: host_specific_override is defined
+  tags: [broker_debug_host_override]
 
 - name: Set default empty dict if host_specific_override is not defined
   ansible.builtin.set_fact:
     host_specific_override: {}
   when: host_specific_override is not defined
+  tags: [broker_default_host_override]
 
 - name: Debug parsed host_specific_override
   ansible.builtin.debug:
     var: host_specific_override
+  tags: [broker_debug_parsed_host_override]
 
 - name: Merge with user-provided overrides (via redpanda variable)
   ansible.builtin.set_fact:
     configuration: "{{ configuration | combine(parsed_redpanda, recursive=True) }}"
+  tags: [broker_merge_overrides]
 
 - name: Merge with user-provided host specific overrides
   ansible.builtin.set_fact:
     configuration: "{{ configuration | combine(host_specific_override, recursive=True) }}"
+  tags: [broker_merge_host_overrides]
     # on first startup, the redpanda process will create this directory and
 # populate.  we need to use this as a trigger to restart redpanda after
 # bootstrapping the first time.
@@ -80,12 +93,14 @@
   ansible.builtin.stat:
     path: "{{ redpanda_data_directory }}/redpanda/controller"
   register: controller_stat
+  tags: [broker_check_initialized]
 
 # a node is only considered initialized if the controller directory
 # exists and is populated.
 - name: Set is_initialized fact based on controller_stat
   ansible.builtin.set_fact:
     is_initialized: "{{ controller_stat.stat.isdir is defined and controller_stat.stat.isdir }}"
+  tags: [broker_set_initialized]
 
 # first run of Generate Node config
 #
@@ -101,6 +116,7 @@
     mode: "0644"
   register: nodeconfig_result
   when: not is_initialized
+  tags: [broker_write_config_first]
 
 # Related to first run of Generate Node config
 #
@@ -115,6 +131,7 @@
     group: redpanda
     mode: "0644"
   when: not is_initialized
+  tags: [broker_write_bootstrap]
 
 # Bootstrap superuser setup (SASL Method 2)
 # The RP_BOOTSTRAP_USER environment variable creates the initial superuser
@@ -131,6 +148,7 @@
     - not is_initialized
     - kafka_enable_authorization | bool
   no_log: "{{ redpanda_broker_no_log }}"
+  tags: [broker_bootstrap_superuser]
 
 # This starts up the tuner process which modifies various redpanda items and
 # os-level sysctls to optimize the node.
@@ -144,8 +162,7 @@
   ansible.builtin.systemd:
     name: redpanda-tuner
     state: started
-  tags:
-    rp_tuner
+  tags: [rp_tuner, broker_start_tuner]
 
 # ensure that systemd starts up redpanda
 # When SASL is enabled on first startup, set RP_BOOTSTRAP_USER environment variable
@@ -159,12 +176,14 @@
     - not is_initialized
     - kafka_enable_authorization | bool
   no_log: "{{ redpanda_broker_no_log }}"
+  tags: [broker_start_sasl]
 
 - name: Start redpanda (standard)
   ansible.builtin.systemd:
     name: redpanda
     state: started
   when: is_initialized or not (kafka_enable_authorization | bool)
+  tags: [broker_start_standard]
 
 # every node must have a unique node id. we extract it for use elsewhere
 #
@@ -174,12 +193,14 @@
   environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   register: node_id_out
   changed_when: false
+  tags: [broker_node_id]
 
 # make the node id a reusable fact
 #
 - name: Set node id
   ansible.builtin.set_fact:
     node_id: "{{ node_id_out.stdout | int() }}"
+  tags: [broker_set_node_id]
 
 # query the redpanda cluster configuration versions so we can determine later
 # if a cluster config change operation require node restarts.
@@ -199,6 +220,7 @@
   changed_when: false
   run_once: true
   no_log: "{{ redpanda_broker_no_log }}"
+  tags: [broker_config_version]
 
 # set cluster-wide configurations
 #
@@ -242,6 +264,7 @@
   no_log: "{{ redpanda_broker_no_log }}"
   run_once: true
   when: is_initialized
+  tags: [broker_set_cluster_config]
 
 # Apply Redpanda Enterprise License
 # This enables enterprise features like Schema Registry Authorization and OIDC
@@ -254,6 +277,7 @@
   register: license_file_stat
   become: false
   when: redpanda_license_file is defined and redpanda_license_file != ""
+  tags: [broker_check_license_file]
 
 - name: Read license file content
   ansible.builtin.slurp:
@@ -265,6 +289,7 @@
     - redpanda_license_file is defined
     - redpanda_license_file != ""
     - license_file_stat.stat.exists | default(false)
+  tags: [broker_read_license]
 
 - name: Copy license to remote temp file
   ansible.builtin.copy:
@@ -276,6 +301,7 @@
     - redpanda_license_file != ""
     - license_content.content is defined
   run_once: true
+  tags: [broker_copy_license]
 
 - name: Check Redpanda license status
   ansible.builtin.command: rpk cluster license info {{ redpanda_rpk_opts }}
@@ -284,11 +310,13 @@
   changed_when: false
   failed_when: false
   run_once: true
+  tags: [broker_check_license_status]
 
 - name: Determine if license update is needed
   ansible.builtin.set_fact:
     redpanda_license_loaded: "{{ license_status.rc == 0 and (license_status.stdout | default('')) is search('(?i)status.*valid') }}"
   run_once: true
+  tags: [broker_license_needed]
 
 - name: Apply Redpanda license
   ansible.builtin.command:
@@ -300,6 +328,7 @@
     - redpanda_license_file != ""
     - license_content.content is defined
     - not redpanda_license_loaded | default(false) | bool
+  tags: [broker_apply_license]
 
 - name: Remove temporary license file
   ansible.builtin.file:
@@ -310,6 +339,7 @@
     - redpanda_license_file != ""
     - license_content.content is defined
   run_once: true
+  tags: [broker_remove_license]
 
 # Set Redpanda license
 #
@@ -322,6 +352,7 @@
   when:
     - redpanda_license is defined
     - not redpanda_license_loaded | default(false) | bool
+  tags: [broker_set_license_string]
 
 - name: Set Redpanda license (path)
   ansible.builtin.command: rpk cluster license set --path {{ redpanda_license_path }} {{ redpanda_rpk_opts }}
@@ -330,6 +361,7 @@
   when:
     - redpanda_license_path is defined
     - not redpanda_license_loaded | default(false) | bool
+  tags: [broker_set_license_path]
 # see if a cluster config operation should trigger ansible to restart each
 # redpanda instance in the cluster
 #
@@ -343,6 +375,7 @@
   changed_when: false
   no_log: "{{ redpanda_broker_no_log }}"
   when: kafka_enable_authorization | default(false) | bool
+  tags: [broker_check_restart]
 
 - name: Check if restart needed (no auth)
   ansible.builtin.shell:
@@ -351,6 +384,7 @@
   changed_when: false
   no_log: "{{ redpanda_broker_no_log }}"
   when: not (kafka_enable_authorization | default(false) | bool)
+  tags: [broker_check_restart_noauth]
 
 # this instance of node config generation only runs after a cluster has been
 # initialized. This is used to update configurations post-cluster setup when
@@ -380,6 +414,7 @@
   check_mode: true
   register: nodeconfig_result
   when: is_initialized
+  tags: [broker_write_config_post]
 
 # Determine if a restart is necessary based on the following logic
 #
@@ -406,6 +441,7 @@
   ansible.builtin.set_fact:
     restart_required: '{{ ("true" in (restart_required_rc.stdout | default("")) or (is_initialized and (nodeconfig_result.changed or package_result.results is defined and ("Removed"
       in package_result.results or "1 upgraded" in package_result.results)))) and (restart_node | default("true") | bool) }}'
+  tags: [broker_restart_required]
 
 # serial: 1 would be the proper solution here, but that can only be set on play level
 # upstream issue: https://github.com/ansible/ansible/issues/12170
@@ -421,3 +457,4 @@
   with_items: "{{ ansible_play_hosts }}"
   loop_control:
     loop_var: cluster_host
+  tags: [broker_safe_restart]
