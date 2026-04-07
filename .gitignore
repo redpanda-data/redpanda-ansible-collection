@@ -1,15 +1,8 @@
-
 .ansible/
 .claude/
+.idea/
 *.gz
-*.xml
-*.iml
-.idea/redpanda-ansible-collection.iml
-.idea/misc.xml
 *.pyc
 
-.idea/**
-.idea/misc.xml
-.idea/redpanda-ansible-collection.iml
 roles/redpanda_broker/tests/inventory
-/.ansible
+roles/redpanda_console/tests/inventory
