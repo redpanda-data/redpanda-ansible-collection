@@ -14,7 +14,7 @@
         {
           "name": "{{ listener.name }}",
           "enabled": true,
-          "require_client_auth": {{ require_client_auth }},
+          "require_client_auth": {{ require_client_auth | lower }},
           "key_file": "{{ redpanda_key_file }}",
           "cert_file": "{{ redpanda_cert_file }}",
           "truststore_file": "{{ redpanda_truststore_file }}"
@@ -24,7 +24,7 @@
         {
           "name": "default",
           "enabled": true,
-          "require_client_auth": {{ require_client_auth }},
+          "require_client_auth": {{ require_client_auth | lower }},
           "key_file": "{{ redpanda_key_file }}",
           "cert_file": "{{ redpanda_cert_file }}",
           "truststore_file": "{{ redpanda_truststore_file }}"
