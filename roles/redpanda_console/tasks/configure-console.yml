@@ -23,9 +23,10 @@
 
 - name: Generate configurations
   vars:
-    tpl: "{{ lookup('template', console_config_template.template) }}"
+    _tpl_result: "{{ lookup('template', console_config_template.template) }}"
+    _tpl_dict: "{{ _tpl_result if (_tpl_result is mapping) else (_tpl_result | from_json) }}"
   ansible.builtin.set_fact:
-    console_config: "{{ console_config | combine(tpl if (tpl is mapping) else (tpl | from_json), recursive=True) }}"
+    console_config: "{{ console_config | combine(_tpl_dict, recursive=True) }}"
   loop: "{{ console_config_templates }}"
   loop_control:
     loop_var: console_config_template
