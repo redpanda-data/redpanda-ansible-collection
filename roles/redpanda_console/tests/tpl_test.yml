@@ -1,0 +1,24 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    advertised_ips: "{{ test_advertised_ips | default(['10.0.0.1', '10.0.0.2', '10.0.0.3']) }}"
+    redpanda_kafka_port: 9092
+    redpanda_admin_api_port: 9644
+    redpanda_schema_registry_port: 8081
+    kafka_connect_port: 8083
+    http_port: 8080
+    https_port: 443
+    redpanda_truststore_file: /etc/redpanda/certs/truststore.pem
+    redpanda_cert_file: /etc/redpanda/certs/node.crt
+    redpanda_key_file: /etc/redpanda/certs/node.key
+    console_cert_file: /etc/redpanda/certs/node.crt
+    console_key_file: /etc/redpanda/certs/node.key
+    redpanda_console_user: redpanda-console
+    redpanda_console_group: redpanda-console
+    console_config_templates: "{{ test_templates }}"
+  tasks:
+    - include_tasks: /app/tasks/configure-console.yml
+      tags: [always]
+    - debug:
+        var: console_config

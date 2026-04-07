@@ -1,0 +1,31 @@
+---
+- hosts: redpanda
+  gather_facts: false
+  vars:
+    advertised_ip: "{{ private_ip }}"
+    redpanda_organization: test-org
+    redpanda_cluster_id: test-cluster
+    redpanda_mode: production
+    redpanda_admin_api_port: 9644
+    redpanda_kafka_port: 9092
+    redpanda_rpc_port: 33145
+    redpanda_schema_registry_port: 8081
+    redpanda_pandaproxy_port: 8082
+    require_client_auth: false
+    redpanda_data_directory: /var/lib/redpanda/data
+    redpanda_key_file: /etc/redpanda/certs/node.key
+    redpanda_cert_file: /etc/redpanda/certs/node.crt
+    redpanda_truststore_file: /etc/redpanda/certs/truststore.pem
+    kafka_enable_authorization: false
+    schema_registry_authn_method: none
+    pandaproxy_authn_method: none
+    custom_config_templates: "{{ test_templates }}"
+    redpanda_kafka_listeners:
+      - address: "{{ private_ip }}"
+        port: 9092
+        name: internal
+  tasks:
+    - include_tasks: /app/tasks/start-redpanda.yml
+      tags: [always]
+    - debug:
+        var: configuration
