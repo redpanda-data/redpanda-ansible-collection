@@ -1,0 +1,17 @@
+---
+- hosts: redpanda
+  gather_facts: false
+  vars:
+    redpanda_rpk_kafka_opts: ""
+    kafka_enable_authorization: false
+  tasks:
+    # The "always" tag ensures this include_tasks directive itself is not
+    # skipped by --tags filtering. Without it, the include would be filtered
+    # out and no tasks would run at all. Once included, Ansible applies
+    # --tags filtering to the individual tasks inside start-redpanda.yml,
+    # so only tasks matching the tags passed via cmdline (e.g.
+    # broker_node_id, broker_set_node_id) will execute.
+    - include_tasks: /app/tasks/start-redpanda.yml
+      tags: [always]
+    - debug:
+        var: node_id
