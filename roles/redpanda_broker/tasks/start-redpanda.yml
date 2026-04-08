@@ -189,7 +189,7 @@
 #
 - name: Establish node id
   ansible.builtin.shell:
-    cmd: rpk cluster status {{ redpanda_rpk_kafka_opts }} | sed 's/*//g' | grep -w "{{ hostvars[inventory_hostname].private_ip }}" | awk '{ print $1;}'
+    cmd: rpk cluster status {{ redpanda_rpk_kafka_opts }} | sed 's/*//g' | grep -wF "{{ hostvars[inventory_hostname].private_ip }}" | awk '{ print $1;}'
   environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   register: node_id_out
   changed_when: false
