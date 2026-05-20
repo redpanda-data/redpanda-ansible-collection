@@ -6,6 +6,12 @@
     rp_repo_signing_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
     rp_repo_signing_src_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
 
+- name: Debug Redpanda DEB repository URLs
+  ansible.builtin.debug:
+    msg:
+      - "GPG key URL: {{ rp_key_deb_actual }}"
+      - "Repo signing line: {{ rp_repo_signing_deb_actual }}"
+
 - name: Download and import Redpanda GPG Key with proxy
   become: true
   ansible.builtin.shell: |

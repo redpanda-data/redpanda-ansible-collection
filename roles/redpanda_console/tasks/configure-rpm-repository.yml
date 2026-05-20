@@ -13,7 +13,7 @@
     description: "{{ repo_name_prefix }}"
     baseurl: "{{ rp_standard_rpm_actual }}"
     gpgkey: "{{ rp_key_rpm_actual }}"
-    repo_gpgcheck: true
+    repo_gpgcheck: false
     gpgcheck: true
     enabled: true
     sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
@@ -28,7 +28,7 @@
     description: "{{ repo_name_prefix }}-noarch"
     baseurl: "{{ rp_noarch_rpm_actual }}"
     gpgkey: "{{ rp_key_rpm_actual }}"
-    repo_gpgcheck: true
+    repo_gpgcheck: false
     gpgcheck: true
     enabled: true
     sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
@@ -43,7 +43,7 @@
     description: "{{ repo_name_prefix }}-source"
     baseurl: "{{ rp_source_rpm_actual }}"
     gpgkey: "{{ rp_key_rpm_actual }}"
-    repo_gpgcheck: true
+    repo_gpgcheck: false
     gpgcheck: true
     enabled: true
     sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
