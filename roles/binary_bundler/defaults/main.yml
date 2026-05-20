@@ -1,5 +1,5 @@
 # defaults
-redpanda_base_url: "https://dl.redpanda.com"
+redpanda_base_url: "https://linux.pkg.redpanda.com"
 download_directory: "/tmp"
 
 # required config from user:
@@ -14,8 +14,8 @@ is_post_split: "{{ redpanda_version >= '24.2' or redpanda_version == 'latest' }}
 
 # the rpms
 rpm_package_suffix: "{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}.{{ basearch }}"
-rpm_base_url: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}"
-rpm_unstable_base_url: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/rpm/{{ (os_distribution == 'RedHat') | ternary('el', os_distribution | lower) }}/{{ os_distribution_major_version }}"
+rpm_base_url: "{{ redpanda_base_url }}/yum/redpanda-yum"
+rpm_unstable_base_url: "{{ redpanda_base_url }}/yum/redpanda-unstable-yum"
 redpanda_package_name: "redpanda{{ rpm_package_suffix }}.rpm"
 redpanda_rpk_package_name: "redpanda-rpk{{ rpm_package_suffix }}.rpm"
 redpanda_tuner_package_name: "redpanda-tuner{{ rpm_package_suffix }}.rpm"
@@ -97,8 +97,8 @@ rpm_noarch_unstable_download_urls: "{{ post_split_noarch_rpms_unstable if is_pos
 rpm_source_unstable_download_urls: "{{ post_split_source_rpms_unstable if is_post_split else pre_split_source_rpms_unstable }}"
 
 # the debs
-deb_download_url: "https://dl.redpanda.com/public/redpanda/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda_{{ redpanda_version}}/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
-deb_unstable_download_url: "https://dl.redpanda.com/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda_{{ redpanda_version}}/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+deb_download_url: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+deb_unstable_download_url: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
 
 pre_split_deb_download_urls:
   redpanda: "{{ deb_download_url }}"
@@ -107,14 +107,14 @@ pre_split_deb_unstable_download_urls:
   redpanda: "{{ deb_unstable_download_url }}"
 
 post_split_deb_download_urls:
-  redpanda-rpk: "https://dl.redpanda.com/public/redpanda/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda-rpk_{{ redpanda_version}}/redpanda-rpk_{{ redpanda_version }}_{{ basearch }}.deb"
-  redpanda-tuner: "https://dl.redpanda.com/public/redpanda/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda-tuner_{{ redpanda_version}}/redpanda-tuner_{{ redpanda_version }}_{{ basearch }}.deb"
-  redpanda: "https://dl.redpanda.com/public/redpanda/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda_{{ redpanda_version}}/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda-rpk: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda-rpk/redpanda-rpk_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda-tuner: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda-tuner/redpanda-tuner_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
 
 post_split_deb_unstable_download_urls:
-  redpanda-rpk: "https://dl.redpanda.com/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda-rpk_{{ redpanda_version}}/redpanda-rpk_{{ redpanda_version }}_{{ basearch }}.deb"
-  redpanda-tuner: "https://dl.redpanda.com/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda-tuner_{{ redpanda_version}}/redpanda-tuner_{{ redpanda_version }}_{{ basearch }}.deb"
-  redpanda: "https://dl.redpanda.com/E4xN1tVe3Xy60GTx/redpanda-unstable/deb/{{ os_distribution }}/pool/any-version/main/r/re/redpanda_{{ redpanda_version}}/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda-rpk: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda-rpk/redpanda-rpk_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda-tuner: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda-tuner/redpanda-tuner_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
 
 deb_download_urls: "{{ post_split_deb_download_urls if is_post_split else pre_split_deb_download_urls }}"
 deb_unstable_download_urls: "{{ post_split_deb_unstable_download_urls if is_post_split else post_split_deb_unstable_download_urls }}"
