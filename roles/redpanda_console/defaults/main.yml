@@ -15,7 +15,7 @@ redpanda_user: redpanda
 redpanda_console_group: redpanda-console
 redpanda_console_user: redpanda-console
 
-redpanda_base_url: "https://dl.redpanda.com"
+redpanda_base_url: "https://linux.pkg.redpanda.com"
 
 redpanda_install_status: present # If redpanda_version is set to latest, changing redpanda_install_status to latest will effect an upgrade, otherwise the currently installed version will remain
 
@@ -34,10 +34,10 @@ console_key_file: "{{ console_certs_dir }}/node.key"
 console_cert_file: "{{ console_certs_dir }}/node.crt"
 
 # the rpms
-rp_key_rpm: "{{ redpanda_base_url }}/public/redpanda/gpg.988A7B0A4918BC85.key"
-rp_standard_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ rp_rpm_distro_map[ansible_distribution] | default('el') }}/{{ ansible_distribution_major_version }}/$basearch"
-rp_noarch_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ rp_rpm_distro_map[ansible_distribution] | default('el') }}/{{ ansible_distribution_major_version }}/noarch"
-rp_source_rpm: "{{ redpanda_base_url }}/public/redpanda/rpm/{{ rp_rpm_distro_map[ansible_distribution] | default('el') }}/{{ ansible_distribution_major_version }}/SRPMS"
+rp_key_rpm: "{{ redpanda_base_url }}/redpanda-rpm-signing-public.key"
+rp_standard_rpm: "{{ redpanda_base_url }}/yum/redpanda-yum"
+rp_noarch_rpm: "{{ redpanda_base_url }}/yum/redpanda-yum"
+rp_source_rpm: "{{ redpanda_base_url }}/yum/redpanda-yum"
 rp_rpm_distro_map:
   Fedora: fedora
   Amazon: amzn
@@ -45,8 +45,8 @@ rp_rpm_distro_map:
 
 
 # the debs
-rp_key_deb: "{{ redpanda_base_url }}/sMIXnoa7DK12JW4A/redpanda/gpg.988A7B0A4918BC85.key"
-rp_key_deb_unstable: "{{ redpanda_base_url }}/E4xN1tVe3Xy60GTx/redpanda-unstable/gpg.39C20393EC2E8747.key"
+rp_key_deb: "{{ redpanda_base_url }}/redpanda-deb-signing-public.gpg"
+rp_key_deb_unstable: "{{ redpanda_base_url }}/redpanda-deb-signing-public.gpg"
 rp_key_path_deb: "/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg"
-rp_repo_signing_deb: "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] {{ redpanda_base_url }}/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
-rp_repo_signing_src_deb: "deb-src [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] {{ redpanda_base_url }}/public/redpanda/deb/{{ansible_distribution | lower}} {{ ansible_distribution_release | lower }} main"
+rp_repo_signing_deb: "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] {{ redpanda_base_url }}/apt redpanda-apt main"
+rp_repo_signing_src_deb: "deb-src [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] {{ redpanda_base_url }}/apt redpanda-apt main"
