@@ -34,6 +34,11 @@
   when: not needs_split_packages
 
 
+# Loop over the versioned package names so a pinned redpanda_version is
+# honored; with redpanda_version=latest the suffix is empty and this list is
+# identical to the unversioned one. (Previously this looped over the
+# unversioned list, so dnf always resolved the newest version in the repo and
+# silently ignored redpanda_version for releases >= 24.2.)
 - name: Install redpanda (post 24.2 or development)
   dnf:
     name: "{{item}}"
@@ -45,7 +50,7 @@
     http_proxy: "{{ https_proxy_value | default('') }}"
   register: package_result
   when: needs_split_packages
-  loop: "{{ redpanda_package_list }}"
+  loop: "{{ redpanda_package_list_versioned }}"
 
 # Stop redpanda if it auto-started after package installation
 # This prevents it from initializing before we can configure SASL
