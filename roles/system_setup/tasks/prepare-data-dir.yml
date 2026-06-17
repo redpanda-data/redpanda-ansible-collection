@@ -26,6 +26,21 @@
   tags:
     - prep_data_dir
 
+# Mount options are independent of how many devices back the filesystem, so
+# compute them once. nofail is only added for ephemeral disks; persistent data
+# volumes intentionally block boot if the device is missing rather than letting
+# Redpanda start on an empty root-disk directory. x-systemd.device-timeout
+# bounds that wait so a slow or absent device does not hang boot for 90s.
+- name: Prep Data Dir - Compute data dir mount options
+  ansible.builtin.set_fact:
+    data_dir_mount_opts: >-
+      {{ (['defaults']
+          + (['nofail'] if ephemeral_disk | bool else [])
+          + ['x-systemd.device-timeout=' + data_dir_device_timeout]) | join(',') }}
+  tags:
+    - prep_data_dir
+    - prep_data_dir_resolve
+
 # Prepare raid 0 for multiple devices
 - name: Prep Data Dir - handle mdadm (raid 0)
   tags:
@@ -55,14 +70,38 @@
         fstype: xfs
         dev: '{{ nvme_devices_for_raid[0] }}'
       when: nvme_devices_for_raid|length == 1
+    # Reference the volume by filesystem UUID rather than the kernel device
+    # path: NVMe device names are assigned in discovery order and are not stable
+    # across reboots, so a raw-path fstab entry can mount the wrong disk or fail.
+    # The retry guards the race where the device is attached but blkid cannot
+    # yet read the filesystem metadata.
+    - name: Prep Data Dir - Get filesystem UUID (single device)
+      ansible.builtin.command:
+        cmd: blkid -s UUID -o value {{ nvme_devices_for_raid[0] }}
+      register: data_dir_uuid
+      changed_when: false
+      retries: 5
+      delay: 2
+      until: data_dir_uuid.stdout | length > 0
+      when: nvme_devices_for_raid|length == 1
+      tags:
+        - prep_data_dir
+        - prep_data_dir_resolve
+    - name: Prep Data Dir - Set data dir mount src (single device)
+      ansible.builtin.set_fact:
+        data_dir_mount_src: "UUID={{ data_dir_uuid.stdout }}"
+      when: nvme_devices_for_raid|length == 1
+      tags:
+        - prep_data_dir
+        - prep_data_dir_resolve
     - name: Prep Data Dir - Mount NVMe device
       ansible.posix.mount:
         path: /mnt/vectorized
-        src: '{{ nvme_devices_for_raid[0] }}'
+        src: "{{ data_dir_mount_src }}"
         fstype: xfs
-        opts: "{{ 'defaults,nofail' if ephemeral_disk else 'defaults'}}"
-        dump: "{{ 1 if ephemeral_disk else 0}}"
-        passno: "{{ 2 if ephemeral_disk else 0}}"
+        opts: "{{ data_dir_mount_opts }}"
+        dump: "{{ 1 if ephemeral_disk | bool else 0 }}"
+        passno: "{{ 2 if ephemeral_disk | bool else 0 }}"
         state: mounted
       when: nvme_devices_for_raid|length == 1
 
@@ -75,20 +114,42 @@
         fstype: xfs
         dev: /dev/md0
       when: nvme_devices_for_raid|length > 1
+    # Mount the array by filesystem UUID. The md device name is also assigned at
+    # assembly time and is not guaranteed stable, so the UUID of the filesystem
+    # on top of the array is the reliable, reboot-safe reference.
+    - name: Prep Data Dir - Get filesystem UUID (raid 0)
+      ansible.builtin.command:
+        cmd: blkid -s UUID -o value /dev/md0
+      register: data_dir_uuid_raid
+      changed_when: false
+      retries: 5
+      delay: 2
+      until: data_dir_uuid_raid.stdout | length > 0
+      when: nvme_devices_for_raid|length > 1
+      tags:
+        - prep_data_dir
+        - prep_data_dir_resolve
+    - name: Prep Data Dir - Set data dir mount src (raid 0)
+      ansible.builtin.set_fact:
+        data_dir_mount_src: "UUID={{ data_dir_uuid_raid.stdout }}"
+      when: nvme_devices_for_raid|length > 1
+      tags:
+        - prep_data_dir
+        - prep_data_dir_resolve
     - name: Prep Data Dir - Mount NVMe device
       ansible.posix.mount:
         path: /mnt/vectorized
-        src: /dev/md0
+        src: "{{ data_dir_mount_src }}"
         fstype: xfs
-        opts: "{{ 'defaults,nofail' if ephemeral_disk else 'defaults'}}"
-        dump: "{{ 1 if ephemeral_disk else 0}}"
-        passno: "{{ 2 if ephemeral_disk else 0}}"
+        opts: "{{ data_dir_mount_opts }}"
+        dump: "{{ 1 if ephemeral_disk | bool else 0 }}"
+        passno: "{{ 2 if ephemeral_disk | bool else 0 }}"
         state: mounted
       when: nvme_devices_for_raid|length > 1
 
 - name: Prep Data Dir - Create data path
   ansible.builtin.file:
-    path: "{{ repdanda_mount_dir }}"
+    path: "{{ redpanda_mount_dir }}"
     state: directory
     owner: redpanda
     group: redpanda

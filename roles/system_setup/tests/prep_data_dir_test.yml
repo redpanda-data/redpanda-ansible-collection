@@ -1,0 +1,16 @@
+---
+- hosts: redpanda
+  gather_facts: false
+  tasks:
+    # The "always" tag ensures this include_tasks directive itself is not
+    # skipped by --tags filtering. Once included, Ansible applies --tags
+    # filtering to the individual tasks inside prepare-data-dir.yml, so only
+    # tasks tagged prep_data_dir_resolve run. That isolates the UUID-resolution
+    # and mount-option computation from the tasks that touch real disks
+    # (filesystem creation, mdadm, mount, directory creation).
+    - include_tasks: /app/tasks/prepare-data-dir.yml
+      tags: [always]
+    - debug:
+        var: data_dir_mount_src
+    - debug:
+        var: data_dir_mount_opts

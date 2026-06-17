@@ -1,7 +1,7 @@
 - name: Set data dir permissions
   ansible.builtin.file:
     dest: "{{ redpanda_base_dir }}"
-    src: "{{ repdanda_mount_dir }}"
+    src: "{{ redpanda_mount_dir }}"
     state: link
     owner: redpanda
     group: redpanda

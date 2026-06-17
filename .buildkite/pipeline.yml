@@ -22,3 +22,8 @@ steps:
       - docker-compose#v5.2.0:
           config: roles/redpanda_logging/docker-compose.yml
           run: testctr
+  - label: "system_setup tests"
+    plugins:
+      - docker-compose#v5.2.0:
+          config: roles/system_setup/docker-compose.yml
+          run: testctr

@@ -29,7 +29,10 @@ redpanda_rpk_kafka_opts: >-
 
 redpanda_base_dir: /var/lib/redpanda
 redpanda_data_directory: "{{ redpanda_base_dir }}/data"
-repdanda_mount_dir: /mnt/vectorized/redpanda
+# Subdirectory on the mounted data volume that holds Redpanda's data.
+# `repdanda_mount_dir` was the historical (misspelled) name; if set, it is
+# still honored via the default below for backward compatibility.
+redpanda_mount_dir: "{{ repdanda_mount_dir | default('/mnt/vectorized/redpanda') }}"
 
 redpanda_certs_dir: /etc/redpanda/certs
 redpanda_csr_file: "{{ redpanda_certs_dir }}/node.csr"
