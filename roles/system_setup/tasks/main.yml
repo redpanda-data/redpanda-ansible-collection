@@ -1,4 +1,15 @@
 ---
+# repdanda_mount_dir was the original (misspelled) variable name. It is still
+# honored via the default() expression on redpanda_mount_dir, but warn so users
+# migrate before it is removed. Fires only when the old name was explicitly set.
+- name: Warn about deprecated repdanda_mount_dir variable
+  ansible.builtin.debug:
+    msg: >-
+      DEPRECATION: 'repdanda_mount_dir' is deprecated and will be removed in a
+      future release. Use 'redpanda_mount_dir' instead; the old name is still
+      honored for now.
+  when: repdanda_mount_dir is defined
+
 - name: Check if ca_cert_file is defined
   ansible.builtin.fail:
     msg: "A valid path must be provided for ca_cert_file ex: tls/certs/ca.crt"

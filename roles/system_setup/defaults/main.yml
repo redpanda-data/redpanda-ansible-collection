@@ -1,6 +1,13 @@
 ---
 redpanda_base_dir: /var/lib/redpanda
-repdanda_mount_dir: /mnt/vectorized/redpanda
+# Subdirectory on the mounted data volume that holds Redpanda's data.
+# `repdanda_mount_dir` was the historical (misspelled) name; if set, it is
+# still honored via the default below for backward compatibility.
+redpanda_mount_dir: "{{ repdanda_mount_dir | default('/mnt/vectorized/redpanda') }}"
+# Bounds how long systemd waits for the data device to appear at boot before
+# continuing. Prevents the default 90-second hang when the volume is slow to
+# attach, while still failing the mount if the device never appears.
+data_dir_device_timeout: "15s"
 redpanda_truststore_file: "{{ redpanda_certs_dir }}/truststore.pem"
 redpanda_cert_file: "{{ redpanda_certs_dir }}/node.crt"
 debian_prerequisite_packages:

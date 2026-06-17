@@ -1,0 +1,2 @@
+[redpanda]
+node0 ansible_connection=local
