@@ -37,8 +37,7 @@ def run():
     with open(inv, 'w') as f:
         f.write(INVENTORY)
 
-    # Write mock rpk to a temp directory so it doesn't pollute PATH
-    # for other tests (rpk_config_idempotency_test skips when rpk is absent)
+    # Write mock rpk to a temp directory so it doesn't pollute PATH for other tests
     mock_dir = tempfile.mkdtemp()
     mock_path = os.path.join(mock_dir, 'rpk')
     with open(mock_path, 'w') as f:
