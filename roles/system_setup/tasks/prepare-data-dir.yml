@@ -36,7 +36,7 @@
     data_dir_mount_opts: >-
       {{ (['defaults']
           + (['nofail'] if ephemeral_disk | bool else [])
-          + ['x-systemd.device-timeout=' + data_dir_device_timeout]) | join(',') }}
+          + ['x-systemd.device-timeout=' + (data_dir_device_timeout | string)]) | join(',') }}
   tags:
     - prep_data_dir
     - prep_data_dir_resolve
