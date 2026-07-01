@@ -6,21 +6,61 @@
     rp_repo_signing_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
     rp_repo_signing_src_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
 
-- name: Download and import Redpanda GPG Key with proxy
-  become: true
-  ansible.builtin.shell: |
-    curl -x "{{ https_proxy_value }}" -1sLf "{{ rp_key_deb_actual }}" | gpg --dearmor > "{{ rp_key_path_deb_actual }}"
-  args:
-    creates: "{{ rp_key_path_deb_actual }}"
-  when: https_proxy_value is defined and https_proxy_value | length > 0
+- name: Debug Redpanda DEB repository URLs
+  ansible.builtin.debug:
+    msg:
+      - "GPG key URL: {{ rp_key_deb_actual }}"
+      - "Repo signing line: {{ rp_repo_signing_deb_actual }}"
 
-- name: Download and import Redpanda GPG Key without proxy
-  become: true
+# Import the Redpanda signing key only when the keyring is missing the key the
+# repository is actually signed with. This stays idempotent in steady state
+# (a no-op once the key is present) while still performing the one-time cutover
+# when migrating an existing host onto a new key (e.g. the dl.redpanda.com ->
+# Artifact Registry migration) or on any future key rotation. The required
+# fingerprint is derived from whatever key the configured URL currently serves,
+# so this never needs revisiting when the signing key changes.
+- name: Fetch the current Redpanda DEB signing key
+  ansible.builtin.get_url:
+    url: "{{ rp_key_deb_actual }}"
+    dest: /tmp/redpanda-deb-signing.key
+    mode: '0644'
+  environment:
+    https_proxy: "{{ https_proxy_value | default('') }}"
+    http_proxy: "{{ https_proxy_value | default('') }}"
+  changed_when: false
+
+- name: Determine the signing key fingerprint we require
+  ansible.builtin.shell: >-
+    set -o pipefail;
+    gpg --show-keys --with-colons /tmp/redpanda-deb-signing.key | awk -F: '/^fpr:/{print $10; exit}'
   args:
-    creates: "{{ rp_key_path_deb_actual }}"
-  ansible.builtin.shell: |
-    curl -1sLf "{{ rp_key_deb_actual }}" | gpg --dearmor > "{{ rp_key_path_deb_actual }}"
-  when: https_proxy_value is not defined or https_proxy_value | length == 0
+    executable: /bin/bash
+  register: rp_want_deb_key_fpr
+  changed_when: false
+
+- name: Read the fingerprints already present in the Redpanda keyring
+  ansible.builtin.shell: >-
+    set -o pipefail;
+    gpg --no-default-keyring --keyring "{{ rp_key_path_deb_actual }}" --list-keys --with-colons 2>/dev/null
+    | awk -F: '/^fpr:/{print $10}'
+  args:
+    executable: /bin/bash
+  register: rp_have_deb_key_fprs
+  changed_when: false
+  failed_when: false
+
+- name: Import/refresh the Redpanda signing key when it is missing (migration / rotation)
+  become: true
+  ansible.builtin.command: gpg --dearmor --yes -o "{{ rp_key_path_deb_actual }}" /tmp/redpanda-deb-signing.key
+  when: rp_want_deb_key_fpr.stdout not in (rp_have_deb_key_fprs.stdout_lines | default([]))
+
+# `gpg --dearmor -o` creates a fresh keyring 0600 root; apt verifies signed-by keyrings as the
+# _apt user, which then can't read it (NO_PUBKEY). Force it world-readable like a public key file.
+- name: Ensure the Redpanda keyring is world-readable for apt verification
+  become: true
+  ansible.builtin.file:
+    path: "{{ rp_key_path_deb_actual }}"
+    mode: '0644'
 
 - name: Add Redpanda DEB repository
   ansible.builtin.copy:
