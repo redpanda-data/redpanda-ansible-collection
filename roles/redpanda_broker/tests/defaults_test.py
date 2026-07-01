@@ -1,5 +1,6 @@
 import unittest
 import os
+import json
 import yaml
 from jinja2 import Environment, FileSystemLoader, Undefined
 
@@ -95,7 +96,7 @@ class TestRedpandaTemplate(unittest.TestCase):
         )
 
         # Convert the rendered template to a dictionary for easier comparison
-        rendered_dict = yaml.safe_load(rendered_template)
+        rendered_dict = json.loads(rendered_template)
 
         # When redpanda_kafka_listeners is defined (as in defaults), it uses those listeners
         # The listener should have a name from the defined listeners
@@ -132,7 +133,7 @@ class TestRedpandaTemplate(unittest.TestCase):
             **defaults_no_listeners
         )
 
-        rendered_dict = yaml.safe_load(rendered_template)
+        rendered_dict = json.loads(rendered_template)
 
         # Verify kafka_api has name even without SASL
         kafka_api = rendered_dict['node']['redpanda']['kafka_api']
@@ -179,7 +180,7 @@ class TestRedpandaTemplate(unittest.TestCase):
             **defaults_with_kafka_listeners
         )
 
-        rendered_dict = yaml.safe_load(rendered_template)
+        rendered_dict = json.loads(rendered_template)
 
         kafka_api = rendered_dict['node']['redpanda']['kafka_api']
         advertised_kafka_api = rendered_dict['node']['redpanda']['advertised_kafka_api']
@@ -226,7 +227,7 @@ class TestRedpandaTemplate(unittest.TestCase):
             **defaults_sasl
         )
 
-        rendered_dict = yaml.safe_load(rendered_template)
+        rendered_dict = json.loads(rendered_template)
 
         # Verify kafka_api has authentication_method: sasl
         kafka_api = rendered_dict['node']['redpanda']['kafka_api']

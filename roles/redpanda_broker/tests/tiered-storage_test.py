@@ -1,5 +1,6 @@
 import unittest
 import os
+import json
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
@@ -77,8 +78,10 @@ class TestRedpandaTemplate(unittest.TestCase):
             }
         }
 
-        # Convert the rendered template to a dictionary for easier comparison
-        rendered_dict = yaml.safe_load(rendered_template)
+        # Parse the rendered template as JSON — this matches how the role actually
+        # consumes it at runtime (start-redpanda.yml uses the from_json filter). YAML
+        # would silently tolerate JSON-invalid content (e.g. `#` comment lines).
+        rendered_dict = json.loads(rendered_template)
 
         # Assert that the expected values are in the rendered template
         self.assertEqual(rendered_dict, expected_rendered_values)

@@ -95,6 +95,28 @@ class TestBrokerTemplates:
         assert config['node']['redpanda']['rpc_server_tls']['enabled'] == True
         assert 'organization' in config['node']
 
+    def test_defaults_tiered_storage_merge(self):
+        # Exercises tiered_storage.j2 through the real from_json config-merge path
+        # (start-redpanda.yml), so JSON-invalid template output fails the play here
+        # rather than silently passing a yaml-only unit test.
+        templates = [
+            {"template": "/app/templates/configs/defaults.j2"},
+            {"template": "/app/templates/configs/tiered_storage.j2"}
+        ]
+        status, config = run(templates, {
+            'tiered_storage_bucket_name': 'my-bucket',
+            'cloud_storage_enable_remote_read': 'true',
+            'cloud_storage_enable_remote_write': 'true',
+            'cloud_storage_region': 'us-west-2',
+            'cloud_storage_credentials_source': 'gcp_instance_metadata',
+        })
+        assert status == 'successful'
+        assert config['cluster']['cloud_storage_bucket'] == 'my-bucket'
+        assert config['cluster']['cloud_storage_credentials_source'] == 'gcp_instance_metadata'
+        # gcp_instance_metadata branch must add the GCS endpoint (and stay valid JSON)
+        assert config['cluster']['cloud_storage_api_endpoint'] == 'storage.googleapis.com'
+        assert 'organization' in config['node']
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

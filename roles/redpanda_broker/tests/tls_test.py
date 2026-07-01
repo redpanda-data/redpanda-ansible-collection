@@ -1,5 +1,6 @@
 import unittest
 import os
+import json
 import yaml
 from jinja2 import Environment, FileSystemLoader, Undefined
 
@@ -144,7 +145,7 @@ class TestRedpandaTemplate(unittest.TestCase):
             }
         }
 
-        rendered_dict = yaml.safe_load(rendered_template)
+        rendered_dict = json.loads(rendered_template)
         self.assertEqual(rendered_dict, expected_rendered_values)
 
         print(rendered_template)
@@ -173,7 +174,7 @@ class TestRedpandaTemplate(unittest.TestCase):
 
         rendered_template = self.env.from_string(first_pass).render(**defaults_no_listeners)
 
-        rendered_dict = yaml.safe_load(rendered_template)
+        rendered_dict = json.loads(rendered_template)
 
         # Verify kafka_api_tls is an array with exactly one entry
         kafka_api_tls = rendered_dict['node']['redpanda']['kafka_api_tls']
