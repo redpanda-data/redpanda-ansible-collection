@@ -35,6 +35,11 @@ console_cert_file: "{{ console_certs_dir }}/node.crt"
 
 # the rpms
 rp_key_rpm: "{{ redpanda_base_url }}/redpanda-rpm-signing-public.key"
+# Artifact Registry signs yum repo *metadata* (repodata/repomd.xml.asc) with
+# Google's own "Artifact Registry Repository Signer" key, published per repo at
+# repodata/repomd.xml.key. It is distinct from the Redpanda package-signing key
+# above; both are required for repo_gpgcheck=1 + gpgcheck=1.
+rp_key_rpm_metadata: "{{ redpanda_base_url }}/yum/redpanda-yum/repodata/repomd.xml.key"
 rp_standard_rpm: "{{ redpanda_base_url }}/yum/redpanda-yum"
 rp_noarch_rpm: "{{ redpanda_base_url }}/yum/redpanda-yum"
 rp_source_rpm: "{{ redpanda_base_url }}/yum/redpanda-yum"
