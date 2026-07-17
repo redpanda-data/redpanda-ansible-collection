@@ -55,6 +55,12 @@ airgap_copy_dest: "/tmp"
 
 # the rpms
 rp_key_rpm: "{{ redpanda_base_url }}/redpanda-rpm-signing-public.key"
+# Artifact Registry signs yum repo *metadata* (repodata/repomd.xml.asc) with
+# Google's own "Artifact Registry Repository Signer" key, published per repo at
+# repodata/repomd.xml.key. It is distinct from the Redpanda package-signing key
+# above; both are required for repo_gpgcheck=1 + gpgcheck=1.
+rp_key_rpm_metadata: "{{ redpanda_base_url }}/yum/redpanda-yum/repodata/repomd.xml.key"
+rp_key_rpm_metadata_unstable: "{{ redpanda_base_url }}/yum/redpanda-unstable-yum/repodata/repomd.xml.key"
 rp_key_rpm_unstable: "{{ redpanda_base_url }}/redpanda-rpm-signing-public.key"
 rp_standard_rpm: "{{ redpanda_base_url }}/yum/redpanda-yum"
 rp_standard_rpm_unstable: "{{ redpanda_base_url }}/yum/redpanda-unstable-yum"
@@ -90,7 +96,6 @@ cloudsmith_config_url_deb: "https://dl.redpanda.com/{{ cloudsmith_token }}/redpa
 cloudsmith_config_url_rpm: "https://dl.redpanda.com/{{ cloudsmith_token }}/redpanda-nightly/config.rpm.txt"
 keyring_location: '/usr/share/keyrings/redpanda-redpanda-nightly-archive-keyring.gpg'
 development_build: false
-
 
 
 # enable fips. requires an enterprise license.
