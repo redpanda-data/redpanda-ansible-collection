@@ -1,4 +1,19 @@
 ---
+# dnf5's repo-metadata verifier rejects the Artifact Registry repomd.xml signature
+# (a critical hashed Issuer subpacket gpg/dnf4 accept but dnf5 does not), so
+# repo_gpgcheck must be off on dnf5 hosts and stays on everywhere else. Package
+# payloads are still verified via gpgcheck=1 regardless. Google documents
+# repo_gpgcheck=0 as the AR client config:
+# https://cloud.google.com/artifact-registry/docs/os-packages/rpm/configure
+- name: Detect dnf5 (Artifact Registry repomd signatures fail its verifier)
+  ansible.builtin.stat:
+    path: /usr/bin/dnf5
+  register: rp_dnf5_bin
+
+- name: Set repo_gpgcheck (off on dnf5, on elsewhere)
+  ansible.builtin.set_fact:
+    rp_repo_gpgcheck: "{{ not rp_dnf5_bin.stat.exists }}"
+
 - name: Set Redpanda RPM and GPG Key details
   ansible.builtin.set_fact:
     rp_key_rpm_actual: "{{ rp_key_rpm }}"
@@ -18,7 +33,7 @@
     gpgkey:
       - "{{ rp_key_rpm_actual }}"
       - "{{ rp_key_rpm_metadata_actual }}"
-    repo_gpgcheck: true
+    repo_gpgcheck: "{{ rp_repo_gpgcheck }}"
     gpgcheck: true
     enabled: true
     sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
@@ -37,7 +52,7 @@
     gpgkey:
       - "{{ rp_key_rpm_actual }}"
       - "{{ rp_key_rpm_metadata_actual }}"
-    repo_gpgcheck: true
+    repo_gpgcheck: "{{ rp_repo_gpgcheck }}"
     gpgcheck: true
     enabled: true
     sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
@@ -56,7 +71,7 @@
     gpgkey:
       - "{{ rp_key_rpm_actual }}"
       - "{{ rp_key_rpm_metadata_actual }}"
-    repo_gpgcheck: true
+    repo_gpgcheck: "{{ rp_repo_gpgcheck }}"
     gpgcheck: true
     enabled: true
     sslcacert: '/etc/pki/tls/certs/ca-bundle.crt'
