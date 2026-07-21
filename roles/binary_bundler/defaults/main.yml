@@ -117,4 +117,4 @@ post_split_deb_unstable_download_urls:
   redpanda: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
 
 deb_download_urls: "{{ post_split_deb_download_urls if is_post_split else pre_split_deb_download_urls }}"
-deb_unstable_download_urls: "{{ post_split_deb_unstable_download_urls if is_post_split else post_split_deb_unstable_download_urls }}"
+deb_unstable_download_urls: "{{ post_split_deb_unstable_download_urls if is_post_split else pre_split_deb_unstable_download_urls }}"
