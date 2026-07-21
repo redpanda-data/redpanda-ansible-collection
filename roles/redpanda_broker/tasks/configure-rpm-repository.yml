@@ -25,6 +25,7 @@
 
 - name: Debug Redpanda RPM repository URLs
   ansible.builtin.debug:
+    verbosity: 2
     msg:
       - "GPG key URL: {{ rp_key_rpm_actual }}"
       - "Standard RPM baseurl: {{ rp_standard_rpm_actual }}"

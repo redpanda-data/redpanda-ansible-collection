@@ -8,6 +8,7 @@
 
 - name: Debug Redpanda DEB repository URLs
   ansible.builtin.debug:
+    verbosity: 2
     msg:
       - "GPG key URL: {{ rp_key_deb_actual }}"
       - "Repo signing line: {{ rp_repo_signing_deb_actual }}"
