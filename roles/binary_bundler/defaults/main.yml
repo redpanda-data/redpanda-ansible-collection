@@ -98,7 +98,9 @@ rpm_source_unstable_download_urls: "{{ post_split_source_rpms_unstable if is_pos
 
 # the debs
 deb_download_url: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
-deb_unstable_download_url: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+# Unstable packages live in the Artifact Registry unstable pool component
+# (redpanda-unstable-apt), distinct from the stable pool above.
+deb_unstable_download_url: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
 
 pre_split_deb_download_urls:
   redpanda: "{{ deb_download_url }}"
@@ -112,9 +114,9 @@ post_split_deb_download_urls:
   redpanda: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
 
 post_split_deb_unstable_download_urls:
-  redpanda-rpk: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda-rpk/redpanda-rpk_{{ redpanda_version }}_{{ basearch }}.deb"
-  redpanda-tuner: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda-tuner/redpanda-tuner_{{ redpanda_version }}_{{ basearch }}.deb"
-  redpanda: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda-rpk: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda-rpk_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda-tuner: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda-tuner_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
 
 deb_download_urls: "{{ post_split_deb_download_urls if is_post_split else pre_split_deb_download_urls }}"
 deb_unstable_download_urls: "{{ post_split_deb_unstable_download_urls if is_post_split else pre_split_deb_unstable_download_urls }}"
