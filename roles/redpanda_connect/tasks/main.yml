@@ -57,8 +57,10 @@
     daemon_reload: true
   when:
     - systemd_unit_result.changed | default(false)
-    - inventory_hostname in groups[redpanda_connect_group]
+    - inventory_hostname in groups[redpanda_connect_group] | default([])
     - not (restart_only | default(false))
+  tags:
+    - connect_systemd_reload
 
 - name: Establish whether restart required
   ansible.builtin.set_fact:
@@ -70,8 +72,10 @@
     state: started
     enabled: true
   when:
-    - inventory_hostname in groups[redpanda_connect_group]
+    - inventory_hostname in groups[redpanda_connect_group] | default([])
     - not (restart_only | default(false))
+  tags:
+    - connect_enable_start
 
 # Safe restart with serialization - one node at a time
 - name: Safe Restart
