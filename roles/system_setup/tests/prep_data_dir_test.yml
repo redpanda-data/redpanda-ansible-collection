@@ -1,6 +1,11 @@
 ---
 - hosts: redpanda
   gather_facts: false
+  # Load the real role defaults so tests exercise production defaults (e.g. the
+  # mount-point derivation) instead of restating them. Extra vars passed by the
+  # tests still override anything defined here.
+  vars_files:
+    - /app/defaults/main.yml
   tasks:
     # The "always" tag ensures this include_tasks directive itself is not
     # skipped by --tags filtering. Once included, Ansible applies --tags
