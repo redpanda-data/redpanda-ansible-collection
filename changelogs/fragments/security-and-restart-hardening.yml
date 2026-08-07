@@ -1,0 +1,24 @@
+---
+security_fixes:
+  - redpanda_broker - the TLS node key was installed world-readable (0644);
+    it is now 0600.
+  - redpanda_broker - /etc/redpanda/redpanda.yaml and .bootstrap.yaml, which
+    carry rpk and service-account credentials when SASL is enabled, were
+    written world-readable; both now default to 0640 via the new
+    ``redpanda_config_file_mode`` variable.
+  - redpanda_broker - the enterprise license string was passed as an rpk
+    command-line argument, recording it in task logs and exposing it in
+    ``ps``; it now flows through a 0600 temporary file.
+  - redpanda_broker - the nightly-install tasks logged URLs embedding the
+    Cloudsmith token in task results; they now honor no_log.
+  - the packaged collection shipped a test-double module inside
+    ``roles/redpanda_broker/library``, which sits on the live module path of
+    every consumer's play; it no longer ships.
+  - redpanda_console - the console configuration file, which can carry SASL
+    and login secrets, is now written 0600 and owned by the console user.
+minor_changes:
+  - redpanda_broker - the rolling restart now waits for the restarted
+    broker's admin API and for ``rpk cluster health`` to report healthy
+    (tunable via ``restart_health_retries``/``restart_health_delay``) before
+    lifting maintenance mode and moving to the next node; previously the
+    next broker was drained while the last one was still replaying its log.

@@ -1,0 +1,39 @@
+---
+bugfixes:
+  - redpanda_broker - the FIPS assertion rejected correctly FIPS-enabled hosts
+    and passed FIPS-disabled ones; it now requires ``fips-mode-setup`` to
+    report enabled whenever ``fips_mode=enabled``.
+  - redpanda_broker - restart detection was silently disabled on SASL-enabled
+    clusters because a skipped conditional twin task overwrote the registered
+    check result; cluster-config changes now trigger restarts with SASL on.
+  - redpanda_broker - package upgrades never triggered a broker restart (the
+    decision matched strings against a result field neither apt nor dnf
+    produces); it now uses the package module's changed flag.
+  - redpanda_broker - pinned pre-24.2 installs skipped the stop that guards
+    SASL bootstrap, letting the cluster initialize before the bootstrap
+    superuser existed.
+  - redpanda_broker - airgap installs compared versions as strings, so 24.10+
+    took the pre-package-split path and lost redpanda-rpk and redpanda-tuner.
+  - redpanda_broker - an expired or invalid enterprise license was treated as
+    loaded (``valid`` matched inside ``invalid``), silently skipping license
+    application.
+  - redpanda_broker - an unreadable cluster status resolved the node id to
+    broker 0, so maintenance-mode and restart decisions could target the
+    wrong broker; the lookup now fails loudly and retries while a broker
+    starts up.
+  - redpanda_broker - run_once tasks gated on the first play host's per-host
+    initialization state; a freshly added node sorting first skipped
+    cluster-config application for the whole cluster, and could attempt SASL
+    service-account creation against an existing cluster.
+  - redpanda_broker - the SASL bootstrap config write failed on images that
+    do not ship /etc/redpanda.d; the directory is now created.
+  - redpanda_broker - the maintenance-mode and health commands in the rolling
+    restart carried no credentials, failing on SASL-enabled clusters.
+  - redpanda_broker - the deb-src repository task wrote the binary repo line
+    to the same file as the binary task and never configured source
+    packages; it is removed.
+  - redpanda_broker - the proxied GPG-key import was gated on
+    ``https_proxy_value`` but exported ``rpm_proxy``, running the proxy
+    branch with no proxy when only the gate variable was set.
+  - redpanda_broker - asserting ``redpanda_version`` on an undefined variable
+    produced a raw Jinja error instead of the actionable message.
