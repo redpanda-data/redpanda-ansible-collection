@@ -4,13 +4,19 @@
     using_gcp: true
   when: ansible_system_vendor == 'Google'
 
+# Only the proxy key is managed: dnf.conf is a shared system file, so writing
+# it wholesale (the previous template approach) destroyed any distro or
+# operator settings already present.
 - name: Node dependencies - Set DNF proxy
   tags:
     - node_deps
     - node_deps_proxy
-  ansible.builtin.template:
-    src: dnf_proxy.j2
-    dest: /etc/dnf/dnf.conf
+  community.general.ini_file:
+    path: /etc/dnf/dnf.conf
+    section: main
+    option: proxy
+    value: "http://{{ rpm_proxy }}"
+    no_extra_spaces: true
     mode: '0644'
   become: true
   when:
