@@ -5,7 +5,6 @@
     rp_key_deb_actual: "{{ rp_key_deb }}"
     rp_key_path_deb_actual: "{{ rp_key_path_deb }}"
     rp_repo_signing_deb_actual: "{{ rp_repo_signing_deb }}"
-    rp_repo_signing_src_deb_actual: "{{ rp_repo_signing_src_deb }}"
 
 # Refresh the keyring whenever it differs from the key material the repository
 # URL currently serves. The comparison is over the WHOLE dearmored keyring, not
@@ -59,15 +58,6 @@
     mode: '0644'
 
 - name: Add Redpanda DEB repository
-  tags: [console_deb_repo_steps]
-  ansible.builtin.copy:
-    dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
-    content: "{{ rp_repo_signing_deb_actual }}\n"
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: Add Redpanda DEB repository (source)
   tags: [console_deb_repo_steps]
   ansible.builtin.copy:
     dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
