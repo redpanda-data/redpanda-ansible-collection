@@ -1,0 +1,9 @@
+---
+# Runs the real install task file. Tests isolate the install contract
+# (stat/assert/download) via --tags where the dnf install itself cannot run
+# in the test container.
+- hosts: connect
+  gather_facts: false
+  tasks:
+    - include_tasks: /app/tasks/install-connect.yml
+      tags: [always]
