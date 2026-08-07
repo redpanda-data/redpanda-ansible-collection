@@ -116,7 +116,7 @@
     dest: /etc/redpanda/redpanda.yaml
     owner: redpanda
     group: redpanda
-    mode: "0644"
+    mode: "{{ redpanda_config_file_mode | default('0640') }}"
   register: nodeconfig_first_run_result
   when: not is_initialized
   tags: [broker_write_config_first]
@@ -132,7 +132,7 @@
     dest: /etc/redpanda/.bootstrap.yaml
     owner: redpanda
     group: redpanda
-    mode: "0644"
+    mode: "{{ redpanda_config_file_mode | default('0640') }}"
   when: not is_initialized
   tags: [broker_write_bootstrap]
 
@@ -416,7 +416,7 @@
     dest: /etc/redpanda/redpanda.yaml
     owner: redpanda
     group: redpanda
-    mode: "0644"
+    mode: "{{ redpanda_config_file_mode | default('0640') }}"
   check_mode: true
   register: nodeconfig_result
   when: is_initialized

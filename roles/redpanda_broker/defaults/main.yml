@@ -89,6 +89,11 @@ rp_repo_signing_src_deb_unstable: "deb-src [signed-by=/usr/share/keyrings/redpan
 
 redpanda_broker_no_log: true
 
+# Mode for /etc/redpanda/redpanda.yaml and /etc/redpanda/.bootstrap.yaml.
+# These files carry rpk credentials and service-account passwords when SASL
+# is enabled, so they must not be world-readable.
+redpanda_config_file_mode: "0640"
+
 # used for installing the nightly build
 cloudsmith_token: "{{ lookup('env', 'CLOUDSMITH_API_KEY') }}"
 cloudsmith_gpg_key_url: "https://dl.redpanda.com/{{ cloudsmith_token }}/redpanda-nightly/gpg.E2242C4583FC4E52.key"

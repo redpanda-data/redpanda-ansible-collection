@@ -20,7 +20,7 @@
     dest: /etc/redpanda/redpanda.yaml
     owner: redpanda
     group: redpanda
-    mode: "0644"
+    mode: "{{ redpanda_config_file_mode | default('0640') }}"
   register: nodeconfig_result
   when:
     - is_initialized
