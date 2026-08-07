@@ -11,7 +11,8 @@
 
 - name: redpanda_version is post packaging split or not
   ansible.builtin.set_fact:
-    is_post_split: "{{ redpanda_version == 'latest' or redpanda_version >= '24.2' }}"
+    is_post_split: "{{ redpanda_version == 'latest' or redpanda_version is version('24.2.0', '>=') }}"
+  tags: [broker_airgap_post_split]
 
 - name: If redpanda_version is latest set needs_update to true
   ansible.builtin.set_fact:
