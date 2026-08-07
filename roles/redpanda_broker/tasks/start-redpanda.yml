@@ -428,10 +428,11 @@
 #    AND
 #    The restart_node variable has not been set to false by the user
 #
+# package_result.changed covers both apt (single result dict) and the dnf
+# loop (aggregate changed); string-matching stdout fragments does not.
 - name: Establish whether restart required
   ansible.builtin.set_fact:
-    restart_required: '{{ ("true" in (restart_required_rc.stdout | default("")) or (is_initialized and (nodeconfig_result.changed or package_result.results is defined and ("Removed"
-      in package_result.results or "1 upgraded" in package_result.results)))) and (restart_node | default("true") | bool) }}'
+    restart_required: '{{ ("true" in (restart_required_rc.stdout | default("")) or (is_initialized and (nodeconfig_result.changed or (package_result.changed | default(false))))) and (restart_node | default("true") | bool) }}'
   tags: [broker_restart_required]
 
 # serial: 1 would be the proper solution here, but that can only be set on play level

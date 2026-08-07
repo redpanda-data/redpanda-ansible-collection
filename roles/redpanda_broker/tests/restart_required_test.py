@@ -124,6 +124,20 @@ def run_playbook(extra_vars, needs_restart):
         "false",
         False
     ),
+    # package was upgraded on an initialized cluster -> restart.
+    # Both apt (dict) and the dnf loop (aggregate) expose a top-level
+    # `changed`; the old string-matching against `.results` matched neither.
+    (
+        {
+            "kafka_enable_authorization": False,
+            "is_initialized": True,
+            "nodeconfig_result": {"changed": False},
+            "package_result": {"changed": True},
+            "restart_node": True,
+        },
+        "false",
+        True
+    ),
     # user opted out of managed restarts -> never restart
     (
         {
