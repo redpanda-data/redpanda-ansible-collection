@@ -65,7 +65,12 @@ def run_role(fixdir, extravars):
         playbook=PLAYBOOK,
         inventory=inventory,
         extravars=extravars,
-        envvars={'PATH': '%s:%s' % (fixdir, os.environ.get('PATH', ''))},
+        envvars={
+            'PATH': '%s:%s' % (fixdir, os.environ.get('PATH', '')),
+            # bare include_tasks does not load the role, so point ansible at
+            # the role's filter plugins explicitly
+            'ANSIBLE_FILTER_PLUGINS': '/app/filter_plugins',
+        },
         quiet=False,
     )
 

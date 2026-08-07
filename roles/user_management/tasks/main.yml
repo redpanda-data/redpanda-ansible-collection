@@ -74,6 +74,11 @@
          else [] }}
   run_once: true
 
+- name: Normalize existing ACLs for comparison
+  ansible.builtin.set_fact:
+    existing_acl_keys: "{{ existing_acls | user_management_acl_keys }}"
+  run_once: true
+
 - name: Create users that should exist but don't
   ansible.builtin.shell:
     cmd: >
@@ -206,6 +211,7 @@
   run_once: true
   when:
     - existing_roles_result.rc == 0
+    - item.1 not in (role_members_result | user_management_role_members(item.0.name))
   register: role_assign_result
   changed_when: role_assign_result.rc == 0
   failed_when:
@@ -236,6 +242,7 @@
   loop_control:
     label: "{{ item.role | default(item.principal) }} {{ item.operation }} on {{ item.resource_type }}:{{ item.resource_name | default('*') }}"
   run_once: true
+  when: (item | user_management_acl_desired_keys) | difference(existing_acl_keys) | length > 0
   register: acl_create_result
   changed_when: acl_create_result.rc == 0
   failed_when:
