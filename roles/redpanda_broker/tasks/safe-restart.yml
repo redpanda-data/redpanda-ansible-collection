@@ -1,16 +1,20 @@
 ---
 # attempt to do a rolling, serial restart by putting each node into maintenance
-# mode, restarting, and putting it back into service. This is throttled to allow
-# only one node out of service at a time.
+# mode, restarting, waiting for the node to rejoin healthy, and putting it back
+# into service. This is throttled to allow only one node out of service at a
+# time; the health gate is what makes the restart actually rolling -- without
+# it the next node is drained while this one is still replaying its log.
 #
 - name: Enable Maintenance Mode
   ansible.builtin.command:
     cmd: rpk cluster maintenance enable {{ node_id }} --wait {{ redpanda_rpk_opts }}
-  no_log: "{{ redpanda_broker_no_log }}"
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
+  changed_when: true
   when:
     - restart_required
     - inventory_hostname == cluster_host
     - ansible_play_hosts | length > 1
+  tags: [safe_restart_mm_enable]
 
 # We need to (actually) generate the node config once the node is in MM, otherwise the `rpk cluster maintenance` command
 # will fail
@@ -25,6 +29,7 @@
   when:
     - is_initialized
     - inventory_hostname == cluster_host
+  tags: [safe_restart_write_config]
 
 - name: Restart Redpanda
   ansible.builtin.systemd:
@@ -33,12 +38,44 @@
   when:
     - restart_required
     - inventory_hostname == cluster_host
+  tags: [safe_restart_restart]
+
+# systemd returns as soon as the process is forked; the broker is not back
+# until its admin API listens and the cluster reports healthy again.
+- name: Wait for admin API after restart
+  ansible.builtin.wait_for:
+    host: "{{ private_ip | default('127.0.0.1') }}"
+    port: "{{ redpanda_admin_api_port | default(9644) }}"
+    timeout: "{{ restart_admin_api_timeout | default(300) }}"
+  when:
+    - restart_required
+    - inventory_hostname == cluster_host
+  tags: [safe_restart_wait_port]
+
+# no_log is deliberately not applied here: when a node fails to rejoin, the
+# health output is the diagnostic the operator needs.
+- name: Wait for cluster health after restart
+  ansible.builtin.command:
+    cmd: rpk cluster health {{ redpanda_rpk_opts }}
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
+  register: cluster_health_out
+  changed_when: false
+  retries: "{{ restart_health_retries | default(60) }}"
+  delay: "{{ restart_health_delay | default(5) }}"
+  until: cluster_health_out.rc == 0 and (cluster_health_out.stdout is search('(?i)healthy:\s+true'))
+  failed_when: cluster_health_out.rc != 0 or not (cluster_health_out.stdout is search('(?i)healthy:\s+true'))
+  when:
+    - restart_required
+    - inventory_hostname == cluster_host
+  tags: [safe_restart_health]
 
 - name: Disable Maintenance Mode
   ansible.builtin.command:
     cmd: rpk cluster maintenance disable {{ node_id }} {{ redpanda_rpk_opts }}
-  no_log: "{{ redpanda_broker_no_log }}"
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
+  changed_when: true
   when:
     - restart_required
     - inventory_hostname == cluster_host
     - ansible_play_hosts | length > 1
+  tags: [safe_restart_mm_disable]

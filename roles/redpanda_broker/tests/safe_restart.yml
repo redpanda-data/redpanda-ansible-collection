@@ -1,0 +1,20 @@
+---
+- hosts: redpanda
+  gather_facts: false
+  vars:
+    redpanda_rpk_opts: ""
+    redpanda_broker_no_log: false
+    kafka_enable_authorization: false
+    sasl_superuser_username: admin
+    sasl_superuser_password: test-password
+    node_id: "1"
+    is_initialized: true
+    restart_required: true
+    cluster_host: node1
+  tasks:
+    # The systemd restart, config write and port wait are skipped via
+    # --skip-tags on the runner side (no systemd or listening broker in the
+    # container); the maintenance-mode commands and the health gate run for
+    # real against a PATH-mocked rpk.
+    - include_tasks: /app/tasks/safe-restart.yml
+      tags: [always]
