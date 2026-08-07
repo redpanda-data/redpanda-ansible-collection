@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - /app/defaults/main.yml
+  tasks:
+    - include_tasks: /app/tasks/configure-deb-repository.yml
+      tags: [always]
+    - include_tasks: /app/tasks/configure-rpm-repository.yml
+      tags: [always]

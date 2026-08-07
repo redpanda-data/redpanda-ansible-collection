@@ -17,14 +17,14 @@
     rp_repo_gpgcheck: "{{ not rp_dnf5_bin.stat.exists }}"
 
 - name: Set Redpanda RPM and GPG Key details
-  tags: [console_rpm_repo_steps]
+  tags: [console_repo_facts]
   ansible.builtin.set_fact:
-    rp_key_rpm_actual: "{{ rp_key_rpm }}"
-    rp_key_rpm_metadata_actual: "{{ rp_key_rpm_metadata }}"
-    rp_standard_rpm_actual: "{{ rp_standard_rpm }}"
-    rp_noarch_rpm_actual: "{{ rp_noarch_rpm }}"
-    rp_source_rpm_actual: "{{ rp_source_rpm }}"
-    repo_name_prefix: "redpanda-redpanda"
+    rp_key_rpm_actual: "{{ (is_using_unstable | default(false) | bool) | ternary(rp_key_rpm_unstable, rp_key_rpm) }}"
+    rp_key_rpm_metadata_actual: "{{ (is_using_unstable | default(false) | bool) | ternary(rp_key_rpm_metadata_unstable, rp_key_rpm_metadata) }}"
+    rp_standard_rpm_actual: "{{ (is_using_unstable | default(false) | bool) | ternary(rp_standard_rpm_unstable, rp_standard_rpm) }}"
+    rp_noarch_rpm_actual: "{{ (is_using_unstable | default(false) | bool) | ternary(rp_noarch_rpm_unstable, rp_noarch_rpm) }}"
+    rp_source_rpm_actual: "{{ (is_using_unstable | default(false) | bool) | ternary(rp_source_rpm_unstable, rp_source_rpm) }}"
+    repo_name_prefix: "{{ (is_using_unstable | default(false) | bool) | ternary('redpanda-redpanda-unstable', 'redpanda-redpanda') }}"
 
 - name: Add redpanda-redpanda RPM repository
   tags: [console_rpm_repo_steps]

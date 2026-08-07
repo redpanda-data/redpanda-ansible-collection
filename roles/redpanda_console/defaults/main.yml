@@ -1,6 +1,10 @@
 ---
 enable_airgap: false
 
+# Select the unstable package channel (release candidates); the repo task
+# files pick stable vs unstable URLs/keys from this flag.
+is_using_unstable: false
+
 redpanda_admin_api_port: 9644
 redpanda_kafka_port: 9092
 redpanda_schema_registry_port: 8081
@@ -43,6 +47,12 @@ rp_key_rpm_metadata: "{{ redpanda_base_url }}/yum/redpanda-yum/repodata/repomd.x
 rp_standard_rpm: "{{ redpanda_base_url }}/yum/redpanda-yum"
 rp_noarch_rpm: "{{ redpanda_base_url }}/yum/redpanda-yum"
 rp_source_rpm: "{{ redpanda_base_url }}/yum/redpanda-yum"
+# the unstable rpms
+rp_key_rpm_unstable: "{{ redpanda_base_url }}/redpanda-rpm-signing-public.key"
+rp_key_rpm_metadata_unstable: "{{ redpanda_base_url }}/yum/redpanda-unstable-yum/repodata/repomd.xml.key"
+rp_standard_rpm_unstable: "{{ redpanda_base_url }}/yum/redpanda-unstable-yum"
+rp_noarch_rpm_unstable: "{{ redpanda_base_url }}/yum/redpanda-unstable-yum"
+rp_source_rpm_unstable: "{{ redpanda_base_url }}/yum/redpanda-unstable-yum"
 rp_rpm_distro_map:
   Fedora: fedora
   Amazon: amzn
@@ -53,4 +63,6 @@ rp_rpm_distro_map:
 rp_key_deb: "{{ redpanda_base_url }}/redpanda-deb-signing-public.gpg"
 rp_key_deb_unstable: "{{ redpanda_base_url }}/redpanda-deb-signing-public.gpg"
 rp_key_path_deb: "/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg"
+rp_key_path_deb_unstable: "/usr/share/keyrings/redpanda-redpanda-unstable-archive-keyring.gpg"
 rp_repo_signing_deb: "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-archive-keyring.gpg] {{ redpanda_base_url }}/apt redpanda-apt main"
+rp_repo_signing_deb_unstable: "deb [signed-by=/usr/share/keyrings/redpanda-redpanda-unstable-archive-keyring.gpg] {{ redpanda_base_url }}/apt redpanda-unstable-apt main"
