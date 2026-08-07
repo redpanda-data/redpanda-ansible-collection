@@ -5,6 +5,7 @@
     nvme_device_ids: "{{ hostvars[inventory_hostname].ansible_devices.keys() | map('regex_search', 'nvme.*') | select('string') | list }}"
   tags:
     - prep_data_dir
+    - prep_data_dir_devices
 
 - name: Prep Data Dir - Set nvme_devices_for_raid fact
   ansible.builtin.set_fact:
@@ -13,12 +14,41 @@
   when: device_info[item]["partitions"] | length == 0
   tags:
     - prep_data_dir
+    - prep_data_dir_devices
 
 - name: Prep Data Dir - Set nvme_devices_for_raid fact with default value
   ansible.builtin.set_fact:
     nvme_devices_for_raid: "{{ (nvme_devices_for_raid | default([])) }}"
   tags:
     - prep_data_dir
+    - prep_data_dir_devices
+
+# Every mkfs/mount task below is gated on the candidate list being non-empty,
+# so with no eligible device they would all silently skip and the final
+# directory task would create the data dir on the root filesystem. Fail loudly
+# instead, unless the data dir (or its mount point) is already mounted or the
+# operator explicitly opts into an unmounted data dir.
+- name: Prep Data Dir - Fail when no eligible data device is found
+  ansible.builtin.fail:
+    msg: >-
+      No eligible data device found for the Redpanda data directory
+      ({{ redpanda_mount_dir }}), and it is not already backed by a mounted
+      filesystem. Only unpartitioned devices named nvme* are considered;
+      detected devices: {{ device_info.keys() | list | join(', ') }}.
+      Attach an unpartitioned NVMe data volume, or pre-mount a filesystem at
+      {{ redpanda_mount_dir | dirname }} (or {{ redpanda_mount_dir }}), or set
+      allow_unmounted_data_dir=true to knowingly place Redpanda data on the
+      root filesystem (unsafe for production).
+  vars:
+    data_dir_mounted_paths: "{{ ansible_mounts | default([]) | map(attribute='mount') | list }}"
+  when:
+    - nvme_devices_for_raid | length == 0
+    - not (allow_unmounted_data_dir | default(false) | bool)
+    - redpanda_mount_dir not in data_dir_mounted_paths
+    - (redpanda_mount_dir | dirname) not in data_dir_mounted_paths
+  tags:
+    - prep_data_dir
+    - prep_data_dir_devices
 
 - name: Prep Data Dir - Set ephemeral_disk fact
   ansible.builtin.set_fact:
