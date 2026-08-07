@@ -315,9 +315,11 @@
   run_once: true
   tags: [broker_check_license_status]
 
+# The status value must be exactly 'valid': a substring match would also
+# accept 'invalid' and 'not valid'.
 - name: Determine if license update is needed
   ansible.builtin.set_fact:
-    redpanda_license_loaded: "{{ license_status.rc == 0 and (license_status.stdout | default('')) is search('(?i)status.*valid') }}"
+    redpanda_license_loaded: '{{ license_status.rc == 0 and (license_status.stdout | default("")) is search("(?im)^status:\s+valid\s*$") }}'
   run_once: true
   tags: [broker_license_needed]
 
