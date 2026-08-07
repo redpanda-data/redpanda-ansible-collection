@@ -123,5 +123,55 @@ class TestNoEligibleDeviceGuard:
         assert facts.get('nvme_devices_for_raid') == ['/dev/nvme0n1']
 
 
+class TestInUseDevicesExcluded:
+
+    def test_device_backing_root_mount_is_not_a_candidate(self):
+        # nvme0n1 is unpartitioned but directly hosts the root filesystem
+        # (common on cloud images). It must never be an mkfs/RAID candidate.
+        status, facts, failures = run({
+            'ansible_devices': {
+                'nvme0n1': {'partitions': {}},
+                'nvme1n1': {'partitions': {}},
+            },
+            'ansible_mounts': [
+                {'mount': '/', 'device': '/dev/nvme0n1'},
+            ],
+            'redpanda_mount_dir': MOUNT_DIR,
+        })
+        assert status == 'successful', f'failures: {failures}'
+        assert facts.get('nvme_devices_for_raid') == ['/dev/nvme1n1'], (
+            'a device backing a mounted filesystem must be excluded from '
+            f'mkfs/RAID candidates, got {facts.get("nvme_devices_for_raid")}'
+        )
+
+    def test_only_device_backs_root_mount_triggers_guard(self):
+        status, _, failures = run({
+            'ansible_devices': {
+                'nvme0n1': {'partitions': {}},
+            },
+            'ansible_mounts': [
+                {'mount': '/', 'device': '/dev/nvme0n1'},
+            ],
+            'redpanda_mount_dir': MOUNT_DIR,
+        })
+        assert_guard_fired(status, failures)
+
+    def test_device_with_holders_is_not_a_candidate(self):
+        # An unpartitioned device claimed by another block layer (LVM, mdraid,
+        # dm-crypt) is in use even though nothing is mounted from it directly.
+        status, facts, failures = run({
+            'ansible_devices': {
+                'nvme0n1': {'partitions': {}, 'holders': ['dm-0']},
+                'nvme1n1': {'partitions': {}, 'holders': []},
+            },
+            'redpanda_mount_dir': MOUNT_DIR,
+        })
+        assert status == 'successful', f'failures: {failures}'
+        assert facts.get('nvme_devices_for_raid') == ['/dev/nvme1n1'], (
+            'a device with holders must be excluded from mkfs/RAID '
+            f'candidates, got {facts.get("nvme_devices_for_raid")}'
+        )
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

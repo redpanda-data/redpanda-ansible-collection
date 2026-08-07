@@ -7,11 +7,21 @@
     - prep_data_dir
     - prep_data_dir_devices
 
+# A candidate device must be genuinely unused: unpartitioned, not claimed by
+# another block layer (LVM/mdraid/dm-crypt show up as holders), and not
+# directly backing a mounted filesystem. Cloud images commonly put the root
+# filesystem straight on an unpartitioned NVMe device; without the mount check
+# that device would be formatted as the data volume.
 - name: Prep Data Dir - Set nvme_devices_for_raid fact
   ansible.builtin.set_fact:
     nvme_devices_for_raid: '{{ (nvme_devices_for_raid | default([])) + ["/dev/" + item] }}'
+  vars:
+    mounted_devices: "{{ ansible_mounts | default([]) | map(attribute='device') | list }}"
   loop: "{{ nvme_device_ids }}"
-  when: device_info[item]["partitions"] | length == 0
+  when:
+    - device_info[item]["partitions"] | length == 0
+    - device_info[item]["holders"] | default([]) | length == 0
+    - ("/dev/" + item) not in mounted_devices
   tags:
     - prep_data_dir
     - prep_data_dir_devices
