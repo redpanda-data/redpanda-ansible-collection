@@ -11,18 +11,6 @@
       - redpanda_version != ''
     fail_msg: "Variable 'redpanda_version' must be defined! Don't use latest here, it won't work"
 
-- name: Ensure os_distribution is defined
-  ansible.builtin.assert:
-    that:
-      - os_distribution != ''
-    fail_msg: "Variable 'os_distribution' must be defined! This is equivalent to ansible_distribution (can be gotten with . /etc/os-release && echo $ID ) on the target system"
-
-- name: Ensure os_distribution_major_version is defined
-  ansible.builtin.assert:
-    that:
-      - os_distribution_major_version != ''
-    fail_msg: "Variable 'os_distribution_major_version' must be defined! This is equivalent to ansible_distribution_major_version (can be gotten with . /etc/os-release && echo ${VERSION_ID%%.*} ) on the target system"
-
 - name: Ensure rpm_or_deb is defined
   ansible.builtin.assert:
     that:

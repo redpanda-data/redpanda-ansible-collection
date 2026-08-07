@@ -5,10 +5,23 @@
   tags:
     - airgap-tarball-install
 
+# Downloads land in a dedicated per-run directory so pre-existing files in
+# download_directory are never swept into the tarball or deleted.
+- name: Create bundle working directory
+  ansible.builtin.tempfile:
+    state: directory
+    path: "{{ download_directory }}"
+    prefix: redpanda-deb-bundle.
+  register: deb_bundle_dir
+  delegate_to: localhost
+  tags:
+    - airgap-tarball-install
+
 - name: Download Redpanda DEBs to local machine
   ansible.builtin.get_url:
     url: "{{ item.value }}"
-    dest: "{{ download_directory }}"
+    dest: "{{ deb_bundle_dir.path }}/"
+    checksum: "{{ deb_checksums[item.key] | default(omit) }}"
     mode: '0644'
   delegate_to: localhost
   tags:
@@ -17,11 +30,19 @@
 
 - name: Create tarball of Redpanda DEBs
   community.general.archive:
-    path: "{{ download_directory }}/redpanda*.deb"
+    path: "{{ deb_bundle_dir.path }}/*.deb"
     dest: "{{ download_directory }}/redpanda_debs.tar.gz"
     mode: '0644'
     format: gz
     remove: true
+  delegate_to: localhost
+  tags:
+    - airgap-tarball-install
+
+- name: Remove bundle working directory
+  ansible.builtin.file:
+    path: "{{ deb_bundle_dir.path }}"
+    state: absent
   delegate_to: localhost
   tags:
     - airgap-tarball-install
