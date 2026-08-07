@@ -140,6 +140,18 @@
 # The RP_BOOTSTRAP_USER environment variable creates the initial superuser
 # This only runs on first initialization when kafka_enable_authorization is enabled
 
+# the redpanda package may or may not ship /etc/redpanda.d; the bootstrap
+# write below must not depend on it
+- name: Ensure /etc/redpanda.d exists
+  ansible.builtin.file:
+    path: /etc/redpanda.d
+    state: directory
+    mode: "0755"
+  when:
+    - not is_initialized
+    - kafka_enable_authorization | bool
+  tags: [broker_bootstrap_superuser]
+
 - name: Create bootstrap superuser config file
   ansible.builtin.copy:
     dest: "/etc/redpanda.d/bootstrap-superuser.conf"
@@ -168,25 +180,18 @@
   tags: [rp_tuner, broker_start_tuner]
 
 # ensure that systemd starts up redpanda
-# When SASL is enabled on first startup, set RP_BOOTSTRAP_USER environment variable
-- name: Start redpanda (with bootstrap user for SASL)
+#
+# On first start with SASL the bootstrap superuser is delivered via
+# /etc/redpanda.d/bootstrap-superuser.conf (written above). A task-level
+# environment: here would apply only to the systemctl invocation, never to
+# the redpanda unit, so there is deliberately none -- and with that, the
+# SASL and standard start twins collapse into one task. Both original tags
+# are kept for existing --tags/--skip-tags filters.
+- name: Start redpanda
   ansible.builtin.systemd:
     name: redpanda
     state: started
-  environment:
-    RP_BOOTSTRAP_USER: "{{ sasl_superuser_username }}:{{ sasl_superuser_password }}"
-  when:
-    - not is_initialized
-    - kafka_enable_authorization | bool
-  no_log: "{{ redpanda_broker_no_log }}"
-  tags: [broker_start_sasl]
-
-- name: Start redpanda (standard)
-  ansible.builtin.systemd:
-    name: redpanda
-    state: started
-  when: is_initialized or not (kafka_enable_authorization | bool)
-  tags: [broker_start_standard]
+  tags: [broker_start_sasl, broker_start_standard]
 
 # every node must have a unique node id. we extract it for use elsewhere
 #

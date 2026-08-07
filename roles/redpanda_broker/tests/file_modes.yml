@@ -18,6 +18,7 @@
     redpanda_certs_dir: /etc/redpanda/certs
     redpanda_user: redpanda
     redpanda_group: redpanda
+    redpanda_broker_no_log: false
     kafka_enable_authorization: false
     schema_registry_authn_method: none
     pandaproxy_authn_method: none
