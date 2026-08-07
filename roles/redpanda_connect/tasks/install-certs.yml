@@ -61,7 +61,8 @@
     owner: redpanda
     group: redpanda
     force: "{{ overwrite_certs | default('no') | bool }}"
-    mode: "0644"
+    # private key: owner-only, never world-readable
+    mode: "0600"
   when:
     - not (node_key_file | default('') == '')
     - handle_cert_install | default(false) | bool
