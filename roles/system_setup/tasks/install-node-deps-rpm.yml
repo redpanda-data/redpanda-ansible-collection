@@ -5,6 +5,9 @@
   when: ansible_system_vendor == 'Google'
 
 - name: Node dependencies - Set DNF proxy
+  tags:
+    - node_deps
+    - node_deps_proxy
   ansible.builtin.template:
     src: dnf_proxy.j2
     dest: /etc/dnf/dnf.conf
@@ -12,8 +15,8 @@
   become: true
   when:
     - rpm_proxy is defined and rpm_proxy | length > 0
-    - (create_pkg_mgr_proxy | default(false)) is true
-    - (using_gcp | default(false)) is false
+    - create_pkg_mgr_proxy | default(false) | bool
+    - not (using_gcp | default(false) | bool)
 
 - name: Node dependencies - RPM setup
   tags:
