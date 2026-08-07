@@ -73,7 +73,7 @@
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
     USER_PASSWORD: "{{ item.password }}"
-  loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.username }}"
   when:
@@ -95,7 +95,7 @@
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
     USER_PASSWORD: "{{ item.password }}"
-  loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.username }}"
   when:
@@ -134,7 +134,7 @@
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.name }}"
   when:
@@ -168,7 +168,7 @@
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.name }}"
   register: role_members_result
@@ -188,7 +188,7 @@
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list | subelements('members', skip_missing=True) }}"
+  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list | subelements('members', skip_missing=True) }}"
   loop_control:
     label: "{{ item.0.name }} <- {{ item.1 }}"
   run_once: true
@@ -220,7 +220,7 @@
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ sasl_acls | selectattr('state', 'undefined') | list + sasl_acls | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ sasl_acls | selectattr('state', 'undefined') | list + sasl_acls | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.role | default(item.principal) }} {{ item.operation }} on {{ item.resource_type }}:{{ item.resource_name | default('*') }}"
   run_once: true
@@ -281,7 +281,7 @@
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ schema_registry_acls | selectattr('state', 'undefined') | list + schema_registry_acls | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ schema_registry_acls | selectattr('state', 'undefined') | list + schema_registry_acls | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.role | default(item.principal) }} {{ item.operation }} on SR {{ item.resource_type }}:{{ item.resource_name | default('global') }}"
   run_once: true
