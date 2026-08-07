@@ -142,3 +142,23 @@ Same as redpanda-ansible-collection
 ## Author Information
 
 Created for the redpanda-ansible-collection to address enterprise logging requirements.
+
+## Variables
+
+The load-bearing inputs are validated by `meta/argument_specs.yml` and
+documented below; any further tunables live in `defaults/main.yml`.
+
+<!-- BEGIN ROLE VARIABLES (generated from meta/argument_specs.yml; run scripts/generate-role-docs.py) -->
+
+| Variable | Type | Default | Choices | Description |
+|---|---|---|---|---|
+| `redpanda_logging_enabled` | bool | `True` | — |  |
+| `redpanda_logging_rsyslog_enabled` | bool | `True` | — |  |
+| `redpanda_logging_logrotate_enabled` | bool | `True` | — |  |
+| `redpanda_logging_systemd_enabled` | bool | `True` | — |  |
+| `redpanda_logging_systemd_max_level` | str | `info` | `emerg`, `alert`, `crit`, `err`, `warning`, `notice`, `info`, `debug` | M a x i m u m   l e v e l   t h e   r e d p a n d a   u n i t   s t o r e s   t o   t h e   j o u r n a l   ( L o g L e v e l M a x ) . |
+| `redpanda_logging_log_file` | str | — | — |  |
+
+Variables not listed here are undeclared in the argument spec; see `defaults/main.yml`.
+
+<!-- END ROLE VARIABLES -->

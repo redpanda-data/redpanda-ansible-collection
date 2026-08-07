@@ -117,6 +117,12 @@ releases:
         never took effect; empty rpk output no longer crashes the role; ACL creation
         and role assignment are now diffed against cluster state instead of re-applied
         unconditionally; sasl item lists without a ``state`` key no longer error.
+      - redpanda_logging - the systemd logging override now triggers a redpanda restart;
+        the documented max-level knob takes effect (LogLevelMax); the unimplementable
+        forward-to-syslog variable is removed; initial log file creation is idempotent.
+      - user_management - sasl_admin_username/password now follow the broker role's
+        sasl_superuser_* credentials when set, instead of a divergent default that
+        silently failed authentication.
       minor_changes:
       - all ten roles now carry containerized test suites; sysctl_setup pins its managed
         kernel settings.
@@ -136,6 +142,10 @@ releases:
       - the collection artifact no longer packages development scaffolding (virtualenvs,
         IDE state, Dockerfiles, test trees, CI configuration) -- ``build_ignore``
         now curates the payload.
+      - every role validates its load-bearing inputs via meta/argument_specs.yml,
+        failing with named errors at role entry; role READMEs carry variable tables
+        generated from the specs with a CI drift check.
+      - all ten roles carry galaxy role metadata (meta/main.yml) with current platforms.
       release_summary: 'Correctness and security hardening across all ten roles: inverted
         FIPS assertion, restart detection on SASL clusters, airgap version gating,
         license validation, rolling-restart health gating, root-disk deployment guard,

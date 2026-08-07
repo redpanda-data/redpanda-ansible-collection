@@ -1,15 +1,36 @@
-# Ansible Deployment for Redpanda Console
+# redpanda_console
 
-## TLS Certificate Migration Note
+Installs and configures Redpanda Console from the package repositories
+(stable or unstable channel), rendering the configuration that matches
+the installed console major version. Configuration merges the `rpconsole`
+variable into the defaults; the rendered file is owned by the console
+user and not world-readable (it can carry SASL/login secrets).
 
-If you manage TLS certificates outside of this role (`handle_cert_install: false`), you must ensure:
+Use as `redpanda.cluster.redpanda_console`.
 
+## TLS migration note
 
-1**Console on dedicated node (no broker):**
-   - Set certificate ownership to `redpanda-console:redpanda-console`
-   - Set key file permissions to `0600`
+Console 3.x reads TLS material as the `redpanda_console` user; existing
+deployments upgrading from 2.x get certificate ownership migrated by the
+role (see `tasks/migrate-ownership.yml`).
 
+## Variables
 
-2**Console co-located with Redpanda broker:**
+The load-bearing inputs are validated by `meta/argument_specs.yml` and
+documented below; any further tunables live in `defaults/main.yml`.
 
-This is not a recommended model for running a production cluster You will need a solution that allows both redpanda-console and redpanda to read their certs whether that be shared ownership or separate directories. 
+<!-- BEGIN ROLE VARIABLES (generated from meta/argument_specs.yml; run scripts/generate-role-docs.py) -->
+
+| Variable | Type | Default | Choices | Description |
+|---|---|---|---|---|
+| `redpanda_version` | str | `latest` | — | C o n s o l e   v e r s i o n   t o   i n s t a l l ,   o r   l a t e s t . |
+| `enable_airgap` | bool | `False` | — |  |
+| `handle_cert_install` | bool | `False` | — |  |
+| `install_certs_only` | bool | `False` | — |  |
+| `is_using_unstable` | bool | `False` | — |  |
+| `redpanda_console_user` | str | `redpanda_console` | — |  |
+| `redpanda_console_group` | str | `redpanda_console` | — |  |
+
+Variables not listed here are undeclared in the argument spec; see `defaults/main.yml`.
+
+<!-- END ROLE VARIABLES -->

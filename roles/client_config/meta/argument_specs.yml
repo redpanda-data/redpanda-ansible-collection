@@ -1,0 +1,28 @@
+---
+# Validates the client_config role inputs at entry. Undeclared variables
+# are not restricted; this spec is deliberately incremental.
+argument_specs:
+  main:
+    short_description: Install rpk and client certificates on client hosts
+    description:
+      - Downloads rpk (optionally pinned and checksummed, or from a
+        mirror) and installs the client truststore.
+    options:
+      rpk_base_url:
+        type: str
+        default: https://github.com/redpanda-data/redpanda/releases
+      rpk_version:
+        type: str
+        default: latest
+      rpk_url:
+        type: str
+        description: Full download URL override; wins over base/version.
+      rpk_checksum:
+        type: str
+        description: Optional checksum (e.g. sha256:<hex>) for the download.
+      cert_dest_dir:
+        type: str
+        default: /opt/rpk/certs
+      truststore_name:
+        type: str
+        default: ca.crt

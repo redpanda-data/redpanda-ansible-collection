@@ -1,0 +1,30 @@
+---
+# Validates the demo_certs role inputs at entry. Undeclared variables are
+# not restricted; this spec is deliberately incremental.
+argument_specs:
+  main:
+    short_description: Demo-only local CA, node certificates and truststore
+    description:
+      - Creates a throwaway local CA on the control node, issues node
+        certificates for the play hosts, and builds a Java truststore.
+        Not for production use.
+    options:
+      create_demo_certs:
+        type: bool
+        default: false
+        description: Create the demo CA and issue node certificates.
+      create_keystore:
+        type: bool
+        default: false
+        description: Generate the Java truststore for the connect group.
+      root_ca_dir:
+        type: str
+        default: tls/ca
+        description: Control-side directory holding the demo CA.
+      truststore_file_name:
+        type: str
+        default: truststore.jks
+      truststore_password:
+        type: str
+        default: password
+        no_log: true

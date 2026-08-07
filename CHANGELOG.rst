@@ -15,8 +15,10 @@ Correctness and security hardening across all ten roles: inverted FIPS assertion
 Minor Changes
 -------------
 
+- all ten roles carry galaxy role metadata (meta/main.yml) with current platforms.
 - all ten roles now carry containerized test suites; sysctl_setup pins its managed kernel settings.
 - changelog machinery (antsibull-changelog) is in place; future changes ship changelog fragments.
+- every role validates its load-bearing inputs via meta/argument_specs.yml, failing with named errors at role entry; role READMEs carry variable tables generated from the specs with a CI drift check.
 - galaxy.yml declares the ``community.general`` and ``ansible.posix`` dependencies the roles require, so bare ansible-core installs resolve them automatically.
 - galaxy.yml repository and issue-tracker URLs point at redpanda-ansible-collection instead of the retired deployment-automation repository.
 - redpanda_broker - load-bearing role inputs are validated by an argument spec at role entry (install status and FIPS mode choices, listener shape), failing with named errors instead of mid-play Jinja tracebacks.
@@ -75,9 +77,11 @@ Bugfixes
 - redpanda_console - the configuration was rendered before the RPM install that decides between the v2 and v3 config schema, so RHEL-family hosts could get a config the installed console cannot parse; configuration now follows installation.
 - redpanda_console - the console was restarted on every play (an unconditional ``state=restarted`` plus the handler); it is now only started, with restarts driven by change notifications.
 - redpanda_console - the deb-src repository task overwrote the binary repository file with duplicate content; it is removed.
+- redpanda_logging - the systemd logging override now triggers a redpanda restart; the documented max-level knob takes effect (LogLevelMax); the unimplementable forward-to-syslog variable is removed; initial log file creation is idempotent.
 - system_setup - configuring the dnf proxy overwrote all of /etc/dnf/dnf.conf; only the proxy key is managed now.
 - system_setup - proxy flags were compared with boolean identity (``is true``), so string values from ``-e`` or INI inventories silently disabled proxy configuration; they are now coerced with ``| bool``.
 - system_setup - the data volume mountpoint was hardcoded to /mnt/vectorized while the data path honored ``redpanda_mount_dir``, so overriding the variable put data on the root disk; the mountpoint now derives from the variable (``redpanda_mount_point``).
 - system_setup - the data-directory preparation silently fell through to the root filesystem when no eligible data volume was found (no NVMe device, pre-partitioned volumes, or sdb-style device names); it now fails with an actionable message unless ``allow_unmounted_data_dir`` is explicitly set.
 - system_setup - unpartitioned devices backing mounted filesystems (including the root device) were eligible for mkfs/RAID; they are now excluded.
 - user_management - existing usernames were never extracted from rpk's JSON output, so every user was re-created on every run and ``update_password`` never took effect; empty rpk output no longer crashes the role; ACL creation and role assignment are now diffed against cluster state instead of re-applied unconditionally; sasl item lists without a ``state`` key no longer error.
+- user_management - sasl_admin_username/password now follow the broker role's sasl_superuser_* credentials when set, instead of a divergent default that silently failed authentication.

@@ -1,0 +1,32 @@
+---
+# Validates the redpanda_console role inputs at entry. Undeclared
+# variables are not restricted; this spec is deliberately incremental.
+argument_specs:
+  main:
+    short_description: Install and configure Redpanda Console
+    description:
+      - Installs Redpanda Console from the package repositories and renders
+        its configuration for the installed major version.
+    options:
+      redpanda_version:
+        type: str
+        default: latest
+        description: Console version to install, or latest.
+      enable_airgap:
+        type: bool
+        default: false
+      handle_cert_install:
+        type: bool
+        default: false
+      install_certs_only:
+        type: bool
+        default: false
+      is_using_unstable:
+        type: bool
+        default: false
+      redpanda_console_user:
+        type: str
+        default: redpanda_console
+      redpanda_console_group:
+        type: str
+        default: redpanda_console

@@ -1,0 +1,34 @@
+---
+# Validates the binary_bundler role inputs at entry. Undeclared variables
+# are not restricted; this spec is deliberately incremental.
+argument_specs:
+  main:
+    short_description: Build Redpanda package tarballs for airgapped installs
+    description:
+      - Downloads the Redpanda packages for one version/architecture and
+        archives them for transfer into an airgapped environment.
+    options:
+      redpanda_version:
+        type: str
+        required: true
+        description: Exact version to bundle; latest is not supported here.
+      basearch:
+        type: str
+        required: true
+        description: Target architecture as reported by uname -m.
+      rpm_or_deb:
+        type: str
+        required: true
+        choices: [rpm, deb]
+      is_using_unstable:
+        type: bool
+        default: false
+      download_directory:
+        type: str
+        default: /tmp
+      deb_checksums:
+        type: dict
+        default: {}
+      rpm_checksums:
+        type: dict
+        default: {}
