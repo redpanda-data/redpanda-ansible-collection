@@ -365,26 +365,17 @@
 # see if a cluster config operation should trigger ansible to restart each
 # redpanda instance in the cluster
 #
+# A single task with a conditional environment: two auth/no-auth twins that
+# both `register: restart_required_rc` would leave the skipped twin's result
+# in the register, silently disabling restart detection whenever SASL is on.
 - name: Check if restart needed
   ansible.builtin.shell:
     cmd: rpk cluster config status {{ redpanda_rpk_opts }} | grep '^{{ node_id }} ' | awk '{ print $3 }' |  grep -E 'true|false'
-  environment:
-    RPK_USER: "{{ sasl_superuser_username }}"
-    RPK_PASS: "{{ sasl_superuser_password }}"
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   register: restart_required_rc
   changed_when: false
   no_log: "{{ redpanda_broker_no_log }}"
-  when: kafka_enable_authorization | default(false) | bool
-  tags: [broker_check_restart]
-
-- name: Check if restart needed (no auth)
-  ansible.builtin.shell:
-    cmd: rpk cluster config status {{ redpanda_rpk_opts }} | grep '^{{ node_id }} ' | awk '{ print $3 }' |  grep -E 'true|false'
-  register: restart_required_rc
-  changed_when: false
-  no_log: "{{ redpanda_broker_no_log }}"
-  when: not (kafka_enable_authorization | default(false) | bool)
-  tags: [broker_check_restart_noauth]
+  tags: [broker_check_restart, broker_check_restart_noauth]
 
 # this instance of node config generation only runs after a cluster has been
 # initialized. This is used to update configurations post-cluster setup when

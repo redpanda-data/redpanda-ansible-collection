@@ -98,6 +98,32 @@ def run_playbook(extra_vars, needs_restart):
         "false",
         True
     ),
+    # rpk reports restart needed with SASL auth enabled -> restart.
+    # Exercises the auth variant of the restart check; the skipped no-auth
+    # twin must not clobber its registered result.
+    (
+        {
+            "kafka_enable_authorization": True,
+            "is_initialized": False,
+            "nodeconfig_result": {"changed": False},
+            "package_result": {"changed": False},
+            "restart_node": True,
+        },
+        "true",
+        True
+    ),
+    # SASL auth enabled, no restart needed -> no restart
+    (
+        {
+            "kafka_enable_authorization": True,
+            "is_initialized": False,
+            "nodeconfig_result": {"changed": False},
+            "package_result": {"changed": False},
+            "restart_node": True,
+        },
+        "false",
+        False
+    ),
     # user opted out of managed restarts -> never restart
     (
         {
