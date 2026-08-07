@@ -190,19 +190,29 @@
 
 # every node must have a unique node id. we extract it for use elsewhere
 #
+# Empty output must fail the task rather than fall through: `stdout | int`
+# would turn it into node 0, and maintenance-mode / restart decisions would
+# then target the wrong broker. pipefail makes an rpk error fail the
+# pipeline even though awk runs last, and the retries give a
+# just-(re)started broker time to serve cluster status.
 - name: Establish node id
   ansible.builtin.shell:
-    cmd: rpk cluster status {{ redpanda_rpk_kafka_opts }} | sed 's/*//g' | grep -wF "{{ hostvars[inventory_hostname].private_ip }}" | awk '{ print $1;}'
+    cmd: set -o pipefail; rpk cluster status {{ redpanda_rpk_kafka_opts }} | sed 's/*//g' | grep -wF "{{ hostvars[inventory_hostname].private_ip }}" | awk '{ print $1;}'
+    executable: /bin/bash
   environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   register: node_id_out
   changed_when: false
+  retries: "{{ node_id_retries | default(12) }}"
+  delay: "{{ node_id_retry_delay | default(5) }}"
+  until: node_id_out.rc == 0 and (node_id_out.stdout | trim | length > 0)
+  failed_when: node_id_out.rc != 0 or (node_id_out.stdout | trim | length == 0)
   tags: [broker_node_id]
 
 # make the node id a reusable fact
 #
 - name: Set node id
   ansible.builtin.set_fact:
-    node_id: "{{ node_id_out.stdout | int() }}"
+    node_id: "{{ node_id_out.stdout | trim | int() }}"
   tags: [broker_set_node_id]
 
 # query the redpanda cluster configuration versions so we can determine later

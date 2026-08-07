@@ -29,10 +29,31 @@ ID    HOST         PORT
 OUTPUT
 """
 
+# rpk responding before the cluster is ready: headers but no broker rows
+MOCK_RPK_NO_BROKERS = """\
+#!/bin/bash
+cat <<'OUTPUT'
+CLUSTER
+=======
+redpanda.test-cluster
+
+BROKERS
+=======
+ID    HOST         PORT
+OUTPUT
+"""
+
+# rpk failing outright (API not yet listening)
+MOCK_RPK_ERROR = """\
+#!/bin/bash
+echo "unable to request metadata: dial tcp: connect: connection refused" >&2
+exit 1
+"""
+
 TAGS = 'broker_node_id,broker_set_node_id'
 
 
-def run():
+def run(mock_rpk=MOCK_RPK, extravars=None):
     inv = '/app/tests/inventory'
     with open(inv, 'w') as f:
         f.write(INVENTORY)
@@ -41,7 +62,7 @@ def run():
     mock_dir = tempfile.mkdtemp()
     mock_path = os.path.join(mock_dir, 'rpk')
     with open(mock_path, 'w') as f:
-        f.write(MOCK_RPK)
+        f.write(mock_rpk)
     os.chmod(mock_path, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
 
     try:
@@ -49,6 +70,7 @@ def run():
             playbook='/app/tests/node_id_test.yml',
             inventory=inv,
             cmdline=f'--tags {TAGS}',
+            extravars=extravars or {},
             envvars={'PATH': f"{mock_dir}:{os.environ.get('PATH', '')}"},
             quiet=False
         )
@@ -78,6 +100,27 @@ class TestNodeIdExtraction:
         assert node_ids['node0'] == '0', f"10.0.0.1 should map to node 0, got {node_ids.get('node0')}"
         assert node_ids['node1'] == '1', f"10.0.0.10 should map to node 1, got {node_ids.get('node1')}"
         assert node_ids['node2'] == '2', f"10.0.0.100 should map to node 2, got {node_ids.get('node2')}"
+
+    # A node id must never be fabricated: `stdout | int` turns empty output
+    # into node 0, and safe-restart then drains the wrong broker.
+
+    def test_no_broker_rows_fails_instead_of_node_zero(self):
+        status, node_ids = run(
+            mock_rpk=MOCK_RPK_NO_BROKERS,
+            extravars={'node_id_retries': 2, 'node_id_retry_delay': 0},
+        )
+        assert status == 'failed', \
+            f"empty broker table must fail the play, got {status} with node_ids={node_ids}"
+        assert not node_ids, f"no node_id fact may be set, got {node_ids}"
+
+    def test_rpk_error_fails_instead_of_node_zero(self):
+        status, node_ids = run(
+            mock_rpk=MOCK_RPK_ERROR,
+            extravars={'node_id_retries': 2, 'node_id_retry_delay': 0},
+        )
+        assert status == 'failed', \
+            f"rpk failure must fail the play, got {status} with node_ids={node_ids}"
+        assert not node_ids, f"no node_id fact may be set, got {node_ids}"
 
 
 if __name__ == "__main__":
