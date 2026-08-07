@@ -1,8 +1,19 @@
 ---
 exclude_paths:
-  - .github/**
-  - Taskfile.yaml
-  - tests/**
+  - .github/
+  - .ansible/
+  - .claude/
+  - tests/
+  - roles/binary_bundler/tests/
+  - roles/client_config/tests/
+  - roles/demo_certs/tests/
+  - roles/redpanda_broker/tests/
+  - roles/redpanda_connect/tests/
+  - roles/redpanda_console/tests/
+  - roles/redpanda_logging/tests/
+  - roles/system_setup/tests/
+  - roles/sysctl_setup/tests/
+  - roles/user_management/tests/
 
 enable_list:
   - yaml
