@@ -11,7 +11,10 @@
 
 - name: Parse existing users
   ansible.builtin.set_fact:
-    existing_users: "{{ (existing_users_result.stdout | from_json) | default([]) }}"
+    existing_users: >-
+      {{ (existing_users_result.stdout | from_json)
+         if (existing_users_result.stdout | trim | length > 0)
+         else [] }}
   run_once: true
 
 - name: Extract existing usernames
@@ -35,7 +38,10 @@
 
 - name: Parse existing roles
   ansible.builtin.set_fact:
-    existing_roles: "{{ ((existing_roles_result.stdout | from_json).roles) | default([]) }}"
+    existing_roles: >-
+      {{ ((existing_roles_result.stdout | from_json).roles | default([]))
+         if (existing_roles_result.stdout | default('') | trim | length > 0)
+         else [] }}
   run_once: true
   when: existing_roles_result.rc == 0
 
@@ -62,7 +68,10 @@
 
 - name: Parse existing ACLs
   ansible.builtin.set_fact:
-    existing_acls: "{{ ((existing_acls_result.stdout | from_json).matches) | default([]) }}"
+    existing_acls: >-
+      {{ ((existing_acls_result.stdout | from_json).matches | default([]))
+         if (existing_acls_result.stdout | default('') | trim | length > 0)
+         else [] }}
   run_once: true
 
 - name: Create users that should exist but don't
