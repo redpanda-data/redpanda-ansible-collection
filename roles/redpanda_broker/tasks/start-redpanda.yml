@@ -107,6 +107,9 @@
 # This run occurs during initial bootstrapping where rpk can push some
 # configurations into the file directly
 #
+# Registered under its own name: the restart decision reads
+# nodeconfig_result from the post-bootstrap task below, and a shared name
+# would let whichever twin is skipped clobber the real result.
 - name: Generate Node config - first run
   ansible.builtin.template:
     src: redpanda.yml
@@ -114,7 +117,7 @@
     owner: redpanda
     group: redpanda
     mode: "0644"
-  register: nodeconfig_result
+  register: nodeconfig_first_run_result
   when: not is_initialized
   tags: [broker_write_config_first]
 

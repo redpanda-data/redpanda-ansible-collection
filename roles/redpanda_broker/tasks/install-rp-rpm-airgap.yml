@@ -46,8 +46,8 @@
 
 - name: Install Redpanda RPMs (pre package split)
   ansible.builtin.shell: "rpm -Uvh --force {{ airgap_copy_dest }}/*.rpm"
-  register: rpm_result
-  failed_when: rpm_result.rc != 2 and rpm_result.rc != 0
+  register: rpm_pre_split_result
+  failed_when: rpm_pre_split_result.rc != 2 and rpm_pre_split_result.rc != 0
   become: true
   tags:
     - airgap-tarball-install
@@ -57,8 +57,8 @@
 
 - name: Install Redpanda RPMs (post package split)
   ansible.builtin.shell: "rpm -Uvh --force {{ airgap_copy_dest }}/{{item}}*__*.rpm"
-  register: rpm_result
-  failed_when: rpm_result.rc != 2 and rpm_result.rc != 0
+  register: rpm_post_split_result
+  failed_when: rpm_post_split_result.rc != 2 and rpm_post_split_result.rc != 0
   become: true
   tags:
     - airgap-tarball-install

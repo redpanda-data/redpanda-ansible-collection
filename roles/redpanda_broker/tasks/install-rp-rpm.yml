@@ -21,9 +21,18 @@
   ansible.builtin.set_fact:
     redpanda_package_list_versioned: "{{ redpanda_package_list | product([redpanda_version_suffix]) | map('join') | list }}"
 
-- name: Install redpanda (pre 24.2)
-  dnf:
-    name: "redpanda{{ redpanda_version_suffix }}"
+# One install task for both package generations: pre/post-24.2 twins that
+# each `register: package_result` would leave the skipped twin's stub in the
+# register, so the SASL bootstrap stop below and the upgrade-restart logic
+# never saw the install as changed on pinned pre-24.2 versions.
+#
+# The versioned package names ensure a pinned redpanda_version is honored;
+# with redpanda_version=latest the suffix is empty and the list is identical
+# to the unversioned one. Installing the list in one dnf transaction (rather
+# than a per-package loop) also lets dnf resolve the packages together.
+- name: Install redpanda
+  ansible.builtin.dnf:
+    name: "{{ redpanda_package_list_versioned if needs_split_packages else (['redpanda' + redpanda_version_suffix]) }}"
     state: "{{ redpanda_install_status }}"
     update_cache: true
     allow_downgrade: "{{ allow_lower_version }}"
@@ -31,26 +40,6 @@
     https_proxy: "{{ https_proxy_value | default('') }}"
     http_proxy: "{{ https_proxy_value | default('') }}"
   register: package_result
-  when: not needs_split_packages
-
-
-# Loop over the versioned package names so a pinned redpanda_version is
-# honored; with redpanda_version=latest the suffix is empty and this list is
-# identical to the unversioned one. (Previously this looped over the
-# unversioned list, so dnf always resolved the newest version in the repo and
-# silently ignored redpanda_version for releases >= 24.2.)
-- name: Install redpanda (post 24.2 or development)
-  dnf:
-    name: "{{item}}"
-    state: "{{ redpanda_install_status }}"
-    update_cache: true
-    allow_downgrade: "{{ allow_lower_version }}"
-  environment:
-    https_proxy: "{{ https_proxy_value | default('') }}"
-    http_proxy: "{{ https_proxy_value | default('') }}"
-  register: package_result
-  when: needs_split_packages
-  loop: "{{ redpanda_package_list_versioned }}"
 
 # Stop redpanda if it auto-started after package installation
 # This prevents it from initializing before we can configure SASL
