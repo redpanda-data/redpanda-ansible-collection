@@ -25,10 +25,13 @@
     connect_distributed_config: "{{ connect_distributed_config + '\n' + connect_distributed_user_config }}"
   when: connect_distributed_user_config is defined
 
+# dest must honor connect_distributed_config_file: the systemd unit's
+# ExecStart points at it, so a hardcoded name here leaves the unit pointing
+# at a file that never exists when the variable is overridden.
 - name: Instantiate config file
   ansible.builtin.copy:
     content: "{{ connect_distributed_config }}"
-    dest: "{{ redpanda_connect_config_dir }}/connect-distributed.properties"
+    dest: "{{ redpanda_connect_config_dir }}/{{ connect_distributed_config_file }}"
     owner: "{{ redpanda_user }}"
     group: "{{ redpanda_group }}"
     mode: '0644'
