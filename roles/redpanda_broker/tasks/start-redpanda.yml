@@ -372,11 +372,46 @@
 
 # Set Redpanda license
 #
-# Sets the redpanda license when redpanda_license is defined
-#
+# Sets the redpanda license when redpanda_license is defined. The license
+# string must never be an rpk argument: command lines are recorded in task
+# invocations (event logs, CI output) at default verbosity and are visible
+# in ps on the target. It goes through a 0600 temp file instead.
+- name: Create temp file for license string
+  ansible.builtin.tempfile:
+    state: file
+    suffix: .license
+  register: license_string_tmp
+  run_once: true
+  when:
+    - redpanda_license is defined
+    - not redpanda_license_loaded | default(false) | bool
+  tags: [broker_set_license_string]
+
+- name: Write license string to temp file
+  ansible.builtin.copy:
+    content: "{{ redpanda_license }}"
+    dest: "{{ license_string_tmp.path }}"
+    mode: "0600"
+  no_log: true
+  run_once: true
+  when:
+    - redpanda_license is defined
+    - not redpanda_license_loaded | default(false) | bool
+  tags: [broker_set_license_string]
+
 - name: Set Redpanda license (string)
-  ansible.builtin.command: rpk cluster license set {{ redpanda_license }} {{ redpanda_rpk_opts }}
+  ansible.builtin.command: rpk cluster license set --path {{ license_string_tmp.path }} {{ redpanda_rpk_opts }}
   environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
+  run_once: true
+  when:
+    - redpanda_license is defined
+    - not redpanda_license_loaded | default(false) | bool
+  tags: [broker_set_license_string]
+
+- name: Remove license string temp file
+  ansible.builtin.file:
+    path: "{{ license_string_tmp.path }}"
+    state: absent
   run_once: true
   when:
     - redpanda_license is defined

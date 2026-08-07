@@ -18,11 +18,14 @@
       - gnupg
     state: present
 
+# no_log: the URL embeds the Cloudsmith token, and module args (including
+# url) are recorded in task results at default verbosity
 - name: Download Cloudsmith GPG key
   get_url:
     url: "{{ cloudsmith_gpg_key_url }}"
     dest: /tmp/cloudsmith_gpg.key
     mode: '0644'
+  no_log: "{{ redpanda_broker_no_log | default(true) }}"
 
 - name: Dearmor and add Cloudsmith GPG key
   ansible.builtin.shell: gpg --dearmor < /tmp/cloudsmith_gpg.key > {{ keyring_location }}
@@ -42,3 +45,4 @@
     dest: /etc/apt/sources.list.d/redpanda-redpanda-nightly.list
     mode: '0644'
   become: true
+  no_log: "{{ redpanda_broker_no_log | default(true) }}"

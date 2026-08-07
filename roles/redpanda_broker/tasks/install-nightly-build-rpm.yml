@@ -10,10 +10,13 @@
     name: yum-utils
     state: present
 
+# no_log: the URL embeds the Cloudsmith token, and module args are recorded
+# in task results at default verbosity
 - name: Import Cloudsmith GPG key
   rpm_key:
     key: "{{ cloudsmith_gpg_key_url }}"
     state: present
+  no_log: "{{ redpanda_broker_no_log | default(true) }}"
 
 - name: Download repository configuration
   get_url:
@@ -21,6 +24,7 @@
     dest: /tmp/redpanda-redpanda-nightly.repo
     mode: '0644'
   become: true
+  no_log: "{{ redpanda_broker_no_log | default(true) }}"
 
 - name: Add repository configuration
   command: dnf config-manager --add-repo '/tmp/redpanda-redpanda-nightly.repo'
