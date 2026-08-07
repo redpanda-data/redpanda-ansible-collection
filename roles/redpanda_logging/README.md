@@ -60,8 +60,7 @@ The role addresses the issue of Redpanda logs mixing with system logs by:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `redpanda_logging_systemd_enabled` | `false` | Enable systemd-specific logging config |
-| `redpanda_logging_systemd_max_level` | `info` | Maximum log level for journald |
-| `redpanda_logging_systemd_forward_to_syslog` | `true` | Forward systemd logs to syslog |
+| `redpanda_logging_systemd_max_level` | `info` | Maximum log level the redpanda unit stores to the journal (LogLevelMax) |
 
 ## Dependencies
 

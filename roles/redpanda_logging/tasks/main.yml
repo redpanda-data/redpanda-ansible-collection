@@ -49,15 +49,17 @@
             mode: '0644'
           become: true
 
+    # copy with force: false creates the file once and only enforces
+    # ownership/mode afterwards; file state=touch reports changed on every
+    # run
     - name: Create initial log file with correct permissions
-      ansible.builtin.file:
-        path: "{{ redpanda_logging_log_file }}"
-        state: touch
+      ansible.builtin.copy:
+        content: ""
+        dest: "{{ redpanda_logging_log_file }}"
+        force: false
         owner: "{{ redpanda_logging_owner }}"
         group: "{{ redpanda_logging_group }}"
         mode: "{{ redpanda_logging_file_mode }}"
-        modification_time: preserve
-        access_time: preserve
       become: true
 
     - name: Configure systemd logging (if enabled)
@@ -79,12 +81,17 @@
               StandardOutput=journal
               StandardError=journal
               SyslogIdentifier={{ redpanda_logging_program }}
+              LogLevelMax={{ redpanda_logging_systemd_max_level }}
             dest: "/etc/systemd/system/redpanda.service.d/logging.conf"
             owner: root
             group: root
             mode: '0644'
           become: true
-          notify: Reload systemd
+          # the override changes where/how the redpanda process logs; it
+          # only takes effect on the next service start
+          notify:
+            - Reload systemd
+            - Restart redpanda
 
 - name: Display logging configuration status
   ansible.builtin.debug:

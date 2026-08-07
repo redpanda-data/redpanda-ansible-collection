@@ -12,13 +12,8 @@
     daemon_reload: true
   become: true
 
-- name: Restart redpanda services
+- name: Restart redpanda
   ansible.builtin.systemd:
-    name: "{{ item }}"
+    name: redpanda
     state: restarted
   become: true
-  loop:
-    - redpanda
-    - redpanda-connect
-    - redpanda-console
-  failed_when: false  # Don't fail if service doesn't exist
