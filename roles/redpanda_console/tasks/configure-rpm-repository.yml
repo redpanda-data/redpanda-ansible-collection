@@ -6,15 +6,18 @@
 # repo_gpgcheck=0 as the AR client config:
 # https://cloud.google.com/artifact-registry/docs/os-packages/rpm/configure
 - name: Detect dnf5 (Artifact Registry repomd signatures fail its verifier)
+  tags: [console_rpm_repo_steps]
   ansible.builtin.stat:
     path: /usr/bin/dnf5
   register: rp_dnf5_bin
 
 - name: Set repo_gpgcheck (off on dnf5, on elsewhere)
+  tags: [console_rpm_repo_steps]
   ansible.builtin.set_fact:
     rp_repo_gpgcheck: "{{ not rp_dnf5_bin.stat.exists }}"
 
 - name: Set Redpanda RPM and GPG Key details
+  tags: [console_rpm_repo_steps]
   ansible.builtin.set_fact:
     rp_key_rpm_actual: "{{ rp_key_rpm }}"
     rp_key_rpm_metadata_actual: "{{ rp_key_rpm_metadata }}"
@@ -24,6 +27,7 @@
     repo_name_prefix: "redpanda-redpanda"
 
 - name: Add redpanda-redpanda RPM repository
+  tags: [console_rpm_repo_steps]
   ansible.builtin.yum_repository:
     name: "{{ repo_name_prefix }}"
     description: "{{ repo_name_prefix }}"
@@ -43,6 +47,7 @@
     proxy: "{{ rpm_proxy | default('_none_') }}"
 
 - name: Add redpanda-redpanda-noarch RPM repository
+  tags: [console_rpm_repo_steps]
   ansible.builtin.yum_repository:
     name: "{{ repo_name_prefix }}-noarch"
     description: "{{ repo_name_prefix }}-noarch"
@@ -62,6 +67,7 @@
     proxy: "{{ rpm_proxy | default('_none_') }}"
 
 - name: Add redpanda-redpanda-source RPM repository
+  tags: [console_rpm_repo_steps]
   ansible.builtin.yum_repository:
     name: "{{ repo_name_prefix }}-source"
     description: "{{ repo_name_prefix }}-source"
@@ -81,6 +87,7 @@
     proxy: "{{ rpm_proxy | default('_none_') }}"
 
 - name: Install GPG key with proxy
+  tags: [console_rpm_repo_steps]
   environment:
     https_proxy: "{{ rpm_proxy | default('') }}"
   ansible.builtin.rpm_key:
@@ -92,6 +99,7 @@
   when: https_proxy_value is defined and https_proxy_value | length > 0
 
 - name: Install GPG key
+  tags: [console_rpm_repo_steps]
   ansible.builtin.rpm_key:
     state: present
     key: "{{ item }}"

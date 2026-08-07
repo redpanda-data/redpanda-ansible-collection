@@ -40,13 +40,15 @@
   ansible.builtin.include_tasks: configure-rpm-repository.yml
   when:
     - ansible_os_family == 'RedHat'
-    - enable_airgap is false
+    - not (enable_airgap | bool)
+  tags: [console_repo_rpm]
 
 - name: Configure Redpanda DEB Repository
   ansible.builtin.include_tasks: configure-deb-repository.yml
   when:
     - ansible_os_family == 'Debian'
-    - enable_airgap is false
+    - not (enable_airgap | bool)
+  tags: [console_repo_deb]
 
 - name: Install Redpanda Console
   ansible.builtin.include_tasks: install-console-deb.yml
