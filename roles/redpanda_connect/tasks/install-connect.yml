@@ -1,3 +1,43 @@
+# Install contract: the role installs a locally staged Connect RPM. Either
+# stage it at {{ redpanda_connect_rpm_dir }}/{{ redpanda_connect_rpm }}
+# before running the role, or set connect_rpm_url so the role downloads it
+# (optionally verified via connect_rpm_checksum). Installation uses dnf and
+# supports Fedora-family hosts only.
+- name: Check for a pre-staged Connect RPM
+  ansible.builtin.stat:
+    path: "{{ redpanda_connect_rpm_dir }}/{{ redpanda_connect_rpm }}"
+  register: connect_rpm_stat
+  tags:
+    - connect_install_contract
+
+- name: Assert the Connect install contract is satisfied
+  ansible.builtin.assert:
+    that:
+      - connect_rpm_stat.stat.exists or (connect_rpm_url | default('') | length > 0)
+    fail_msg: >-
+      Redpanda Connect install contract not satisfied: stage the Connect RPM at
+      {{ redpanda_connect_rpm_dir }}/{{ redpanda_connect_rpm }} before running this
+      role, or set connect_rpm_url so the role downloads it (optionally set
+      connect_rpm_checksum, e.g. 'sha256:<hex>', to verify the download). This role
+      installs via dnf and supports Fedora-family hosts only; installing Connect on
+      Debian/Ubuntu hosts is unsupported.
+    quiet: true
+  tags:
+    - connect_install_contract
+
+- name: Download the Connect RPM from connect_rpm_url
+  ansible.builtin.get_url:
+    url: "{{ connect_rpm_url }}"
+    dest: "{{ redpanda_connect_rpm_dir }}/{{ redpanda_connect_rpm }}"
+    checksum: "{{ connect_rpm_checksum | default(omit) }}"
+    mode: "0644"
+  become: true
+  when:
+    - not connect_rpm_stat.stat.exists
+    - connect_rpm_url | default('') | length > 0
+  tags:
+    - connect_install_contract
+
 - name: Install Redpanda RPMs
   ansible.builtin.dnf:
     name: "{{ redpanda_connect_rpm_dir }}/{{ redpanda_connect_rpm }}"
@@ -5,3 +45,5 @@
     disable_gpg_check: true
   register: rpm_result
   become: true
+  tags:
+    - connect_install_rpm

@@ -1,0 +1,9 @@
+---
+# Includes the role's real main.yml; the runner isolates the tasks under
+# test via --tags. The inventory deliberately has no connect group so the
+# groups[redpanda_connect_group] conditionals are exercised.
+- hosts: all
+  gather_facts: false
+  tasks:
+    - include_tasks: /app/tasks/main.yml
+      tags: [always]

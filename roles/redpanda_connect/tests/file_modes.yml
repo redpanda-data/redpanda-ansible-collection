@@ -1,0 +1,14 @@
+---
+# Runs the real cert-install, truststore-copy and keystore tasks so the
+# on-disk ownership and modes asserted by file_modes_test.py are what the
+# role really produces. Bare include_tasks does not load role defaults, so
+# every variable arrives via extravars.
+- hosts: connect
+  gather_facts: false
+  tasks:
+    - include_tasks: /app/tasks/install-certs.yml
+      tags: [always]
+    - include_tasks: /app/tasks/copy-truststore.yml
+      tags: [always]
+    - include_tasks: /app/tasks/copy-keystore.yml
+      tags: [always]

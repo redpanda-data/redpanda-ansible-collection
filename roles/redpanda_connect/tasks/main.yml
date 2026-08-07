@@ -57,12 +57,14 @@
     daemon_reload: true
   when:
     - systemd_unit_result.changed | default(false)
-    - inventory_hostname in groups[redpanda_connect_group]
+    - inventory_hostname in groups[redpanda_connect_group] | default([])
     - not (restart_only | default(false))
+  tags:
+    - connect_systemd_reload
 
 - name: Establish whether restart required
   ansible.builtin.set_fact:
-    restart_required: '{{ restart_only | default(false) or ((connect_distributed_config_result.changed | default(false) or log4j_user_config_result.changed | default(false) or log4j_default_config_result.changed | default(false) or systemd_unit_result.changed | default(false)) and (restart_connect_node | default(true) | bool)) }}'
+    restart_required: '{{ restart_only | default(false) or ((connect_distributed_config_result.changed | default(false) or log4j_user_config_result.changed | default(false) or log4j_default_config_result.changed | default(false) or jmx_exporter_config_result.changed | default(false) or systemd_unit_result.changed | default(false)) and (restart_connect_node | default(true) | bool)) }}'
 
 - name: Ensure Redpanda Connect is enabled and started
   ansible.builtin.systemd_service:
@@ -70,8 +72,10 @@
     state: started
     enabled: true
   when:
-    - inventory_hostname in groups[redpanda_connect_group]
+    - inventory_hostname in groups[redpanda_connect_group] | default([])
     - not (restart_only | default(false))
+  tags:
+    - connect_enable_start
 
 # Safe restart with serialization - one node at a time
 - name: Safe Restart
