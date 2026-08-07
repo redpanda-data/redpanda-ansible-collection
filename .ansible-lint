@@ -3,6 +3,7 @@ exclude_paths:
   - .github/
   - .ansible/
   - .claude/
+  - changelogs/
   - tests/
   - roles/binary_bundler/tests/
   - roles/client_config/tests/

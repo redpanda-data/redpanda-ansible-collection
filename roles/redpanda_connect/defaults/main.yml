@@ -82,7 +82,7 @@ admin_ssl_truststore_password: password
 redpanda_keystores_dir: /etc/redpanda/keystores
 keystores_file_name: keystore.p12
 ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
-ssl_keystore_password:  password
+ssl_keystore_password: password
 ssl_keystore_type: PKCS12
 producer_ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
 producer_ssl_keystore_password: password

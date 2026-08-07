@@ -1,6 +1,6 @@
 ---
 - name: Get existing users
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: rpk security user list --format json {{ redpanda_rpk_kafka_opts }}
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
@@ -26,7 +26,7 @@
   run_once: true
 
 - name: Get existing roles
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: rpk security role list --format json {{ redpanda_rpk_kafka_opts }}
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
@@ -57,7 +57,7 @@
   run_once: true
 
 - name: Get existing ACLs
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: rpk security acl list --format json {{ redpanda_rpk_kafka_opts }}
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
@@ -180,7 +180,7 @@
   changed_when: role_delete_result.rc == 0
 
 - name: Get role members for each role
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: rpk security role describe {{ item.name }} --format json {{ redpanda_rpk_kafka_opts }}
   environment:
     RPK_USER: "{{ sasl_admin_username }}"

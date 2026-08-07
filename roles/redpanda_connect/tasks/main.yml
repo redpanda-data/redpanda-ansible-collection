@@ -4,8 +4,8 @@
 
 - name: Install JVM
   ansible.builtin.package:
-      name: "{{ java_package }}"
-      state: present
+    name: "{{ java_package }}"
+    state: present
   when:
     - not use_existing_jvm | default(false)
     - not (restart_only | default(false))

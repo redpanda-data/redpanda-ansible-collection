@@ -16,10 +16,10 @@
 
 - name: Copy truststore to remote hosts in connect group
   ansible.builtin.copy:
-      src: "{{ truststore_file }}"
-      dest: "{{ redpanda_truststores_dir }}/{{ truststore_file_name }}"
-      owner: redpanda
-      group: redpanda
-      # commonly password-protected key material: no world access
-      mode: "0640"
+    src: "{{ truststore_file }}"
+    dest: "{{ redpanda_truststores_dir }}/{{ truststore_file_name }}"
+    owner: redpanda
+    group: redpanda
+    # commonly password-protected key material: no world access
+    mode: "0640"
   tags: copy_truststore

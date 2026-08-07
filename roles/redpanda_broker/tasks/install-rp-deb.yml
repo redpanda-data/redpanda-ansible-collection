@@ -24,7 +24,7 @@
     allow_unauthenticated: "{{ using_gcp | default(false) }}"
     allow_downgrade: "{{ allow_downgrade | default(false) }}"
     install_recommends: "{{ install_recommends | default(false) }}"
-    force: yes
+    force: true
   environment:
     https_proxy: "{{ https_proxy_value | default('') }}"
     http_proxy: "{{ https_proxy_value | default('') }}"
@@ -49,3 +49,4 @@
     owner: redpanda
     group: redpanda
     state: directory
+    mode: "0755"

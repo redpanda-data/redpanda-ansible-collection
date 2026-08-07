@@ -1,16 +1,16 @@
 ---
 - name: Set distribution-specific variables
-  set_fact:
+  ansible.builtin.set_fact:
     distro: "{{ ansible_distribution | lower }}"
     codename: "{{ ansible_distribution_release }}"
     arch: "{{ ansible_architecture }}"
 
 - name: Update apt cache
-  apt:
-    update_cache: yes
+  ansible.builtin.apt:
+    update_cache: true
 
 - name: Install required packages
-  apt:
+  ansible.builtin.apt:
     name:
       - debian-keyring
       - debian-archive-keyring
@@ -21,7 +21,7 @@
 # no_log: the URL embeds the Cloudsmith token, and module args (including
 # url) are recorded in task results at default verbosity
 - name: Download Cloudsmith GPG key
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ cloudsmith_gpg_key_url }}"
     dest: /tmp/cloudsmith_gpg.key
     mode: '0644'
@@ -34,13 +34,13 @@
   become: true
 
 - name: Set correct permissions for the keyring file
-  file:
+  ansible.builtin.file:
     path: "{{ keyring_location }}"
     mode: '0644'
   become: true
 
 - name: Add Cloudsmith repository configuration
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ cloudsmith_config_url_deb }}?distro={{ distro }}&codename={{ codename }}&arch={{ arch }}&component=main"
     dest: /etc/apt/sources.list.d/redpanda-redpanda-nightly.list
     mode: '0644'

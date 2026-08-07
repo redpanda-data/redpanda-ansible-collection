@@ -28,7 +28,7 @@
             group: root
             mode: '0644'
           become: true
-          notify: restart rsyslog
+          notify: Restart rsyslog
 
         - name: Ensure rsyslog service is running
           ansible.builtin.systemd:
@@ -84,7 +84,7 @@
             group: root
             mode: '0644'
           become: true
-          notify: reload systemd
+          notify: Reload systemd
 
 - name: Display logging configuration status
   ansible.builtin.debug:

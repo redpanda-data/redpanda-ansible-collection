@@ -7,9 +7,10 @@
   ansible.builtin.command:
     cmd: "/usr/bin/redpanda --version"
   register: rp_ver_output
+  changed_when: false
   when: rp_exists_check.stat.exists
 
-- name: redpanda_version is post packaging split or not
+- name: Determine whether redpanda_version is post package split
   ansible.builtin.set_fact:
     is_post_split: "{{ redpanda_version == 'latest' or redpanda_version is version('24.2.0', '>=') }}"
   tags: [broker_airgap_post_split]
@@ -48,6 +49,7 @@
 - name: Install Redpanda DEBs (pre-package split)
   ansible.builtin.shell: "dpkg -i --force-confold {{ airgap_copy_dest }}/redpanda_*.deb"
   become: true
+  changed_when: true
   tags:
     - airgap-tarball-install
   when:
@@ -57,6 +59,7 @@
 - name: Install Redpanda DEBs (post-package split)
   ansible.builtin.shell: "dpkg -i --force-confold {{ airgap_copy_dest }}/{{ item }}_*.deb"
   become: true
+  changed_when: true
   tags:
     - airgap-tarball-install
   when:

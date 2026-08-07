@@ -16,4 +16,3 @@
     fail_msg: "OS does not have FIPS correctly enabled (fips-mode-setup exit code == {{os_fips_mode.rc}}) while Redpanda Ansible 'fips_mode' is set to {{fips_mode}}; this will cause Redpanda startup failures. set fips_mode=permissive for unsafe bypass"
   when:
     - ansible_os_family == "RedHat"
-

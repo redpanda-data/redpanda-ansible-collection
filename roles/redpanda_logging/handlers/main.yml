@@ -1,18 +1,18 @@
 ---
 # Handlers for redpanda_logging role
 
-- name: restart rsyslog
+- name: Restart rsyslog
   ansible.builtin.systemd:
     name: rsyslog
     state: restarted
   become: true
 
-- name: reload systemd
+- name: Reload systemd
   ansible.builtin.systemd:
     daemon_reload: true
   become: true
 
-- name: restart redpanda services
+- name: Restart redpanda services
   ansible.builtin.systemd:
     name: "{{ item }}"
     state: restarted

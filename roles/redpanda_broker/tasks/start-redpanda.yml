@@ -350,6 +350,7 @@
 - name: Apply Redpanda license
   ansible.builtin.command:
     cmd: rpk cluster license set --path /tmp/redpanda.license --config /etc/redpanda/redpanda.yaml
+  changed_when: true
   environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   run_once: true
   when:
@@ -401,6 +402,7 @@
 
 - name: Set Redpanda license (string)
   ansible.builtin.command: rpk cluster license set --path {{ license_string_tmp.path }} {{ redpanda_rpk_opts }}
+  changed_when: true
   environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   run_once: true
   when:
@@ -420,6 +422,7 @@
 
 - name: Set Redpanda license (path)
   ansible.builtin.command: rpk cluster license set --path {{ redpanda_license_path }} {{ redpanda_rpk_opts }}
+  changed_when: true
   environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   run_once: true
   when:

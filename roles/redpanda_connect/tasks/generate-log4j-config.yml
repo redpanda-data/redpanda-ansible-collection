@@ -1,5 +1,5 @@
 # example usage in a playbook
-#log4j_config_override_content: |
+# log4j_config_override_content: |
 #  log4j.rootLogger=INFO, stdout, syslogAppender
 #
 #  log4j.appender.stdout=org.apache.log4j.ConsoleAppender

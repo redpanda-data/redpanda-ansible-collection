@@ -8,16 +8,16 @@
          development_build | default(false) | bool }}
     allow_lower_version: "{{ development_build | default(false) | bool }}"
 
-- name: check OS FIPS mode state to see if configured and safe for Redpanda to proceed with fips_mode=enabled
+- name: Check OS FIPS mode state to see if configured and safe for Redpanda to proceed with fips_mode=enabled
   ansible.builtin.include_tasks: fips-assert.yml
   when:
-   - enable_fips | default(false) | bool
+    - enable_fips | default(false) | bool
 
-- name: generate package list to install
+- name: Generate package list to install
   ansible.builtin.set_fact:
     redpanda_package_list: "{{ ['redpanda-rpk-fips', 'redpanda', 'redpanda-fips', 'redpanda-tuner'] if enable_fips | bool else ['redpanda-rpk','redpanda','redpanda-tuner']  }}"
 
-- name: generate versioned package list to install
+- name: Generate versioned package list to install
   ansible.builtin.set_fact:
     redpanda_package_list_versioned: "{{ redpanda_package_list | product([redpanda_version_suffix]) | map('join') | list }}"
 
@@ -60,3 +60,4 @@
     state: directory
     owner: redpanda
     group: redpanda
+    mode: "0755"

@@ -24,6 +24,7 @@
       -storepass:env TRUSTSTORE_PASSWORD -storetype {{ truststore_type }}
   environment:
     TRUSTSTORE_PASSWORD: "{{ truststore_password }}"
+  changed_when: true
   when: not truststore_stat.stat.exists
   tags: generate_truststore
 
@@ -36,5 +37,6 @@
       -storepass:env TRUSTSTORE_PASSWORD -storetype {{ truststore_type }}
   environment:
     TRUSTSTORE_PASSWORD: "{{ truststore_password }}"
+  changed_when: true
   when: not truststore_stat.stat.exists
   tags: generate_truststore
