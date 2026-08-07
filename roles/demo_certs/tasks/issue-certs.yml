@@ -55,9 +55,9 @@
   ansible.builtin.command:
     cmd: |
       openssl ca
-        -config tls/ca/ca.conf
-        -keyfile tls/ca/ca.key
-        -cert tls/ca/ca.crt
+        -config {{ root_ca_dir }}/ca.conf
+        -keyfile {{ root_ca_dir }}/ca.key
+        -cert {{ root_ca_dir }}/ca.crt
         -policy signing_policy
         -extensions signing_node_req
         -in {{ node_csr }}

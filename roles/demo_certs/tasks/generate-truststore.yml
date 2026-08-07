@@ -6,23 +6,35 @@
   delegate_to: localhost
   tags: generate_truststore
 
-- name: Ensure the truststore file is absent
+- name: Check for existing truststore
   delegate_to: localhost
-  ansible.builtin.file:
+  ansible.builtin.stat:
     path: "{{ truststore_file }}"
-    state: absent
+  register: truststore_stat
   tags: generate_truststore
 
+# The store password is delivered via the environment (keytool's
+# -storepass:env) so it never appears on a recorded command line.
 - name: Create the truststore
   delegate_to: localhost
   ansible.builtin.command:
-    cmd: |
-      keytool -importcert -noprompt -file {{ node_cert }} -alias {{ ansible_hostname }} -keystore {{ truststore_file }} -storepass {{ truststore_password }} -storetype {{ truststore_type }}
+    cmd: >
+      keytool -importcert -noprompt -file {{ node_cert }}
+      -alias {{ ansible_hostname }} -keystore {{ truststore_file }}
+      -storepass:env TRUSTSTORE_PASSWORD -storetype {{ truststore_type }}
+  environment:
+    TRUSTSTORE_PASSWORD: "{{ truststore_password }}"
+  when: not truststore_stat.stat.exists
   tags: generate_truststore
 
 - name: Import the CA certificate into the truststore
   delegate_to: localhost
   ansible.builtin.command:
-    cmd: |
-      keytool -importcert -noprompt -file {{ root_ca_dir }}/ca.crt -alias ca -keystore {{ truststore_file }} -storepass {{ truststore_password }} -storetype {{ truststore_type }}
+    cmd: >
+      keytool -importcert -noprompt -file {{ root_ca_dir }}/ca.crt
+      -alias ca -keystore {{ truststore_file }}
+      -storepass:env TRUSTSTORE_PASSWORD -storetype {{ truststore_type }}
+  environment:
+    TRUSTSTORE_PASSWORD: "{{ truststore_password }}"
+  when: not truststore_stat.stat.exists
   tags: generate_truststore
