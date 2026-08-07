@@ -102,6 +102,15 @@
     is_initialized: "{{ controller_stat.stat.isdir is defined and controller_stat.stat.isdir }}"
   tags: [broker_set_initialized]
 
+# run_once tasks pick an arbitrary host (the first in the play), so they
+# must not gate on that host's per-host state: a freshly added node sorting
+# first would otherwise skip cluster-wide operations for everyone. The
+# cluster counts as initialized when any member node is.
+- name: Establish cluster-wide initialization state
+  ansible.builtin.set_fact:
+    cluster_is_initialized: "{{ ansible_play_hosts | map('extract', hostvars, 'is_initialized') | select | list | length > 0 }}"
+  tags: [broker_cluster_initialized]
+
 # first run of Generate Node config
 #
 # This run occurs during initial bootstrapping where rpk can push some
@@ -281,7 +290,7 @@
   failed_when: "'RESULT:ERROR' in cluster_config_result.stdout or cluster_config_result.rc != 0"
   no_log: "{{ redpanda_broker_no_log }}"
   run_once: true
-  when: is_initialized
+  when: cluster_is_initialized | default(is_initialized)
   tags: [broker_set_cluster_config]
 
 # Apply Redpanda Enterprise License
