@@ -11,3 +11,4 @@ roles/redpanda_console/tests/inventory
 .logs/
 .run/
 __pycache__/
+roles/*/library/

@@ -19,10 +19,13 @@ bats:
 .PHONY: do
 do: mocks shellcheck bats test
 
+# The mock library must live OUTSIDE /app: /app is the volume-mounted role
+# directory, and writing into it leaks the test double onto the host where
+# it would sit on the role's live module path.
 .PHONY: mocks
 mocks:
-	mkdir -p /app/library && \
-	cp tests/mocks/* /app/library
+	mkdir -p /opt/mock-library && \
+	cp tests/mocks/* /opt/mock-library
 
 .PHONY: test
 test: $(SCRIPTS)
