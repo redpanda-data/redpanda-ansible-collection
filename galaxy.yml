@@ -16,7 +16,7 @@ readme: README.md
 # A list of the collection's content authors. Can be just the name or in the format 'Full Name <email> (url)
 # @nicks:irc/im.site#channel'
 authors:
-- Devex Team devex@redpanda.com
+- Redpanda Data DevEx Team <devex@redpanda.com>
 
 ### OPTIONAL but strongly recommended
 # A short summary description of the collection
@@ -28,16 +28,46 @@ license_file: LICENSE
 
 # A list of tags you want to associate with the collection for indexing/searching. A tag name has the same character
 # requirements as 'namespace' and 'name'
-tags: ["redpanda", "redpanda_data", "data", "redpanda_cluster", "kafka", "apache_kafka"]
+tags: ["infrastructure", "redpanda", "redpanda_data", "data", "redpanda_cluster", "kafka", "apache_kafka"]
+
+# Collections whose modules the roles use at runtime; installed automatically
+# by ansible-galaxy alongside this collection.
+dependencies:
+  community.general: ">=7.0.0"
+  ansible.posix: ">=1.5.0"
 
 # The URL of the originating SCM repository
-repository: https://github.com/redpanda-data/deployment-automation
+repository: https://github.com/redpanda-data/redpanda-ansible-collection
 
 # The URL to any online docs
-documentation: https://docs.redpanda.com/docs/home
+documentation: https://docs.redpanda.com/current/home/
 
 # The URL to the homepage of the collection/project
 homepage: https://redpanda.com/
 
 # The URL to the collection issue tracker
-issues: https://github.com/redpanda-data/deployment-automation/issues
+issues: https://github.com/redpanda-data/redpanda-ansible-collection/issues
+
+# Development scaffolding must not ship in the built artifact: the builder
+# packages the whole working tree (it does not consult .gitignore), so an
+# unlisted local .venv or IDE state would otherwise land on Galaxy.
+build_ignore:
+  - .venv
+  - .ansible
+  - .idea
+  - .logs
+  - .claude
+  - .pytest_cache
+  - .run
+  - .buildkite
+  - .github
+  - .gitignore
+  - .ansible-lint
+  - tests
+  - Makefile
+  - "*.tar.gz"
+  - "*.cld"
+  - "roles/*/Dockerfile"
+  - "roles/*/Makefile"
+  - "roles/*/docker-compose.yml"
+  - "roles/*/tests"
