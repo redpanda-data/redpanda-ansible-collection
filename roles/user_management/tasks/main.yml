@@ -200,7 +200,7 @@
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list | subelements('members', skip_missing=True) }}"
+  loop: "{{ (sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list) | subelements('members', skip_missing=True) }}"
   loop_control:
     label: "{{ item.0.name }} <- {{ item.1 }}"
   run_once: true
