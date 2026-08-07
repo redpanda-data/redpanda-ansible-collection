@@ -53,13 +53,16 @@
   when:
     - ansible_os_family == 'Debian'
 
-- name: Configure Redpanda Console
-  ansible.builtin.include_tasks: configure-console.yml
-
 - name: Install Redpanda Console
   ansible.builtin.include_tasks: install-console-rpm.yml
   when:
     - ansible_os_family == 'RedHat'
+
+# Must run after the install includes: when redpanda_version == 'latest' they
+# set use_pre_v3_template from the version that was actually installed, which
+# decides the config template shape.
+- name: Configure Redpanda Console
+  ansible.builtin.include_tasks: configure-console.yml
 
 # Flush handlers to ensure systemd is reloaded before starting console
 - name: Flush handlers
