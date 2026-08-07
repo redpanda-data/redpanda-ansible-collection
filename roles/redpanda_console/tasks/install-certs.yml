@@ -1,4 +1,19 @@
 ---
+# These variables have no defaults; fail up front with a usable message
+# instead of dying mid-run on a raw undefined-variable error after users and
+# directories have already been created.
+- name: Ensure required cert variables are defined
+  ansible.builtin.assert:
+    that:
+      - ca_cert_file is defined
+      - node_cert_file is defined
+      - node_key_file is defined
+    fail_msg: >-
+      Cert installation requires ca_cert_file, node_cert_file and
+      node_key_file to be set to the local paths of the CA certificate,
+      node certificate and node key (one or more is undefined).
+  tags: [install_certs]
+
 - name: Check if broker is co-located
   ansible.builtin.set_fact:
     redpanda_console_broker_colocated: "{{ inventory_hostname in groups['redpanda'] | default([]) }}"
