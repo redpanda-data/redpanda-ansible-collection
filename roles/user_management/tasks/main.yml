@@ -16,7 +16,10 @@
 
 - name: Extract existing usernames
   ansible.builtin.set_fact:
-    existing_usernames: "{{ existing_users }}"
+    existing_usernames: >-
+      {{ (existing_users | map(attribute='username') | list)
+         if (existing_users | length > 0 and existing_users[0] is mapping)
+         else existing_users }}
   run_once: true
 
 - name: Get existing roles
