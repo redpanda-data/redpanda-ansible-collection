@@ -123,6 +123,10 @@ releases:
       - user_management - sasl_admin_username/password now follow the broker role's
         sasl_superuser_* credentials when set, instead of a divergent default that
         silently failed authentication.
+      - redpanda_broker - node-id extraction matched the private IP against a broker
+        table that shows advertised addresses, so on clusters with advertise_public_ips
+        every node silently resolved to broker 0; the lookup now matches the advertised
+        address. Found by the new SASL end-to-end lane.
       minor_changes:
       - all ten roles now carry containerized test suites; sysctl_setup pins its managed
         kernel settings.

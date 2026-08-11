@@ -211,7 +211,7 @@
 # just-(re)started broker time to serve cluster status.
 - name: Establish node id
   ansible.builtin.shell:
-    cmd: set -o pipefail; rpk cluster status {{ redpanda_rpk_kafka_opts }} | sed 's/*//g' | grep -wF "{{ hostvars[inventory_hostname].private_ip }}" | awk '{ print $1;}'
+    cmd: set -o pipefail; rpk cluster status {{ redpanda_rpk_kafka_opts }} | sed 's/*//g' | grep -wF "{{ advertised_ip | default(hostvars[inventory_hostname].private_ip) }}" | awk '{ print $1;}'
     executable: /bin/bash
   environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   register: node_id_out

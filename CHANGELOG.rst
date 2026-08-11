@@ -55,6 +55,7 @@ Bugfixes
 - redpanda_broker - an expired or invalid enterprise license was treated as loaded (``valid`` matched inside ``invalid``), silently skipping license application.
 - redpanda_broker - an unreadable cluster status resolved the node id to broker 0, so maintenance-mode and restart decisions could target the wrong broker; the lookup now fails loudly and retries while a broker starts up.
 - redpanda_broker - asserting ``redpanda_version`` on an undefined variable produced a raw Jinja error instead of the actionable message.
+- redpanda_broker - node-id extraction matched the private IP against a broker table that shows advertised addresses, so on clusters with advertise_public_ips every node silently resolved to broker 0; the lookup now matches the advertised address. Found by the new SASL end-to-end lane.
 - redpanda_broker - package upgrades never triggered a broker restart (the decision matched strings against a result field neither apt nor dnf produces); it now uses the package module's changed flag.
 - redpanda_broker - pinned pre-24.2 installs skipped the stop that guards SASL bootstrap, letting the cluster initialize before the bootstrap superuser existed.
 - redpanda_broker - restart detection was silently disabled on SASL-enabled clusters because a skipped conditional twin task overwrote the registered check result; cluster-config changes now trigger restarts with SASL on.

@@ -13,6 +13,32 @@ node1 ansible_connection=local private_ip=10.0.0.10
 node2 ansible_connection=local private_ip=10.0.0.100
 """
 
+# With advertise_public_ips the broker table shows the ADVERTISED (public)
+# addresses, not the private ones; node-id extraction must match on the
+# advertised_ip fact or every lookup comes back empty.
+INVENTORY_PUBLIC = """\
+[redpanda]
+node0 ansible_connection=local private_ip=10.0.0.1 advertised_ip=3.14.1.1
+node1 ansible_connection=local private_ip=10.0.0.10 advertised_ip=3.14.1.10
+node2 ansible_connection=local private_ip=10.0.0.100 advertised_ip=3.14.1.100
+"""
+
+MOCK_RPK_PUBLIC = """\
+#!/bin/bash
+cat <<'OUTPUT'
+CLUSTER
+=======
+redpanda.test-cluster
+
+BROKERS
+=======
+ID    HOST         PORT
+0     3.14.1.1     9092
+1*    3.14.1.10    9092
+2     3.14.1.100   9092
+OUTPUT
+"""
+
 MOCK_RPK = """\
 #!/bin/bash
 cat <<'OUTPUT'
@@ -53,10 +79,10 @@ exit 1
 TAGS = 'broker_node_id,broker_set_node_id'
 
 
-def run(mock_rpk=MOCK_RPK, extravars=None):
+def run(mock_rpk=MOCK_RPK, extravars=None, inventory=INVENTORY):
     inv = '/app/tests/inventory'
     with open(inv, 'w') as f:
-        f.write(INVENTORY)
+        f.write(inventory)
 
     # Write mock rpk to a temp directory so it doesn't pollute PATH for other tests
     mock_dir = tempfile.mkdtemp()
@@ -103,6 +129,13 @@ class TestNodeIdExtraction:
 
     # A node id must never be fabricated: `stdout | int` turns empty output
     # into node 0, and safe-restart then drains the wrong broker.
+
+    def test_node_id_matches_advertised_address(self):
+        status, node_ids = run(mock_rpk=MOCK_RPK_PUBLIC, inventory=INVENTORY_PUBLIC)
+        assert status == 'successful'
+        assert node_ids['node0'] == '0', f"3.14.1.1 should map to node 0, got {node_ids.get('node0')}"
+        assert node_ids['node1'] == '1', f"3.14.1.10 should map to node 1, got {node_ids.get('node1')}"
+        assert node_ids['node2'] == '2', f"3.14.1.100 should map to node 2, got {node_ids.get('node2')}"
 
     def test_no_broker_rows_fails_instead_of_node_zero(self):
         status, node_ids = run(
