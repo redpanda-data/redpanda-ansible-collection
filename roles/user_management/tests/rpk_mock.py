@@ -67,13 +67,24 @@ def run_role(fixdir, extravars):
         extravars=extravars,
         envvars={
             'PATH': '%s:%s' % (fixdir, os.environ.get('PATH', '')),
-            # bare include_tasks does not load the collection, so point
-            # ansible at the collection-level filter plugins (mounted by
-            # docker-compose)
-            'ANSIBLE_FILTER_PLUGINS': '/collection-plugins/filter',
+            # the tasks reference the filters by FQCN, so expose the mounted
+            # collection plugins under a synthetic collection layout
+            'ANSIBLE_COLLECTIONS_PATH': _collection_root(),
         },
         quiet=False,
     )
+
+
+def _collection_root():
+    """Build an ansible_collections tree exposing the mounted plugins as
+    redpanda.cluster so FQCN filter references resolve in the harness."""
+    root = '/tmp/synthetic-collections'
+    pkg = os.path.join(root, 'ansible_collections', 'redpanda', 'cluster')
+    os.makedirs(pkg, exist_ok=True)
+    link = os.path.join(pkg, 'plugins')
+    if not os.path.islink(link):
+        os.symlink('/collection-plugins', link)
+    return root
 
 
 def calls(fixdir):

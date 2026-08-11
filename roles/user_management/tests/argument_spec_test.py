@@ -5,6 +5,8 @@ import tempfile
 import pytest
 import ansible_runner
 
+import rpk_mock
+
 
 ROLE = 'user_management'
 
@@ -42,7 +44,7 @@ def run_playbook(extravars):
     r = ansible_runner.run(
         playbook=pb, inventory=inv, extravars=extravars,
         envvars={'ANSIBLE_ROLES_PATH': roles_dir,
-                 'ANSIBLE_FILTER_PLUGINS': '/collection-plugins/filter',
+                 'ANSIBLE_COLLECTIONS_PATH': rpk_mock._collection_root(),
                  'PATH': f"{roles_dir}:{os.environ.get('PATH', '')}"},
         quiet=False)
     failure_msg = ''
@@ -68,4 +70,4 @@ def test_bad_inputs_fail_with_named_error(bad, var):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    raise SystemExit(pytest.main([__file__, "-v"]))
