@@ -67,9 +67,10 @@ def run_role(fixdir, extravars):
         extravars=extravars,
         envvars={
             'PATH': '%s:%s' % (fixdir, os.environ.get('PATH', '')),
-            # bare include_tasks does not load the role, so point ansible at
-            # the role's filter plugins explicitly
-            'ANSIBLE_FILTER_PLUGINS': '/app/filter_plugins',
+            # bare include_tasks does not load the collection, so point
+            # ansible at the collection-level filter plugins (mounted by
+            # docker-compose)
+            'ANSIBLE_FILTER_PLUGINS': '/collection-plugins/filter',
         },
         quiet=False,
     )

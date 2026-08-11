@@ -42,6 +42,7 @@ def run_playbook(extravars):
     r = ansible_runner.run(
         playbook=pb, inventory=inv, extravars=extravars,
         envvars={'ANSIBLE_ROLES_PATH': roles_dir,
+                 'ANSIBLE_FILTER_PLUGINS': '/collection-plugins/filter',
                  'PATH': f"{roles_dir}:{os.environ.get('PATH', '')}"},
         quiet=False)
     failure_msg = ''
