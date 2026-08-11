@@ -73,4 +73,4 @@ def test_license_loaded(status_line, rc, expected):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    raise SystemExit(pytest.main([__file__, "-v"]))

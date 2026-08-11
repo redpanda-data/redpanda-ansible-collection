@@ -133,4 +133,4 @@ def test_install_files_include_safeguard():
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    raise SystemExit(pytest.main([__file__, "-v"]))

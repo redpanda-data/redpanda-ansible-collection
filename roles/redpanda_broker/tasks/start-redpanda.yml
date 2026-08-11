@@ -108,7 +108,7 @@
 # cluster counts as initialized when any member node is.
 - name: Establish cluster-wide initialization state
   ansible.builtin.set_fact:
-    cluster_is_initialized: "{{ ansible_play_hosts | map('extract', hostvars, 'is_initialized') | select | list | length > 0 }}"
+    cluster_is_initialized: "{{ ansible_play_hosts | map('extract', hostvars) | selectattr('is_initialized', 'defined') | selectattr('is_initialized') | list | length > 0 }}"
   tags: [broker_cluster_initialized]
 
 # first run of Generate Node config

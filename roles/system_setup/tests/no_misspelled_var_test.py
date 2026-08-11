@@ -39,4 +39,4 @@ def test_misspelled_variable_absent_from_role_tree():
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    raise SystemExit(pytest.main([__file__, "-v"]))

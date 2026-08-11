@@ -53,4 +53,4 @@ def test_airgap_package_split_gate(airgap_tasks_file, redpanda_version, expected
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    raise SystemExit(pytest.main([__file__, "-v"]))

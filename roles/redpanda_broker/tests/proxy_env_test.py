@@ -29,4 +29,4 @@ def test_proxied_gpg_import_uses_its_gate_variable():
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    raise SystemExit(pytest.main([__file__, "-v"]))

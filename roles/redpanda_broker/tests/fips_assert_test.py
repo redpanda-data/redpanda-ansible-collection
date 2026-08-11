@@ -62,4 +62,4 @@ def test_fips_assert(os_fips_rc, fips_mode, expected_status):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    raise SystemExit(pytest.main([__file__, "-v"]))
