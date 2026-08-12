@@ -6,17 +6,17 @@
   when:
     - create_demo_certs | default(false) | bool
 
-# Generates CSRs from the demo local CA
+# Generates CSRs from the demo local CA. The keystore path (connect hosts)
+# also needs node certs issued -- historically that ran via duplicate task
+# files gated on create_keystore, so both flags enable cert issuance.
 - name: Generate cert signing requests
   ansible.builtin.include_tasks: generate-csrs.yml
-  when:
-    - create_demo_certs | default(false) | bool
+  when: (create_demo_certs | default(false) | bool) or (create_keystore | default(false) | bool)
 
 # Issues certs from the demo local CA
 - name: Issue certs
   ansible.builtin.include_tasks: issue-certs.yml
-  when:
-    - create_demo_certs | default(false) | bool
+  when: (create_demo_certs | default(false) | bool) or (create_keystore | default(false) | bool)
 
 # Generates a Java truststore containing the CA certificate and the node
 # certificate on localhost. Keystore generation itself is owned by the
