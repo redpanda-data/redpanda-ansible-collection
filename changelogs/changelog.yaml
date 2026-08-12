@@ -127,6 +127,12 @@ releases:
         table that shows advertised addresses, so on clusters with advertise_public_ips
         every node silently resolved to broker 0; the lookup now matches the advertised
         address. Found by the new SASL end-to-end lane.
+      - redpanda_connect - the jmx-exporter config merge crashed on ansible-core versions
+        where the template lookup returns an already-parsed mapping (2.18) instead
+        of a string (2.20); both are handled now.
+      - redpanda_console - the certificate entry assert wrongly required node_key_file,
+        which is optional by design (its install is skipped when unset); only ca_cert_file
+        and node_cert_file are required.
       minor_changes:
       - all ten roles now carry containerized test suites; sysctl_setup pins its managed
         kernel settings.

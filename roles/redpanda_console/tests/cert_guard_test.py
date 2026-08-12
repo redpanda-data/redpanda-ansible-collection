@@ -1,6 +1,7 @@
 """Behavioral test for the required-variable guard in install-certs.yml.
 
-install-certs.yml consumes ca_cert_file, node_cert_file and node_key_file,
+install-certs.yml requires ca_cert_file and node_cert_file (node_key_file
+stays optional -- the harness's deploy-console-tls playbook omits it),
 none of which have defaults. When handle_cert_install is enabled without
 them, the play used to die mid-run with a raw Jinja undefined-variable
 error after already creating users/directories. The task file must instead
@@ -15,7 +16,7 @@ import ansible_runner
 PLAYBOOK = '/app/tests/cert_guard.yml'
 INVENTORY = '/app/tests/inventory'
 
-CERT_VARS = ('ca_cert_file', 'node_cert_file', 'node_key_file')
+CERT_VARS = ('ca_cert_file', 'node_cert_file')
 
 
 def run(extra_vars):

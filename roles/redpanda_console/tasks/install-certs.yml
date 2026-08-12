@@ -7,11 +7,10 @@
     that:
       - ca_cert_file is defined
       - node_cert_file is defined
-      - node_key_file is defined
     fail_msg: >-
-      Cert installation requires ca_cert_file, node_cert_file and
-      node_key_file to be set to the local paths of the CA certificate,
-      node certificate and node key (one or more is undefined).
+      Cert installation requires ca_cert_file and node_cert_file to be set
+      to the local paths of the CA certificate and node certificate
+      (node_key_file is optional; its install is skipped when unset).
   tags: [install_certs]
 
 - name: Check if broker is co-located

@@ -69,12 +69,14 @@ Bugfixes
 - redpanda_connect - installing without the pre-staged RPM failed with an opaque dnf error; the contract (pre-staged file or ``connect_rpm_url``, optionally ``connect_rpm_checksum``) is now asserted with an actionable message.
 - redpanda_connect - keystore generation is idempotent (``creates`` guard) and the keystore password is delivered via the environment instead of the openssl command line.
 - redpanda_connect - plays without a connect inventory group crashed on ``groups[redpanda_connect_group]``; it now defaults to an empty list.
+- redpanda_connect - the jmx-exporter config merge crashed on ansible-core versions where the template lookup returns an already-parsed mapping (2.18) instead of a string (2.20); both are handled now.
 - redpanda_connect - the jmx-exporter task rewrote connect-log4j.properties gated on the wrong override variable, silently clobbering user log4j overrides; the log4j file is owned solely by the log4j generator, and both generators now feed restart detection. The jmx merge chain also crashed on modern ansible-core and is fixed.
 - redpanda_connect - the post-restart REST health check was skipped on single-host plays, reporting success on a dead service.
 - redpanda_connect - the staged-keystore check ran on the managed host against a control-node path, so a pre-built keystore was never found and a self-signed one was regenerated (and Connect restarted) on every run; the check is now delegated to the control node.
 - redpanda_console - ``enable_airgap`` was compared with boolean identity, so ``-e enable_airgap=false`` skipped repository configuration and the install failed; it is coerced with ``| bool`` now.
 - redpanda_console - ``is_using_unstable`` was silently ignored; the repository configuration now switches to the unstable channel like the broker role.
 - redpanda_console - missing certificate variables now fail with a named assertion at role entry instead of a raw undefined-variable error mid-play.
+- redpanda_console - the certificate entry assert wrongly required node_key_file, which is optional by design (its install is skipped when unset); only ca_cert_file and node_cert_file are required.
 - redpanda_console - the configuration was rendered before the RPM install that decides between the v2 and v3 config schema, so RHEL-family hosts could get a config the installed console cannot parse; configuration now follows installation.
 - redpanda_console - the console was restarted on every play (an unconditional ``state=restarted`` plus the handler); it is now only started, with restarts driven by change notifications.
 - redpanda_console - the deb-src repository task overwrote the binary repository file with duplicate content; it is removed.
