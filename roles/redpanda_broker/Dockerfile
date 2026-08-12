@@ -17,8 +17,9 @@ RUN ansible-galaxy role install -r requirements.yml --force
 
 COPY . .
 
-# Set ANSIBLE_LIBRARY environment variable
-ENV ANSIBLE_LIBRARY=/app/library
+# Mock modules are staged outside the /app volume mount so they never leak
+# onto the host role directory (see the Makefile mocks target)
+ENV ANSIBLE_LIBRARY=/opt/mock-library
 
 # Run make do when the container launches
 CMD ["make", "do"]

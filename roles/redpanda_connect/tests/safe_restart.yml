@@ -1,0 +1,13 @@
+---
+# Mirrors main.yml's Safe Restart include: one iteration per play host with
+# cluster_host as the loop var. The runner isolates the health-check task
+# via --tags so the systemd restart itself is not attempted in the test
+# container.
+- hosts: connect
+  gather_facts: false
+  tasks:
+    - include_tasks: /app/tasks/safe-restart.yml
+      tags: [always]
+      with_items: "{{ ansible_play_hosts }}"
+      loop_control:
+        loop_var: cluster_host

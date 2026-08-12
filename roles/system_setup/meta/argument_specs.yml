@@ -1,0 +1,34 @@
+---
+# Validates the system_setup role inputs at entry. Undeclared variables
+# are not restricted; this spec is deliberately incremental.
+argument_specs:
+  main:
+    short_description: Prepare hosts for Redpanda
+    description:
+      - Data volume discovery, filesystem and mount setup, prerequisite
+        packages, and the redpanda service user.
+    options:
+      prep_data_dir:
+        type: bool
+        default: true
+      data_dir_perms:
+        type: bool
+        default: true
+      redpanda_mount_dir:
+        type: str
+        default: /mnt/vectorized/redpanda
+        description: Data path on the mounted data volume.
+      allow_unmounted_data_dir:
+        type: bool
+        default: false
+        description:
+          - Unsafe escape hatch; permits creating the data path on the root
+            filesystem when no data volume is eligible.
+      ephemeral_disk:
+        type: bool
+        default: false
+      create_pkg_mgr_proxy:
+        type: bool
+        default: false
+      https_proxy_value:
+        type: str

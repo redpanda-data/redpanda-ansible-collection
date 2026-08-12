@@ -1,0 +1,31 @@
+---
+# Validates the redpanda_connect role inputs at entry. Undeclared
+# variables are not restricted; this spec is deliberately incremental.
+argument_specs:
+  main:
+    short_description: Install and configure Kafka Connect for Redpanda
+    description:
+      - Installs Kafka Connect on RHEL-family hosts from a pre-staged RPM
+        or connect_rpm_url, and manages its configuration and service.
+    options:
+      restart_only:
+        type: bool
+        default: false
+      use_existing_jvm:
+        type: bool
+        default: false
+      copy_keystore:
+        type: bool
+        default: false
+      copy_truststore:
+        type: bool
+        default: false
+      connect_distributed_config_file:
+        type: str
+        default: connect-distributed.properties
+      connect_rpm_url:
+        type: str
+        description: Optional URL to download the Connect RPM from.
+      connect_rpm_checksum:
+        type: str
+        description: Optional checksum (e.g. sha256:<hex>) for the RPM download.

@@ -1,14 +1,14 @@
 - name: Create Redpanda group
-  group:
+  ansible.builtin.group:
     name: redpanda
     state: present
-    system: yes
-  become: yes
+    system: true
+  become: true
 
 - name: Create Redpanda user
-  user:
+  ansible.builtin.user:
     name: redpanda
     group: redpanda
     state: present
-    system: yes
-  become: yes
+    system: true
+  become: true

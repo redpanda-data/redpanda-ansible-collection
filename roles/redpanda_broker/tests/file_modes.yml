@@ -1,0 +1,40 @@
+---
+- hosts: redpanda
+  gather_facts: false
+  vars:
+    advertised_ip: "{{ private_ip }}"
+    redpanda_organization: test-org
+    redpanda_cluster_id: test-cluster
+    redpanda_admin_api_port: 9644
+    redpanda_kafka_port: 9092
+    redpanda_rpc_port: 33145
+    redpanda_schema_registry_port: 8081
+    redpanda_pandaproxy_port: 8082
+    require_client_auth: false
+    redpanda_data_directory: /var/lib/redpanda/data
+    redpanda_key_file: /etc/redpanda/certs/node.key
+    redpanda_cert_file: /etc/redpanda/certs/node.crt
+    redpanda_truststore_file: /etc/redpanda/certs/truststore.pem
+    redpanda_certs_dir: /etc/redpanda/certs
+    redpanda_user: redpanda
+    redpanda_group: redpanda
+    redpanda_broker_no_log: false
+    kafka_enable_authorization: false
+    schema_registry_authn_method: none
+    pandaproxy_authn_method: none
+    custom_config_templates:
+      - template: /app/templates/configs/defaults.j2
+    redpanda_kafka_listeners:
+      - address: "{{ private_ip }}"
+        port: 9092
+        name: internal
+    # ca_cert_file / node_cert_file / node_key_file come from extravars
+  tasks:
+    # Runs the real cert-install tasks and then (via --skip-tags on the
+    # runner side) the real first-run node config write, so the on-disk
+    # ownership and modes asserted by the test are what the role really
+    # produces.
+    - include_tasks: /app/tasks/install-certs.yml
+      tags: [always]
+    - include_tasks: /app/tasks/start-redpanda.yml
+      tags: [always]

@@ -1,0 +1,47 @@
+---
+# Validates the user_management role inputs at entry. Undeclared variables
+# are not restricted; this spec is deliberately incremental.
+argument_specs:
+  main:
+    short_description: Declarative SASL users, roles and ACLs via rpk
+    description:
+      - Reconciles SASL users, Redpanda roles, role memberships and ACLs
+        against the desired lists.
+    options:
+      sasl_admin_username:
+        type: str
+        default: admin
+      sasl_admin_password:
+        type: str
+        default: change-me
+        no_log: true
+      sasl_users:
+        type: list
+        elements: dict
+        default: []
+        options:
+          username:
+            type: str
+            required: true
+          password:
+            type: str
+            no_log: true
+          state:
+            type: str
+            choices: [present, absent]
+          update_password:
+            type: bool
+          mechanism:
+            type: str
+      sasl_roles:
+        type: list
+        elements: dict
+        default: []
+      sasl_acls:
+        type: list
+        elements: dict
+        default: []
+      schema_registry_acls:
+        type: list
+        elements: dict
+        default: []

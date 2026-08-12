@@ -1,10 +1,10 @@
 ---
 - name: Set Redpanda GPG Key and Repository details
+  tags: [console_repo_facts]
   ansible.builtin.set_fact:
-    rp_key_deb_actual: "{{ rp_key_deb }}"
-    rp_key_path_deb_actual: "{{ rp_key_path_deb }}"
-    rp_repo_signing_deb_actual: "{{ rp_repo_signing_deb }}"
-    rp_repo_signing_src_deb_actual: "{{ rp_repo_signing_src_deb }}"
+    rp_key_deb_actual: "{{ (is_using_unstable | default(false) | bool) | ternary(rp_key_deb_unstable, rp_key_deb) }}"
+    rp_key_path_deb_actual: "{{ (is_using_unstable | default(false) | bool) | ternary(rp_key_path_deb_unstable, rp_key_path_deb) }}"
+    rp_repo_signing_deb_actual: "{{ (is_using_unstable | default(false) | bool) | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
 
 # Refresh the keyring whenever it differs from the key material the repository
 # URL currently serves. The comparison is over the WHOLE dearmored keyring, not
@@ -13,6 +13,7 @@
 # an atomic replace, while steady state stays a no-op. (A fingerprint-presence
 # gate would skip exactly the rotation events this mechanism exists for.)
 - name: Fetch the current Redpanda DEB signing key
+  tags: [console_deb_repo_steps]
   ansible.builtin.get_url:
     url: "{{ rp_key_deb_actual }}"
     dest: /tmp/redpanda-deb-signing.key
@@ -23,16 +24,19 @@
   changed_when: false
 
 - name: Dearmor the fetched signing key for comparison
+  tags: [console_deb_repo_steps]
   ansible.builtin.command: gpg --dearmor --yes -o /tmp/redpanda-deb-signing.dearmored /tmp/redpanda-deb-signing.key
   changed_when: false
 
 - name: Check whether the installed keyring matches the served key material
+  tags: [console_deb_repo_steps]
   ansible.builtin.command: cmp -s /tmp/redpanda-deb-signing.dearmored "{{ rp_key_path_deb_actual }}"
   register: rp_deb_keyring_cmp
   changed_when: false
   failed_when: false
 
 - name: Install/refresh the Redpanda keyring (migration / rotation)
+  tags: [console_deb_repo_steps]
   become: true
   ansible.builtin.copy:
     src: /tmp/redpanda-deb-signing.dearmored
@@ -47,20 +51,14 @@
 # keyring fails verification (NO_PUBKEY) even when its contents are correct, so
 # force it world-readable like a public key file regardless of who created it.
 - name: Ensure the Redpanda keyring is world-readable for apt verification
+  tags: [console_deb_repo_steps]
   become: true
   ansible.builtin.file:
     path: "{{ rp_key_path_deb_actual }}"
     mode: '0644'
 
 - name: Add Redpanda DEB repository
-  ansible.builtin.copy:
-    dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
-    content: "{{ rp_repo_signing_deb_actual }}\n"
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: Add Redpanda DEB repository (source)
+  tags: [console_deb_repo_steps]
   ansible.builtin.copy:
     dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
     content: "{{ rp_repo_signing_deb_actual }}\n"

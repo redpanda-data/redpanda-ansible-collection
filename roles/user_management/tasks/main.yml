@@ -1,6 +1,6 @@
 ---
 - name: Get existing users
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: rpk security user list --format json {{ redpanda_rpk_kafka_opts }}
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
@@ -11,16 +11,22 @@
 
 - name: Parse existing users
   ansible.builtin.set_fact:
-    existing_users: "{{ (existing_users_result.stdout | from_json) | default([]) }}"
+    existing_users: >-
+      {{ (existing_users_result.stdout | from_json)
+         if (existing_users_result.stdout | trim | length > 0)
+         else [] }}
   run_once: true
 
 - name: Extract existing usernames
   ansible.builtin.set_fact:
-    existing_usernames: "{{ existing_users }}"
+    existing_usernames: >-
+      {{ (existing_users | map(attribute='username') | list)
+         if (existing_users | length > 0 and existing_users[0] is mapping)
+         else existing_users }}
   run_once: true
 
 - name: Get existing roles
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: rpk security role list --format json {{ redpanda_rpk_kafka_opts }}
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
@@ -32,7 +38,10 @@
 
 - name: Parse existing roles
   ansible.builtin.set_fact:
-    existing_roles: "{{ ((existing_roles_result.stdout | from_json).roles) | default([]) }}"
+    existing_roles: >-
+      {{ ((existing_roles_result.stdout | from_json).roles | default([]))
+         if (existing_roles_result.stdout | default('') | trim | length > 0)
+         else [] }}
   run_once: true
   when: existing_roles_result.rc == 0
 
@@ -48,7 +57,7 @@
   run_once: true
 
 - name: Get existing ACLs
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: rpk security acl list --format json {{ redpanda_rpk_kafka_opts }}
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
@@ -59,7 +68,15 @@
 
 - name: Parse existing ACLs
   ansible.builtin.set_fact:
-    existing_acls: "{{ ((existing_acls_result.stdout | from_json).matches) | default([]) }}"
+    existing_acls: >-
+      {{ ((existing_acls_result.stdout | from_json).matches | default([]))
+         if (existing_acls_result.stdout | default('') | trim | length > 0)
+         else [] }}
+  run_once: true
+
+- name: Normalize existing ACLs for comparison
+  ansible.builtin.set_fact:
+    existing_acl_keys: "{{ existing_acls | redpanda.cluster.user_management_acl_keys }}"
   run_once: true
 
 - name: Create users that should exist but don't
@@ -73,7 +90,7 @@
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
     USER_PASSWORD: "{{ item.password }}"
-  loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.username }}"
   when:
@@ -95,7 +112,7 @@
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
     USER_PASSWORD: "{{ item.password }}"
-  loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ sasl_users | selectattr('state', 'undefined') | list + sasl_users | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.username }}"
   when:
@@ -134,7 +151,7 @@
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.name }}"
   when:
@@ -163,12 +180,12 @@
   changed_when: role_delete_result.rc == 0
 
 - name: Get role members for each role
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: rpk security role describe {{ item.name }} --format json {{ redpanda_rpk_kafka_opts }}
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.name }}"
   register: role_members_result
@@ -188,12 +205,13 @@
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'eq', 'present') | list | subelements('members', skip_missing=True) }}"
+  loop: "{{ (sasl_roles | selectattr('state', 'undefined') | list + sasl_roles | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list) | subelements('members', skip_missing=True) }}"
   loop_control:
     label: "{{ item.0.name }} <- {{ item.1 }}"
   run_once: true
   when:
     - existing_roles_result.rc == 0
+    - item.1 not in (role_members_result | redpanda.cluster.user_management_role_members(item.0.name))
   register: role_assign_result
   changed_when: role_assign_result.rc == 0
   failed_when:
@@ -220,10 +238,11 @@
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ sasl_acls | selectattr('state', 'undefined') | list + sasl_acls | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ sasl_acls | selectattr('state', 'undefined') | list + sasl_acls | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.role | default(item.principal) }} {{ item.operation }} on {{ item.resource_type }}:{{ item.resource_name | default('*') }}"
   run_once: true
+  when: (item | redpanda.cluster.user_management_acl_desired_keys) | difference(existing_acl_keys) | length > 0
   register: acl_create_result
   changed_when: acl_create_result.rc == 0
   failed_when:
@@ -281,7 +300,7 @@
   environment:
     RPK_USER: "{{ sasl_admin_username }}"
     RPK_PASS: "{{ sasl_admin_password }}"
-  loop: "{{ schema_registry_acls | selectattr('state', 'undefined') | list + schema_registry_acls | selectattr('state', 'eq', 'present') | list }}"
+  loop: "{{ schema_registry_acls | selectattr('state', 'undefined') | list + schema_registry_acls | selectattr('state', 'defined') | selectattr('state', 'eq', 'present') | list }}"
   loop_control:
     label: "{{ item.role | default(item.principal) }} {{ item.operation }} on SR {{ item.resource_type }}:{{ item.resource_name | default('global') }}"
   run_once: true

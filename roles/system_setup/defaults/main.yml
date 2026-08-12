@@ -1,9 +1,19 @@
 ---
 redpanda_base_dir: /var/lib/redpanda
 # Subdirectory on the mounted data volume that holds Redpanda's data.
-# `repdanda_mount_dir` was the historical (misspelled) name; if set, it is
-# still honored via the default below for backward compatibility.
-redpanda_mount_dir: "{{ repdanda_mount_dir | default('/mnt/vectorized/redpanda') }}"
+redpanda_mount_dir: /mnt/vectorized/redpanda
+# Filesystem mount point for the data volume. The data directory
+# (redpanda_mount_dir) is a subdirectory of it, so the mount point defaults to
+# the parent of redpanda_mount_dir (historically /mnt/vectorized) and follows
+# any redpanda_mount_dir override automatically. Override this only when the
+# volume must be mounted somewhere other than redpanda_mount_dir's parent.
+redpanda_mount_point: "{{ redpanda_mount_dir | dirname }}"
+# Safety valve for the data-device guard. When no eligible (unpartitioned,
+# nvme-named) data device is found and redpanda_mount_dir is not already backed
+# by a mounted filesystem, the role fails instead of silently creating the data
+# directory on the root filesystem. Set to true to accept an unmounted data dir
+# anyway (data lands on the root disk -- unsafe for production).
+allow_unmounted_data_dir: false
 # Bounds how long systemd waits for the data device to appear at boot before
 # continuing. Prevents the default 90-second hang when the volume is slow to
 # attach, while still failing the mount if the device never appears.

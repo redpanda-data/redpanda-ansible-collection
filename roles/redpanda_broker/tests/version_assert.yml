@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+    # Only the broker_assert_version guard runs; redpanda_version is
+    # deliberately left to extravars so the undefined case can be exercised.
+    - include_tasks: /app/tasks/main.yml
+      tags: [always]

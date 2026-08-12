@@ -40,5 +40,5 @@ redpanda_logging_logrotate_postrotate_command: |
 
 # Systemd logging configuration
 redpanda_logging_systemd_enabled: false  # Enable systemd-specific logging config
-redpanda_logging_systemd_max_level: info  # MaxLevelStore for journald
-redpanda_logging_systemd_forward_to_syslog: true
+# maximum level the redpanda unit stores to the journal (LogLevelMax)
+redpanda_logging_systemd_max_level: info

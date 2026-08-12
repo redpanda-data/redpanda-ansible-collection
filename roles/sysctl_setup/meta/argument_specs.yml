@@ -1,0 +1,18 @@
+---
+# Validates the sysctl_setup role inputs at entry. These settings change
+# host panic behavior, so bad values must fail before anything is applied.
+argument_specs:
+  main:
+    short_description: Kernel tuning for Redpanda hosts
+    description:
+      - Applies and persists the sysctl settings Redpanda needs.
+    options:
+      max_user_instances:
+        type: int
+        default: 8192
+        description: fs.inotify.max_user_instances value.
+      kernel_panic_on_oops:
+        type: int
+        choices: [0, 1]
+        default: 1
+        description: Whether the kernel panics immediately on an oops.

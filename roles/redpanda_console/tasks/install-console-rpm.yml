@@ -9,7 +9,8 @@
 
 # Get installed version if 'latest' was requested
 - name: Get installed console version
-  ansible.builtin.shell: rpm -q --qf '%{VERSION}' redpanda-console
+  # rpm -q is a read-only version query with no module equivalent
+  ansible.builtin.shell: rpm -q --qf '%{VERSION}' redpanda-console  # noqa: command-instead-of-module
   register: console_version_result
   changed_when: false
   when: redpanda_version == 'latest'

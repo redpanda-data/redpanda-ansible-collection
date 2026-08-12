@@ -4,10 +4,10 @@
     - generate_csrs
   ansible.builtin.debug:
     msg:
-      - "ipv4            : {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
-      - "private ip      : {{ hostvars[inventory_hostname]['private_ip'] }}"
-      - "ansible_hostname: {{ hostvars[inventory_hostname]['ansible_hostname'] }}"
-      - "ansible_fqdn    : {{ hostvars[inventory_hostname]['ansible_fqdn'] }}"
+      - "ipv4            : {{ (hostvars[inventory_hostname]['ansible_default_ipv4'] | default({})).address | default('n/a') }}"
+      - "private ip      : {{ hostvars[inventory_hostname]['private_ip'] | default('n/a') }}"
+      - "ansible_hostname: {{ hostvars[inventory_hostname]['ansible_hostname'] | default('n/a') }}"
+      - "ansible_fqdn    : {{ hostvars[inventory_hostname]['ansible_fqdn'] | default('n/a') }}"
 
 - name: Create redpanda group
   ansible.builtin.group:
@@ -63,6 +63,13 @@
     creates: "{{ redpanda_key_file }}"
     chdir: "{{ redpanda_certs_dir }}"
     cmd: openssl genrsa -out node.key 2048
+
+- name: Protect the node private key
+  tags:
+    - generate_csrs
+  ansible.builtin.file:
+    path: "{{ redpanda_key_file }}"
+    mode: "0600"
 
 - name: Generate a Certificate Signing Request on {{ansible_hostname}}
   tags:

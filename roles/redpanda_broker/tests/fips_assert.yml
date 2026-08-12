@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    # mirrors roles/redpanda_broker/defaults/main.yml; bare include_tasks does
+    # not load role defaults
+    fips_check_exit_codes: [0, 1, 2]
+    # fips_mode and ansible_os_family are supplied per test case via extravars
+  tasks:
+    - include_tasks: /app/tasks/fips-assert.yml

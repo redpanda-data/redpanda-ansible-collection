@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  gather_facts: false
+  # redpanda_version and airgap_tasks_file are supplied per test case via
+  # extravars.
+  tasks:
+    # The "always" tag ensures this include_tasks directive itself is not
+    # skipped by --tags filtering; only the broker_airgap_post_split set_fact
+    # inside the included file runs, isolating the package-split gate from
+    # tasks that touch real files and packages.
+    - include_tasks: "{{ airgap_tasks_file }}"
+      tags: [always]
+    - debug:
+        var: is_post_split

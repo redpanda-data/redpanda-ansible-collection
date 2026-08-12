@@ -42,11 +42,15 @@
     console_config: "{{ console_config | combine((rpconsole | default('{}') | from_json), recursive=True) }}"
   tags: [console_merge_overrides]
 
+# The rendered config can carry secrets (SASL credentials / login providers
+# merged in via the rpconsole override variable); only the console user reads
+# it, so keep it out of world-readable territory.
 - name: Generate Console config
   ansible.builtin.template:
     src: console.yml
     dest: /etc/redpanda/redpanda-console-config.yaml
     owner: "{{ redpanda_console_user }}"
     group: "{{ redpanda_console_group }}"
-    mode: "0644"
+    mode: "0600"
+  notify: Reload systemd and restart console
   tags: [console_write_config]

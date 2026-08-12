@@ -1,0 +1,8 @@
+services:
+  testctr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    command: make do

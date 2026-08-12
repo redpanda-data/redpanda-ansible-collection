@@ -1,76 +1,67 @@
-# Ansible Deployment for Redpanda
+# redpanda_broker
 
-Ansible configuration to easily provision a [Redpanda](https://www.redpanda.com/) cluster.
+Installs and configures Redpanda brokers: package installation (stable,
+unstable, nightly, or airgap bundles), node and cluster configuration
+(TLS, SASL, tiered storage, FIPS), enterprise license application, and
+safe rolling restarts when configuration changes require them.
 
-## Installation Prerequisites
+Use as `redpanda.cluster.redpanda_broker`. Hosts must be in the `redpanda`
+inventory group and carry a `private_ip` hostvar.
 
-Here are some prerequisites you'll need to install to run the content in this repo. You can also choose to use our
-Dockerfile_FEDORA or Dockerfile_UBUNTU dockerfiles to build a local client if you'd rather not install terraform and
-ansible on your machine.
+## Behavior
 
-* Install Ansible: https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
-* Depending on your system, you might need to install some python packages (e.g. `selinux` or `jmespath`). Ansible will
-  throw an error with the expected python packages, both on local and remote machines.
+- Configuration is merged from the built-in templates plus the free-form
+  `redpanda` variable (cluster/node overrides) and `host_specific_override`.
+- On clusters that are already initialized, config changes that require a
+  restart trigger a serial rolling restart: maintenance mode on, restart,
+  wait for the admin API and `rpk cluster health` to report healthy, then
+  maintenance mode off. Set `restart_node: false` to opt out.
+- With `kafka_enable_authorization: true` on first bootstrap, the
+  superuser is created via `/etc/redpanda.d/bootstrap-superuser.conf`
+  (removed after the run) and Schema Registry / Pandaproxy service
+  accounts are created.
 
-### On Mac OS X:
+## Variables
 
-You can use brew to install the prerequisites. You will also need to install gnu-tar:
+The load-bearing inputs are validated by `meta/argument_specs.yml` and
+documented below; the full set of tunables lives in `defaults/main.yml`.
 
-```commandline
-brew install ansible
-brew install gnu-tar
-```
+<!-- BEGIN ROLE VARIABLES (generated from meta/argument_specs.yml; run scripts/generate-role-docs.py) -->
 
-## Basic Usage:
+| Variable | Type | Default | Choices | Description |
+|---|---|---|---|---|
+| `redpanda_version` | str | `latest` | — | Redpanda version to install (e.g. `24.3.1-1`` or `latest`. |
+| `redpanda_install_status` | str | `present` | `present`, `latest` | `latest` upgrades an existing install when redpanda_version is `latest`; `present` leaves an installed version alone. |
+| `fips_mode` | str | `disabled` | `disabled`, `permissive`, `enabled` | Redpanda FIPS mode. `enabled` requires the OS to have FIPS correctly enabled. |
+| `enable_fips` | bool | `False` | — |  |
+| `enable_tls` | bool | `False` | — |  |
+| `require_client_auth` | bool | `False` | — |  |
+| `kafka_enable_authorization` | bool | `False` | — | Enables SASL authorization; requires sasl_superuser_username and sasl_superuser_password. |
+| `sasl_superuser_username` | str | `admin` | — |  |
+| `sasl_superuser_password` | str | `change-me-in-production` | — |  |
+| `restart_node` | bool | `True` | — | Set to false to manage broker restarts yourself. |
+| `handle_cert_install` | bool | `False` | — |  |
+| `install_certs_only` | bool | `False` | — |  |
+| `enable_airgap` | bool | `False` | — |  |
+| `development_build` | bool | `False` | — |  |
+| `is_using_unstable` | bool | `False` | — |  |
+| `redpanda_config_file_mode` | str | `0640` | — |  |
+| `redpanda_kafka_listeners` | list of dict | — | — | Kafka API listeners; each entry needs address, port and name. |
 
-```shell
-# Set required ansible variables
-export ANSIBLE_COLLECTIONS_PATHS=${PWD}/artifacts/collections
-export ANSIBLE_ROLES_PATH=${PWD}/artifacts/roles
-export ANSIBLE_INVENTORY=${PWD}/${CLOUD_PROVIDER}/hosts.ini
+Variables not listed here are undeclared in the argument spec; see `defaults/main.yml`.
 
-# Generate a hosts file that fits our standard
+<!-- END ROLE VARIABLES -->
 
-# Install collections and roles
-ansible-galaxy install -r ./requirements.yml
+## Secrets handling
 
-# Run a Playbook
-# You need to pick the correct playbook for you, in this case we picked provision-basic-cluster
-ansible-playbook ansible/provision-basic-cluster.yml --private-key ~/.ssh/id_rsa
-```
+Passwords are passed to rpk via environment variables, never argv. Note
+that Ansible inlines task environments into the connection exec line, so
+`-vvv` output exposes them regardless of `no_log` — treat verbose CI logs
+as sensitive. `redpanda.yaml` and `.bootstrap.yaml` default to mode 0640
+(`redpanda_config_file_mode`).
 
-## Additional Documentation
+## Testing
 
-More information on consuming this collection
-is [available here](https://docs.redpanda.com/docs/deploy/deployment-option/self-hosted/manual/production/production-deployment-automation/)
-in our official documentation.
-
-## Troubleshooting
-
-### On Mac OS X, Python unable to fork workers
-
-If you see something like this:
-
-```
-ok: [34.209.26.177] => {“changed”: false, “stat”: {“exists”: false}}
-objc[57889]: +[__NSCFConstantString initialize] may have been in progress in another thread when fork() was called.
-objc[57889]: +[__NSCFConstantString initialize] may have been in progress in another thread when fork() was called. We cannot safely call it or ignore it in the fork() child process. Crashing instead. Set a breakpoint on objc_initializeAfterForkError to debug.
-ERROR! A worker was found in a dead state
-```
-
-You might try resolving by setting an environment variable:
-`export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
-
-See: https://stackoverflow.com/questions/50168647/multiprocessing-causes-python-to-crash-and-gives-an-error-may-have-been-in-progr
-
-## Contribution Guide
-
-### testing with a specific branch of redpanda-ansible-collection
-
-Change the redpanda.cluster entry in your requirements.yml file to the following:
-
-```yaml
-  - name: https://github.com/redpanda-data/redpanda-ansible-collection.git
-    type: git
-    version: <<<YOUR BRANCH NAME>>>
-```
+`cd roles/redpanda_broker && docker compose run --rm testctr make do`
+runs the containerized suite (template renders, real task files driven
+with mocked rpk, shellcheck, bats).
