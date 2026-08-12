@@ -64,4 +64,4 @@
     force: "{{ overwrite_certs | default('no') | bool }}"
     mode: "0600"
   when:
-    - not (node_key_file | default('') == '')
+    - node_key_file | default('') | length > 0

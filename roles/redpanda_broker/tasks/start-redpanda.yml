@@ -303,7 +303,7 @@
   delegate_to: localhost
   register: license_file_stat
   become: false
-  when: redpanda_license_file is defined and redpanda_license_file != ""
+  when: redpanda_license_file is defined and redpanda_license_file | length > 0
   tags: [broker_check_license_file]
 
 - name: Read license file content
@@ -314,7 +314,7 @@
   become: false
   when:
     - redpanda_license_file is defined
-    - redpanda_license_file != ""
+    - redpanda_license_file | length > 0
     - license_file_stat.stat.exists | default(false)
   tags: [broker_read_license]
 
@@ -325,7 +325,7 @@
     mode: '0600'
   when:
     - redpanda_license_file is defined
-    - redpanda_license_file != ""
+    - redpanda_license_file | length > 0
     - license_content.content is defined
   run_once: true
   tags: [broker_copy_license]
@@ -355,7 +355,7 @@
   run_once: true
   when:
     - redpanda_license_file is defined
-    - redpanda_license_file != ""
+    - redpanda_license_file | length > 0
     - license_content.content is defined
     - not redpanda_license_loaded | default(false) | bool
   tags: [broker_apply_license]
@@ -366,7 +366,7 @@
     state: absent
   when:
     - redpanda_license_file is defined
-    - redpanda_license_file != ""
+    - redpanda_license_file | length > 0
     - license_content.content is defined
   run_once: true
   tags: [broker_remove_license]

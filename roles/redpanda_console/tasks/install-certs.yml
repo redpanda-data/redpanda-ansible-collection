@@ -97,7 +97,7 @@
     mode: "{{ redpanda_console_key_mode }}"
   become: true
   when:
-    - (node_key_file | default('')) != ''
+    - node_key_file | default('') | length > 0
     - handle_cert_install | default(false) | bool
     - not (create_demo_certs | default(false) | bool)
   tags: [install_certs]

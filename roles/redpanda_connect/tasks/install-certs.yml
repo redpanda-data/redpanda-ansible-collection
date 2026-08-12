@@ -64,6 +64,6 @@
     # private key: owner-only, never world-readable
     mode: "0600"
   when:
-    - not (node_key_file | default('') == '')
+    - node_key_file | default('') | length > 0
     - handle_cert_install | default(false) | bool
     - not (create_demo_certs | default(false) | bool)
