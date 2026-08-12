@@ -54,7 +54,9 @@ steps:
           run: testctr
   - label: "lint, packaging and docs checks"
     command: |
-      pip install --quiet ansible-lint antsibull-changelog pytest pyyaml
+      # Pinned: a floating ansible-lint means unrelated tool releases can
+      # break the build (new rules land in minor versions). Bump deliberately.
+      pip install --quiet 'ansible-lint==26.8.0' 'antsibull-changelog==0.35.1' pytest pyyaml
       ansible-lint -c .ansible-lint
       antsibull-changelog lint
       python3 -m pytest tests/packaging/ tests/docs/ -q
