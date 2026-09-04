@@ -69,6 +69,7 @@
       community.general.filesystem:
         fstype: xfs
         dev: '{{ nvme_devices_for_raid[0] }}'
+        opts: "-m rmapbt=0"
       when: nvme_devices_for_raid|length == 1
     # Reference the volume by filesystem UUID rather than the kernel device
     # path: NVMe device names are assigned in discovery order and are not stable
@@ -113,6 +114,7 @@
       community.general.filesystem:
         fstype: xfs
         dev: /dev/md0
+        opts: "-m rmapbt=0"
       when: nvme_devices_for_raid|length > 1
     # Mount the array by filesystem UUID. The md device name is also assigned at
     # assembly time and is not guaranteed stable, so the UUID of the filesystem
