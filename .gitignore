@@ -6,3 +6,9 @@
 
 roles/redpanda_broker/tests/inventory
 roles/redpanda_console/tests/inventory
+.venv/
+.pytest_cache/
+.logs/
+.run/
+__pycache__/
+roles/*/library/

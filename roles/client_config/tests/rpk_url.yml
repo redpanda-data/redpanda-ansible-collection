@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - /app/defaults/main.yml
+  # ansible_architecture and any overrides come from extravars
+  tasks:
+    # Only the URL/arch fact computation runs (--tags client_rpk_url); no
+    # download or install work.
+    - include_tasks: /app/tasks/install-rpk.yml
+      tags: [always]
+    - debug:
+        var: rpk_download_url

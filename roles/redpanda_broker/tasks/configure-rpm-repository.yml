@@ -90,7 +90,7 @@
 
 - name: Install GPG key with proxy
   environment:
-    https_proxy: "{{ rpm_proxy | default('') }}"
+    https_proxy: "{{ https_proxy_value }}"
   ansible.builtin.rpm_key:
     state: present
     key: "{{ item }}"

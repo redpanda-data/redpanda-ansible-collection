@@ -1,0 +1,14 @@
+---
+- hosts: all
+  gather_facts: true
+  # include_tasks does not load role defaults; pull in the real defaults file
+  # so the chain runs exactly on the role's declared values
+  vars_files:
+    - /app/defaults/main.yml
+  vars:
+    create_demo_certs: true
+    create_keystore: true
+    private_ip: 127.0.0.1
+  tasks:
+    - name: Run the demo_certs role tasks
+      ansible.builtin.include_tasks: /app/tasks/main.yml

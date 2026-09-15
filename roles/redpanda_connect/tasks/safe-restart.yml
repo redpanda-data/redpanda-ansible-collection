@@ -6,6 +6,8 @@
   when:
     - restart_required | bool
     - inventory_hostname == cluster_host
+  tags:
+    - connect_restart_node
 
 - name: Wait for Kafka Connect REST API to be healthy
   ansible.builtin.uri:
@@ -17,8 +19,10 @@
   until: health_check_result.status == 200
   retries: "{{ connect_restart_health_check_retries }}"
   delay: "{{ connect_restart_health_check_delay }}"
+  # no play-size gate: single-node deployments need the post-restart
+  # verification most of all
   when:
     - restart_required | bool
     - inventory_hostname == cluster_host
-    - ansible_play_hosts | length > 1
-  ignore_errors: false
+  tags:
+    - connect_restart_health_check

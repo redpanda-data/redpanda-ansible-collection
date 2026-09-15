@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - /app/defaults/main.yml
+  # redpanda_version, basearch, rpm_or_deb etc. come from extravars
+  tasks:
+    - name: Run bundler
+      ansible.builtin.include_tasks: "/app/tasks/{{ rpm_or_deb }}_bundle.yml"
+      when: run_bundle | default(false) | bool
+
+    - name: Show computed urls
+      ansible.builtin.debug:
+        msg:
+          deb: "{{ deb_download_urls }}"
+          deb_unstable: "{{ deb_unstable_download_urls }}"
+          rpm_standard: "{{ rpm_standard_download_urls }}"
+          rpm_noarch: "{{ rpm_noarch_download_urls }}"
+          rpm_source: "{{ rpm_source_download_urls }}"
+      when: not (run_bundle | default(false) | bool)

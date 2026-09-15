@@ -1,49 +1,22 @@
-# example usage in a playbook
-#logging_config_override_content: |
-#  log4j.rootLogger=INFO, stdout, syslogAppender
-#
-#  log4j.appender.stdout=org.apache.log4j.ConsoleAppender
-#  log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
-#
-#  log4j.appender.syslogAppender=org.apache.log4j.net.SyslogAppender
-#  log4j.appender.syslogAppender.syslogHost=localhost
-#  log4j.appender.syslogAppender.facility=LOCAL0
-#  log4j.appender.syslogAppender.layout=org.apache.log4j.PatternLayout
-#
-#  connect.log.pattern=[%d] %p %X{connector.context}%m (%c:%L)%n
-#
-#  log4j.appender.stdout.layout.ConversionPattern=${connect.log.pattern}
-#  log4j.appender.syslogAppender.layout.ConversionPattern=${connect.log.pattern}
-#
-#  log4j.logger.org.reflections=ERROR
+# connect-log4j.properties is owned by generate-log4j-config.yml (driven by
+# log4j_config_override_content); this file only produces the jmx exporter
+# config.
 
-- name: Use user-provided logging config content if defined
-  ansible.builtin.copy:
-    content: "{{ logging_config_override_content }}"
-    dest: "{{ redpanda_connect_config_dir }}/connect-log4j.properties"
-    owner: "{{ redpanda_user }}"
-    group: "{{ redpanda_group }}"
-    mode: '0644'
-    force: true
-  when: logging_config_override_content is defined
-
-- name: Use default logging config if user-provided content is not defined
-  ansible.builtin.template:
-    src: log4j.properties.j2
-    dest: "{{ redpanda_connect_config_dir }}/connect-log4j.properties"
-    owner: "{{ redpanda_user }}"
-    group: "{{ redpanda_group }}"
-    mode: '0644'
-    force: true
-  when: logging_config_override_content is not defined
-
+# The template lookup returns a string on some ansible-core versions and an
+# already-parsed mapping on others (2.18's native types vs 2.20); the mapping
+# guard handles both, and combine
+# below merges dicts
 - name: Load template contents
   ansible.builtin.set_fact:
-    jmx_exporter_config: "{{ lookup('template', 'jmx-exporter-config.json.j2') }}"
+    jmx_exporter_config: "{{ _jmx_rendered if (_jmx_rendered is mapping) else (_jmx_rendered | from_json) }}"
+  vars:
+    _jmx_rendered: "{{ lookup('template', 'jmx-exporter-config.json.j2') }}"
 
 - name: Merge with user-provided overrides
   ansible.builtin.set_fact:
-    jmx_exporter_config: "{{ jmx_exporter_config | combine((jmx_exporter_override | default('{}') | from_json), recursive=True) }}"
+    jmx_exporter_config: "{{ jmx_exporter_config | combine((_jmx_override if (_jmx_override is mapping) else (_jmx_override | from_json)), recursive=True) }}"
+  vars:
+    _jmx_override: "{{ jmx_exporter_override | default('{}') }}"
 
 - name: Instantiate jmx-exporter file
   ansible.builtin.copy:
@@ -53,3 +26,4 @@
     group: "{{ redpanda_group }}"
     mode: '0644'
     force: true
+  register: jmx_exporter_config_result

@@ -1,0 +1,95 @@
+---
+# Validates the load-bearing role inputs at entry so bad values fail with a
+# named error before any package is installed, instead of a Jinja traceback
+# mid-play. Undeclared variables are not restricted; this spec is
+# deliberately incremental.
+argument_specs:
+  main:
+    short_description: Install and configure a Redpanda broker
+    description:
+      - Installs the Redpanda broker from the package repositories (or an
+        airgap bundle), renders its node and cluster configuration, and
+        performs safe rolling restarts when configuration changes require
+        them.
+    options:
+      redpanda_version:
+        type: str
+        default: latest
+        description:
+          - Redpanda version to install (e.g. C(24.3.1-1)) or C(latest).
+      redpanda_install_status:
+        type: str
+        choices: [present, latest]
+        default: present
+        description:
+          - C(latest) upgrades an existing install when redpanda_version is
+            C(latest); C(present) leaves an installed version alone.
+      fips_mode:
+        type: str
+        choices: [disabled, permissive, enabled]
+        default: disabled
+        description:
+          - Redpanda FIPS mode. C(enabled) requires the OS to have FIPS
+            correctly enabled.
+      enable_fips:
+        type: bool
+        default: false
+      enable_tls:
+        type: bool
+        default: false
+      require_client_auth:
+        type: bool
+        default: false
+      kafka_enable_authorization:
+        type: bool
+        default: false
+        description:
+          - Enables SASL authorization; requires sasl_superuser_username and
+            sasl_superuser_password.
+      sasl_superuser_username:
+        type: str
+        default: admin
+      sasl_superuser_password:
+        type: str
+        default: change-me-in-production
+        no_log: true
+      restart_node:
+        type: bool
+        default: true
+        description:
+          - Set to false to manage broker restarts yourself.
+      handle_cert_install:
+        type: bool
+        default: false
+      install_certs_only:
+        type: bool
+        default: false
+      enable_airgap:
+        type: bool
+        default: false
+      development_build:
+        type: bool
+        default: false
+      is_using_unstable:
+        type: bool
+        default: false
+      redpanda_config_file_mode:
+        type: str
+        default: "0640"
+      redpanda_kafka_listeners:
+        type: list
+        elements: dict
+        description:
+          - Kafka API listeners; each entry needs address, port and name.
+        options:
+          address:
+            type: str
+            required: true
+          port:
+            type: int
+            required: true
+          name:
+            type: str
+            required: true
+          auth_method:
+            type: str

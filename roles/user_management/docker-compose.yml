@@ -1,0 +1,10 @@
+services:
+  testctr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      # collection-level filter plugins used by the role's tasks
+      - ../../plugins:/collection-plugins:ro
+    command: make do

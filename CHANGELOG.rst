@@ -1,0 +1,91 @@
+==============================
+Redpanda.Cluster Release Notes
+==============================
+
+.. contents:: Topics
+
+v0.13.0
+=======
+
+Release Summary
+---------------
+
+Correctness and security hardening across all ten roles: inverted FIPS assertion, restart detection on SASL clusters, airgap version gating, license validation, rolling-restart health gating, root-disk deployment guard, world-readable key material, credential leaks into logs, broken demo_certs and binary_bundler flows, plus containerized test suites for every role, packaging/build_ignore fixes, declared collection dependencies, and changelog machinery.
+
+Minor Changes
+-------------
+
+- all ten roles carry galaxy role metadata (meta/main.yml) with current platforms.
+- all ten roles now carry containerized test suites; sysctl_setup pins its managed kernel settings.
+- changelog machinery (antsibull-changelog) is in place; future changes ship changelog fragments.
+- every role validates its load-bearing inputs via meta/argument_specs.yml, failing with named errors at role entry; role READMEs carry variable tables generated from the specs with a CI drift check.
+- galaxy.yml declares the ``community.general`` and ``ansible.posix`` dependencies the roles require, so bare ansible-core installs resolve them automatically.
+- galaxy.yml repository and issue-tracker URLs point at redpanda-ansible-collection instead of the retired deployment-automation repository.
+- redpanda_broker - load-bearing role inputs are validated by an argument spec at role entry (install status and FIPS mode choices, listener shape), failing with named errors instead of mid-play Jinja tracebacks.
+- redpanda_broker - the rolling restart now waits for the restarted broker's admin API and for ``rpk cluster health`` to report healthy (tunable via ``restart_health_retries``/``restart_health_delay``) before lifting maintenance mode and moving to the next node; previously the next broker was drained while the last one was still replaying its log.
+- the collection artifact no longer packages development scaffolding (virtualenvs, IDE state, Dockerfiles, test trees, CI configuration) -- ``build_ignore`` now curates the payload.
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- redpanda_broker and redpanda_console configuration files are no longer world-readable; set ``redpanda_config_file_mode`` if other local processes must read the broker config.
+- system_setup - hosts with no eligible data volume now fail the play instead of silently deploying to the root disk; set ``allow_unmounted_data_dir=true`` to restore the old behavior.
+- the misspelled ``repdanda_mount_dir`` backward-compatibility fallback is removed from both system_setup and redpanda_broker; ``redpanda_mount_dir`` (system_setup) is the single knob for the data volume path.
+
+Security Fixes
+--------------
+
+- demo_certs - generated CA and node private keys are now 0600 (openssl wrote them world-readable).
+- redpanda_broker - /etc/redpanda/redpanda.yaml and .bootstrap.yaml, which carry rpk and service-account credentials when SASL is enabled, were written world-readable; both now default to 0640 via the new ``redpanda_config_file_mode`` variable.
+- redpanda_broker - the TLS node key was installed world-readable (0644); it is now 0600.
+- redpanda_broker - the enterprise license string was passed as an rpk command-line argument, recording it in task logs and exposing it in ``ps``; it now flows through a 0600 temporary file.
+- redpanda_broker - the nightly-install tasks logged URLs embedding the Cloudsmith token in task results; they now honor no_log.
+- redpanda_connect - the node TLS key was world-readable (0644) and the generated keystore was 0755; keys are now 0600 and keystores/truststores 0640.
+- redpanda_console - the console configuration file, which can carry SASL and login secrets, is now written 0600 and owned by the console user.
+- the packaged collection shipped a test-double module inside ``roles/redpanda_broker/library``, which sits on the live module path of every consumer's play; it no longer ships.
+- user_management - loop labels no longer print user passwords into play output; demo_certs and user_management pass secrets via environment instead of recorded command lines.
+
+Bugfixes
+--------
+
+- binary_bundler - DEB URLs used the RPM architecture name (every deb download 404ed), noarch/SRPMS URLs embedded the host arch (always 404ed), the package-split gate compared versions as strings (24.10+ lost rpk/tuner), and bundling swept and deleted pre-existing ``/tmp/redpanda*`` files; downloads now verify optional checksums and run in an isolated per-run directory.
+- client_config - ``rpk_base_url`` was dead (the download URL hardcoded GitHub latest), there was no version pin or checksum option, and cert installation lacked privilege escalation.
+- demo_certs - restoring cert issuance under the create_keystore flag: connect hosts invoke the role with create_keystore alone, and the removed duplicate task files had been the (unintended) mechanism issuing their node certificates before truststore generation.
+- demo_certs - the role could not run standalone (``root_ca_dir`` and ``truststore_file_name`` were defined nowhere), cert issuance hardcoded the CA path, re-runs wiped the CA serial database (re-issuing serials already in circulation) and rebuilt the truststore every play, and CA generation re-ran every play due to mismatched ``creates`` paths. The dead keystore task files that never produced a keystore are removed (the connect role owns keystore creation).
+- redpanda_broker - airgap installs compared versions as strings, so 24.10+ took the pre-package-split path and lost redpanda-rpk and redpanda-tuner.
+- redpanda_broker - an expired or invalid enterprise license was treated as loaded (``valid`` matched inside ``invalid``), silently skipping license application.
+- redpanda_broker - an unreadable cluster status resolved the node id to broker 0, so maintenance-mode and restart decisions could target the wrong broker; the lookup now fails loudly and retries while a broker starts up.
+- redpanda_broker - asserting ``redpanda_version`` on an undefined variable produced a raw Jinja error instead of the actionable message.
+- redpanda_broker - node-id extraction matched the private IP against a broker table that shows advertised addresses, so on clusters with advertise_public_ips every node silently resolved to broker 0; the lookup now matches the advertised address. Found by the new SASL end-to-end lane.
+- redpanda_broker - package upgrades never triggered a broker restart (the decision matched strings against a result field neither apt nor dnf produces); it now uses the package module's changed flag.
+- redpanda_broker - pinned pre-24.2 installs skipped the stop that guards SASL bootstrap, letting the cluster initialize before the bootstrap superuser existed.
+- redpanda_broker - restart detection was silently disabled on SASL-enabled clusters because a skipped conditional twin task overwrote the registered check result; cluster-config changes now trigger restarts with SASL on.
+- redpanda_broker - run_once tasks gated on the first play host's per-host initialization state; a freshly added node sorting first skipped cluster-config application for the whole cluster, and could attempt SASL service-account creation against an existing cluster.
+- redpanda_broker - the FIPS assertion rejected correctly FIPS-enabled hosts and passed FIPS-disabled ones; it now requires ``fips-mode-setup`` to report enabled whenever ``fips_mode=enabled``.
+- redpanda_broker - the SASL bootstrap config write failed on images that do not ship /etc/redpanda.d; the directory is now created.
+- redpanda_broker - the deb-src repository task wrote the binary repo line to the same file as the binary task and never configured source packages; it is removed.
+- redpanda_broker - the maintenance-mode and health commands in the rolling restart carried no credentials, failing on SASL-enabled clusters.
+- redpanda_broker - the proxied GPG-key import was gated on ``https_proxy_value`` but exported ``rpm_proxy``, running the proxy branch with no proxy when only the gate variable was set.
+- redpanda_connect - ``connect_distributed_config_file`` was honored by the systemd unit but ignored by the config writer, producing a unit that pointed at a file that never existed.
+- redpanda_connect - installing without the pre-staged RPM failed with an opaque dnf error; the contract (pre-staged file or ``connect_rpm_url``, optionally ``connect_rpm_checksum``) is now asserted with an actionable message.
+- redpanda_connect - keystore generation is idempotent (``creates`` guard) and the keystore password is delivered via the environment instead of the openssl command line.
+- redpanda_connect - plays without a connect inventory group crashed on ``groups[redpanda_connect_group]``; it now defaults to an empty list.
+- redpanda_connect - the jmx-exporter config merge crashed on ansible-core versions where the template lookup returns an already-parsed mapping (2.18) instead of a string (2.20); both are handled now.
+- redpanda_connect - the jmx-exporter task rewrote connect-log4j.properties gated on the wrong override variable, silently clobbering user log4j overrides; the log4j file is owned solely by the log4j generator, and both generators now feed restart detection. The jmx merge chain also crashed on modern ansible-core and is fixed.
+- redpanda_connect - the post-restart REST health check was skipped on single-host plays, reporting success on a dead service.
+- redpanda_connect - the staged-keystore check ran on the managed host against a control-node path, so a pre-built keystore was never found and a self-signed one was regenerated (and Connect restarted) on every run; the check is now delegated to the control node.
+- redpanda_console - ``enable_airgap`` was compared with boolean identity, so ``-e enable_airgap=false`` skipped repository configuration and the install failed; it is coerced with ``| bool`` now.
+- redpanda_console - ``is_using_unstable`` was silently ignored; the repository configuration now switches to the unstable channel like the broker role.
+- redpanda_console - missing certificate variables now fail with a named assertion at role entry instead of a raw undefined-variable error mid-play.
+- redpanda_console - the certificate entry assert wrongly required node_key_file, which is optional by design (its install is skipped when unset); only ca_cert_file and node_cert_file are required.
+- redpanda_console - the configuration was rendered before the RPM install that decides between the v2 and v3 config schema, so RHEL-family hosts could get a config the installed console cannot parse; configuration now follows installation.
+- redpanda_console - the console was restarted on every play (an unconditional ``state=restarted`` plus the handler); it is now only started, with restarts driven by change notifications.
+- redpanda_console - the deb-src repository task overwrote the binary repository file with duplicate content; it is removed.
+- redpanda_logging - the systemd logging override now triggers a redpanda restart; the documented max-level knob takes effect (LogLevelMax); the unimplementable forward-to-syslog variable is removed; initial log file creation is idempotent.
+- system_setup - configuring the dnf proxy overwrote all of /etc/dnf/dnf.conf; only the proxy key is managed now.
+- system_setup - proxy flags were compared with boolean identity (``is true``), so string values from ``-e`` or INI inventories silently disabled proxy configuration; they are now coerced with ``| bool``.
+- system_setup - the data volume mountpoint was hardcoded to /mnt/vectorized while the data path honored ``redpanda_mount_dir``, so overriding the variable put data on the root disk; the mountpoint now derives from the variable (``redpanda_mount_point``).
+- system_setup - the data-directory preparation silently fell through to the root filesystem when no eligible data volume was found (no NVMe device, pre-partitioned volumes, or sdb-style device names); it now fails with an actionable message unless ``allow_unmounted_data_dir`` is explicitly set.
+- system_setup - unpartitioned devices backing mounted filesystems (including the root device) were eligible for mkfs/RAID; they are now excluded.
+- user_management - existing usernames were never extracted from rpk's JSON output, so every user was re-created on every run and ``update_password`` never took effect; empty rpk output no longer crashes the role; ACL creation and role assignment are now diffed against cluster state instead of re-applied unconditionally; sasl item lists without a ``state`` key no longer error.
+- user_management - sasl_admin_username/password now follow the broker role's sasl_superuser_* credentials when set, instead of a divergent default that silently failed authentication.

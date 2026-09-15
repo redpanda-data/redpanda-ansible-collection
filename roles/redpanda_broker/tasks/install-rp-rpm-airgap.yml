@@ -7,11 +7,13 @@
   ansible.builtin.command:
     cmd: "/usr/bin/redpanda --version"
   register: rp_ver_output
+  changed_when: false
   when: rp_exists_check.stat.exists
 
-- name: redpanda_version is post packaging split or not
+- name: Determine whether redpanda_version is post package split
   ansible.builtin.set_fact:
-    is_post_split: "{{ redpanda_version == 'latest' or redpanda_version >= '24.2' }}"
+    is_post_split: "{{ redpanda_version == 'latest' or redpanda_version is version('24.2.0', '>=') }}"
+  tags: [broker_airgap_post_split]
 
 - name: Check if redpanda_version is set to latest
   ansible.builtin.set_fact:
@@ -33,7 +35,7 @@
   tags:
     - airgap-tarball-install
   when:
-   - (needs_update | default(false)) or not rp_exists_check.stat.exists
+    - (needs_update | default(false)) or not rp_exists_check.stat.exists
 
 - name: Unpack Redpanda RPMs on host
   ansible.builtin.unarchive:
@@ -45,9 +47,12 @@
     - (needs_update | default(false)) or not rp_exists_check.stat.exists
 
 - name: Install Redpanda RPMs (pre package split)
-  ansible.builtin.shell: "rpm -Uvh --force {{ airgap_copy_dest }}/*.rpm"
-  register: rpm_result
-  failed_when: rpm_result.rc != 2 and rpm_result.rc != 0
+  # rpm -Uvh --force is deliberate for airgap re-installs; the dnf module
+  # would refuse same-version reinstalls
+  ansible.builtin.shell: "rpm -Uvh --force {{ airgap_copy_dest }}/*.rpm"  # noqa: command-instead-of-module
+  changed_when: true
+  register: rpm_pre_split_result
+  failed_when: rpm_pre_split_result.rc != 2 and rpm_pre_split_result.rc != 0
   become: true
   tags:
     - airgap-tarball-install
@@ -56,9 +61,12 @@
     - not is_post_split
 
 - name: Install Redpanda RPMs (post package split)
-  ansible.builtin.shell: "rpm -Uvh --force {{ airgap_copy_dest }}/{{item}}*__*.rpm"
-  register: rpm_result
-  failed_when: rpm_result.rc != 2 and rpm_result.rc != 0
+  # rpm -Uvh --force is deliberate for airgap re-installs; the dnf module
+  # would refuse same-version reinstalls
+  ansible.builtin.shell: "rpm -Uvh --force {{ airgap_copy_dest }}/{{item}}*__*.rpm"  # noqa: command-instead-of-module
+  changed_when: true
+  register: rpm_post_split_result
+  failed_when: rpm_post_split_result.rc != 2 and rpm_post_split_result.rc != 0
   become: true
   tags:
     - airgap-tarball-install
@@ -69,4 +77,3 @@
     - redpanda-rpk
     - redpanda-tuner
     - redpanda
-

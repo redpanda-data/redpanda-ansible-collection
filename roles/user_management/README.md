@@ -269,3 +269,23 @@ sasl_acls:
 ## License
 
 Apache-2.0
+
+## Variables
+
+The load-bearing inputs are validated by `meta/argument_specs.yml` and
+documented below; any further tunables live in `defaults/main.yml`.
+
+<!-- BEGIN ROLE VARIABLES (generated from meta/argument_specs.yml; run scripts/generate-role-docs.py) -->
+
+| Variable | Type | Default | Choices | Description |
+|---|---|---|---|---|
+| `sasl_admin_username` | str | `admin` | — |  |
+| `sasl_admin_password` | str | `change-me` | — |  |
+| `sasl_users` | list of dict | `[]` | — |  |
+| `sasl_roles` | list of dict | `[]` | — |  |
+| `sasl_acls` | list of dict | `[]` | — |  |
+| `schema_registry_acls` | list of dict | `[]` | — |  |
+
+Variables not listed here are undeclared in the argument spec; see `defaults/main.yml`.
+
+<!-- END ROLE VARIABLES -->

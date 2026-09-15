@@ -1,0 +1,14 @@
+- hosts: redpanda
+  gather_facts: false
+  # The proxy tasks use `become: true`; the test container already runs as
+  # root but has no sudo, so route become through su (root -> root, no
+  # password prompt).
+  vars:
+    ansible_become_method: su
+  tasks:
+    # The "always" tag keeps the include itself from being filtered out; the
+    # node_deps_proxy tag passed on the command line then isolates the proxy
+    # configuration task from the package-manager install tasks, which must
+    # never run inside the test container.
+    - include_tasks: "/app/tasks/install-node-deps-{{ node_deps_flavor }}.yml"
+      tags: [always]

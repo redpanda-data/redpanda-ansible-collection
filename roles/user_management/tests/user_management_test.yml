@@ -1,0 +1,17 @@
+---
+- hosts: redpanda
+  gather_facts: false
+  vars:
+    # include_tasks does not load role defaults, so the connection opts and
+    # mechanism defaults the tasks rely on are supplied here. Credentials and
+    # the desired user/role/acl state come in via extravars from each test.
+    redpanda_rpk_kafka_opts: ""
+    sasl_mechanism: "SCRAM-SHA-256"
+    sasl_users: []
+    sasl_roles: []
+    sasl_acls: []
+    schema_registry_acls: []
+  tasks:
+    - name: Run user management tasks
+      ansible.builtin.include_tasks: /app/tasks/main.yml
+      tags: [always]

@@ -7,11 +7,11 @@ redpanda_key_file: "{{ redpanda_certs_dir }}/node.key"
 redpanda_cert_file: "{{ redpanda_certs_dir }}/node.crt"
 redpanda_truststore_file: "{{ redpanda_certs_dir }}/truststore.pem"
 truststore_password: "password"
-keystore_password: "password"
 redpanda_truststores_dir: /etc/redpanda/truststores
 
 truststore_type: PKCS12
-keystore_file_name: keystore.p12
-keystores_type: PKCS12
+# control-side directory holding the demo CA (relative to the playbook cwd)
+root_ca_dir: tls/ca
+truststore_file_name: truststore.jks
 redpanda_user: redpanda
 redpanda_group: redpanda

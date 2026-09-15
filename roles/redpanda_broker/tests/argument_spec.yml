@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+    # include_role (not include_tasks) so the role's argument spec runs;
+    # install_certs_only (from extravars) ends the play immediately after
+    # validation so no install work happens.
+    - name: Invoke role for validation
+      ansible.builtin.include_role:
+        name: redpanda_broker

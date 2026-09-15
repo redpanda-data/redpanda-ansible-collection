@@ -12,38 +12,23 @@
          (redpanda_version is version('24.2.0', '>=')) or
       development_build | default(false) | bool }}
 
-- name: Install redpanda (pre 24.2)
+# One install task for both package generations: pre/post-24.2 twins that
+# each `register: package_result` would leave the skipped twin's stub in the
+# register, so the SASL bootstrap stop below and the upgrade-restart logic
+# never saw the install as changed on pinned pre-24.2 versions.
+- name: Install redpanda
   ansible.builtin.apt:
-    name: "redpanda{{ redpanda_version_suffix }}"
+    name: "{{ (['redpanda' + redpanda_version_suffix, 'redpanda-rpk' + redpanda_version_suffix, 'redpanda-tuner' + redpanda_version_suffix]) if needs_split_packages else (['redpanda' + redpanda_version_suffix]) }}"
     state: "{{ redpanda_install_status }}"
     update_cache: true
     allow_unauthenticated: "{{ using_gcp | default(false) }}"
     allow_downgrade: "{{ allow_downgrade | default(false) }}"
     install_recommends: "{{ install_recommends | default(false) }}"
-    force: yes
+    force: true
   environment:
     https_proxy: "{{ https_proxy_value | default('') }}"
     http_proxy: "{{ https_proxy_value | default('') }}"
   register: package_result
-  when: not needs_split_packages
-
-- name: Install redpanda (post 24.2)
-  ansible.builtin.apt:
-    name:
-      - "redpanda{{ redpanda_version_suffix }}"
-      - "redpanda-rpk{{ redpanda_version_suffix }}"
-      - "redpanda-tuner{{ redpanda_version_suffix }}"
-    state: "{{ redpanda_install_status }}"
-    update_cache: true
-    allow_unauthenticated: "{{ using_gcp | default(false) }}"
-    allow_downgrade: "{{ allow_downgrade | default(false) }}"
-    install_recommends: "{{ install_recommends | default(false) }}"
-    force: yes
-  environment:
-    https_proxy: "{{ https_proxy_value | default('') }}"
-    http_proxy: "{{ https_proxy_value | default('') }}"
-  register: package_result
-  when: needs_split_packages
 
 # Stop redpanda if it auto-started after package installation
 # This prevents it from initializing before we can configure SASL
@@ -64,3 +49,4 @@
     owner: redpanda
     group: redpanda
     state: directory
+    mode: "0755"

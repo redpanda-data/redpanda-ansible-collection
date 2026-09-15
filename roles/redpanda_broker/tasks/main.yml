@@ -1,10 +1,14 @@
 ---
+# `is defined` must come first: asserting on an undefined variable raises a
+# raw Jinja error and the fail_msg is never shown.
 - name: Ensure redpanda_version is defined
   ansible.builtin.assert:
     that:
+      - redpanda_version is defined
       - redpanda_version != ''
     fail_msg: "Variable 'redpanda_version' must be defined!"
   when: not (install_certs_only | default(false) | bool)
+  tags: [broker_assert_version]
 
 # Copies certs set in ca_cert_file and node_cert_file into the redpanda nodes. see defaults for the default values
 # only necessary when TLS is enabled

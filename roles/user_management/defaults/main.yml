@@ -6,8 +6,10 @@ enable_tls: false
 redpanda_truststore_file: "/etc/redpanda/certs/truststore.pem"
 
 # admin credentials
-sasl_admin_username: "admin"
-sasl_admin_password: "change-me"
+# Follows the broker role's superuser credentials when those are set, so a
+# vault-provided sasl_superuser_password flows through without duplication.
+sasl_admin_username: "{{ sasl_superuser_username | default('admin') }}"
+sasl_admin_password: "{{ sasl_superuser_password | default('change-me-in-production') }}"
 sasl_mechanism: "SCRAM-SHA-256"
 
 redpanda_rpk_kafka_opts: >-

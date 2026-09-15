@@ -1,6 +1,14 @@
 - name: Set architecture fact for url
   ansible.builtin.set_fact:
     rpk_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else 'unsupported' }}"
+  tags: [client_rpk_url]
+
+# rpk_url wins outright; otherwise the URL derives from rpk_base_url and
+# rpk_version so mirrors and pins actually take effect.
+- name: Determine rpk download url
+  ansible.builtin.set_fact:
+    rpk_download_url: "{{ rpk_url | default(rpk_base_url + ('/latest/download' if rpk_version == 'latest' else '/download/' + rpk_version) + '/rpk-linux-' + rpk_arch + '.zip') }}"
+  tags: [client_rpk_url]
 
 - name: Ensure unzip is installed
   ansible.builtin.package:
@@ -8,10 +16,11 @@
     state: present
   become: true
 
-- name: Download Redpanda rpk zip for amd64
+- name: Download Redpanda rpk zip
   ansible.builtin.get_url:
-    url: "{{ rpk_url | default('https://github.com/redpanda-data/redpanda/releases/latest/download/rpk-linux-' + rpk_arch + '.zip') }}"
+    url: "{{ rpk_download_url }}"
     dest: "/tmp/rpk-linux-{{ rpk_arch }}.zip"
+    checksum: "{{ rpk_checksum | default(omit) }}"
     mode: '0644'
   when: rpk_arch in ['amd64', 'arm64']
 

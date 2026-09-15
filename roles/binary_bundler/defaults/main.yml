@@ -6,40 +6,56 @@ download_directory: "/tmp"
 redpanda_version: ""
 is_using_unstable: false
 basearch: ""
-os_distribution: ""
-os_distribution_major_version: ""
 rpm_or_deb: ""
 
-is_post_split: "{{ redpanda_version >= '24.2' or redpanda_version == 'latest' }}"
+is_post_split: "{{ redpanda_version == 'latest' or redpanda_version is version('24.2.0', '>=') }}"
+
+# Debian packages use their own architecture names in filenames
+deb_arch: "{{ 'amd64' if basearch == 'x86_64' else 'arm64' if basearch == 'aarch64' else basearch }}"
+
+# Optional per-package checksums (e.g. "sha256:<hex>") verified on download:
+# rpm_checksums / deb_checksums keyed by package name (redpanda,
+# redpanda-rpk, redpanda-tuner).
+rpm_checksums: {}
+deb_checksums: {}
 
 # the rpms
-rpm_package_suffix: "{{ '' if redpanda_version=='latest' else ('=' if ansible_os_family == 'Debian' else '-') + redpanda_version }}.{{ basearch }}"
+rpm_version_part: "{{ '' if redpanda_version=='latest' else '-' + redpanda_version }}"
+rpm_package_suffix: "{{ rpm_version_part }}.{{ basearch }}"
+rpm_noarch_suffix: "{{ rpm_version_part }}.noarch"
+rpm_source_suffix: "{{ rpm_version_part }}.src"
 rpm_base_url: "{{ redpanda_base_url }}/yum/redpanda-yum"
 rpm_unstable_base_url: "{{ redpanda_base_url }}/yum/redpanda-unstable-yum"
 redpanda_package_name: "redpanda{{ rpm_package_suffix }}.rpm"
 redpanda_rpk_package_name: "redpanda-rpk{{ rpm_package_suffix }}.rpm"
 redpanda_tuner_package_name: "redpanda-tuner{{ rpm_package_suffix }}.rpm"
+redpanda_noarch_package_name: "redpanda{{ rpm_noarch_suffix }}.rpm"
+redpanda_rpk_noarch_package_name: "redpanda-rpk{{ rpm_noarch_suffix }}.rpm"
+redpanda_tuner_noarch_package_name: "redpanda-tuner{{ rpm_noarch_suffix }}.rpm"
+redpanda_source_package_name: "redpanda{{ rpm_source_suffix }}.rpm"
+redpanda_rpk_source_package_name: "redpanda-rpk{{ rpm_source_suffix }}.rpm"
+redpanda_tuner_source_package_name: "redpanda-tuner{{ rpm_source_suffix }}.rpm"
 
 rp_standard_rpm: "{{ rpm_base_url }}/{{ basearch }}/{{ redpanda_package_name }}"
 rp_standard_rpm_unstable: "{{ rpm_unstable_base_url }}/{{ basearch }}/{{ redpanda_package_name }}"
-rp_noarch_rpm: "{{ rpm_base_url }}/noarch/{{ redpanda_package_name }}"
-rp_noarch_rpm_unstable: "{{ rpm_unstable_base_url }}/noarch/{{ redpanda_package_name }}"
-rp_source_rpm: "{{ rpm_base_url }}/SRPMS/{{ redpanda_package_name }}"
-rp_source_rpm_unstable: "{{ rpm_unstable_base_url }}/SRPMS/{{ redpanda_package_name }}"
+rp_noarch_rpm: "{{ rpm_base_url }}/noarch/{{ redpanda_noarch_package_name }}"
+rp_noarch_rpm_unstable: "{{ rpm_unstable_base_url }}/noarch/{{ redpanda_noarch_package_name }}"
+rp_source_rpm: "{{ rpm_base_url }}/SRPMS/{{ redpanda_source_package_name }}"
+rp_source_rpm_unstable: "{{ rpm_unstable_base_url }}/SRPMS/{{ redpanda_source_package_name }}"
 
 rpk_standard_rpm: "{{ rpm_base_url }}/{{ basearch }}/{{ redpanda_rpk_package_name }}"
 rpk_standard_rpm_unstable: "{{ rpm_unstable_base_url }}/{{ basearch }}/{{ redpanda_rpk_package_name }}"
-rpk_noarch_rpm: "{{ rpm_base_url }}/noarch/{{ redpanda_rpk_package_name }}"
-rpk_noarch_rpm_unstable: "{{ rpm_unstable_base_url }}/noarch/{{ redpanda_rpk_package_name }}"
-rpk_source_rpm: "{{ rpm_base_url }}/SRPMS/{{ redpanda_rpk_package_name }}"
-rpk_source_rpm_unstable: "{{ rpm_unstable_base_url }}/SRPMS/{{ redpanda_rpk_package_name }}"
+rpk_noarch_rpm: "{{ rpm_base_url }}/noarch/{{ redpanda_rpk_noarch_package_name }}"
+rpk_noarch_rpm_unstable: "{{ rpm_unstable_base_url }}/noarch/{{ redpanda_rpk_noarch_package_name }}"
+rpk_source_rpm: "{{ rpm_base_url }}/SRPMS/{{ redpanda_rpk_source_package_name }}"
+rpk_source_rpm_unstable: "{{ rpm_unstable_base_url }}/SRPMS/{{ redpanda_rpk_source_package_name }}"
 
 tuner_standard_rpm: "{{ rpm_base_url }}/{{ basearch }}/{{ redpanda_tuner_package_name }}"
 tuner_standard_rpm_unstable: "{{ rpm_unstable_base_url }}/{{ basearch }}/{{ redpanda_tuner_package_name }}"
-tuner_noarch_rpm: "{{ rpm_base_url }}/noarch/{{ redpanda_tuner_package_name }}"
-tuner_noarch_rpm_unstable: "{{ rpm_unstable_base_url }}/noarch/{{ redpanda_tuner_package_name }}"
-tuner_source_rpm: "{{ rpm_base_url }}/SRPMS/{{ redpanda_tuner_package_name }}"
-tuner_source_rpm_unstable: "{{ rpm_unstable_base_url }}/SRPMS/{{ redpanda_tuner_package_name }}"
+tuner_noarch_rpm: "{{ rpm_base_url }}/noarch/{{ redpanda_tuner_noarch_package_name }}"
+tuner_noarch_rpm_unstable: "{{ rpm_unstable_base_url }}/noarch/{{ redpanda_tuner_noarch_package_name }}"
+tuner_source_rpm: "{{ rpm_base_url }}/SRPMS/{{ redpanda_tuner_source_package_name }}"
+tuner_source_rpm_unstable: "{{ rpm_unstable_base_url }}/SRPMS/{{ redpanda_tuner_source_package_name }}"
 
 pre_split_standard_rpms:
   redpanda: "{{ rp_standard_rpm }}"
@@ -97,10 +113,10 @@ rpm_noarch_unstable_download_urls: "{{ post_split_noarch_rpms_unstable if is_pos
 rpm_source_unstable_download_urls: "{{ post_split_source_rpms_unstable if is_post_split else pre_split_source_rpms_unstable }}"
 
 # the debs
-deb_download_url: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+deb_download_url: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ deb_arch }}.deb"
 # Unstable packages live in the Artifact Registry unstable pool component
 # (redpanda-unstable-apt), distinct from the stable pool above.
-deb_unstable_download_url: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+deb_unstable_download_url: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda_{{ redpanda_version }}_{{ deb_arch }}.deb"
 
 pre_split_deb_download_urls:
   redpanda: "{{ deb_download_url }}"
@@ -109,14 +125,14 @@ pre_split_deb_unstable_download_urls:
   redpanda: "{{ deb_unstable_download_url }}"
 
 post_split_deb_download_urls:
-  redpanda-rpk: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda-rpk/redpanda-rpk_{{ redpanda_version }}_{{ basearch }}.deb"
-  redpanda-tuner: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda-tuner/redpanda-tuner_{{ redpanda_version }}_{{ basearch }}.deb"
-  redpanda: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda-rpk: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda-rpk/redpanda-rpk_{{ redpanda_version }}_{{ deb_arch }}.deb"
+  redpanda-tuner: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda-tuner/redpanda-tuner_{{ redpanda_version }}_{{ deb_arch }}.deb"
+  redpanda: "{{ redpanda_base_url }}/apt/pool/main/r/redpanda/redpanda_{{ redpanda_version }}_{{ deb_arch }}.deb"
 
 post_split_deb_unstable_download_urls:
-  redpanda-rpk: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda-rpk_{{ redpanda_version }}_{{ basearch }}.deb"
-  redpanda-tuner: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda-tuner_{{ redpanda_version }}_{{ basearch }}.deb"
-  redpanda: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda_{{ redpanda_version }}_{{ basearch }}.deb"
+  redpanda-rpk: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda-rpk_{{ redpanda_version }}_{{ deb_arch }}.deb"
+  redpanda-tuner: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda-tuner_{{ redpanda_version }}_{{ deb_arch }}.deb"
+  redpanda: "{{ redpanda_base_url }}/apt/pool/redpanda-unstable-apt/redpanda_{{ redpanda_version }}_{{ deb_arch }}.deb"
 
 deb_download_urls: "{{ post_split_deb_download_urls if is_post_split else pre_split_deb_download_urls }}"
 deb_unstable_download_urls: "{{ post_split_deb_unstable_download_urls if is_post_split else pre_split_deb_unstable_download_urls }}"

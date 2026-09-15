@@ -1,31 +1,38 @@
 ---
 - name: Set distribution-specific variables
-  set_fact:
+  ansible.builtin.set_fact:
     distro: "{{ ansible_distribution | lower }}"
     codename: "{{ ansible_distribution_version }}"
     arch: "{{ ansible_architecture }}"
 
 - name: Install yum-utils
-  dnf:
+  ansible.builtin.dnf:
     name: yum-utils
     state: present
 
+# no_log: the URL embeds the Cloudsmith token, and module args are recorded
+# in task results at default verbosity
 - name: Import Cloudsmith GPG key
-  rpm_key:
+  ansible.builtin.rpm_key:
     key: "{{ cloudsmith_gpg_key_url }}"
     state: present
+  no_log: "{{ redpanda_broker_no_log | default(true) }}"
 
 - name: Download repository configuration
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ cloudsmith_config_url_rpm }}?distro={{ distro }}&codename={{ codename }}"
     dest: /tmp/redpanda-redpanda-nightly.repo
     mode: '0644'
   become: true
+  no_log: "{{ redpanda_broker_no_log | default(true) }}"
 
 - name: Add repository configuration
-  command: dnf config-manager --add-repo '/tmp/redpanda-redpanda-nightly.repo'
+  ansible.builtin.command: dnf config-manager --add-repo '/tmp/redpanda-redpanda-nightly.repo'
   become: true
+  # registers the repo file; treat as a state change
+  changed_when: true
 
 - name: Make DNF cache
-  command: dnf -q makecache -y --disablerepo='*' --enablerepo='redpanda-redpanda-nightly' --enablerepo='redpanda-redpanda-nightly-source'
+  ansible.builtin.command: dnf -q makecache -y --disablerepo='*' --enablerepo='redpanda-redpanda-nightly' --enablerepo='redpanda-redpanda-nightly-source'
   become: true
+  changed_when: false

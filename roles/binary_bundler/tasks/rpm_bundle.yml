@@ -8,10 +8,23 @@
   tags:
     - airgap-tarball-install
 
+# Downloads land in a dedicated per-run directory so pre-existing files in
+# download_directory are never swept into the tarball or deleted.
+- name: Create bundle working directory
+  ansible.builtin.tempfile:
+    state: directory
+    path: "{{ download_directory }}"
+    prefix: redpanda-rpm-bundle.
+  register: rpm_bundle_dir
+  delegate_to: localhost
+  tags:
+    - airgap-tarball-install
+
 - name: Download Redpanda RPMs (standard) to local machine
   ansible.builtin.get_url:
     url: "{{ item.value }}"
-    dest: "{{ download_directory }}/{{ item.key }}__standard.rpm"
+    dest: "{{ rpm_bundle_dir.path }}/{{ item.key }}__standard.rpm"
+    checksum: "{{ rpm_checksums[item.key] | default(omit) }}"
     mode: '0644'
   loop: "{{ rp_standard_rpm_actuals | dict2items }}"
   delegate_to: localhost
@@ -21,7 +34,7 @@
 - name: Download Redpanda RPMs (noarch) to local machine
   ansible.builtin.get_url:
     url: "{{ item.value }}"
-    dest: "{{ download_directory }}/{{ item.key }}__noarch.rpm"
+    dest: "{{ rpm_bundle_dir.path }}/{{ item.key }}__noarch.rpm"
     mode: '0644'
   loop: "{{ rp_noarch_rpm_actuals | dict2items }}"
   delegate_to: localhost
@@ -31,7 +44,7 @@
 - name: Download Redpanda RPMs (source) to local machine
   ansible.builtin.get_url:
     url: "{{ item.value }}"
-    dest: "{{ download_directory }}/{{ item.key }}__source.rpm"
+    dest: "{{ rpm_bundle_dir.path }}/{{ item.key }}__source.rpm"
     mode: '0644'
   loop: "{{ rp_source_rpm_actuals | dict2items }}"
   delegate_to: localhost
@@ -40,11 +53,19 @@
 
 - name: Create tarball of Redpanda RPMs
   community.general.archive:
-    path: "{{ download_directory }}/redpanda*__*.rpm"
+    path: "{{ rpm_bundle_dir.path }}/*__*.rpm"
     dest: "{{ download_directory }}/redpanda_rpms.tar.gz"
     format: gz
     remove: true
     mode: '0644'
+  delegate_to: localhost
+  tags:
+    - airgap-tarball-install
+
+- name: Remove bundle working directory
+  ansible.builtin.file:
+    path: "{{ rpm_bundle_dir.path }}"
+    state: absent
   delegate_to: localhost
   tags:
     - airgap-tarball-install

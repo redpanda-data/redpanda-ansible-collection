@@ -26,8 +26,15 @@ java_package: "{{ 'java-21-openjdk' if (ansible_distribution == 'Fedora' and ans
 java_home: "/usr/lib/jvm/{{ java_package }}"
 
 # required binary install values
+# Install contract: stage the RPM at {{ redpanda_connect_rpm_dir }}/{{ redpanda_connect_rpm }}
+# before running the role, or set connect_rpm_url so the role downloads it.
+# dnf/Fedora-family hosts only; Debian/Ubuntu installs are unsupported.
 redpanda_connect_rpm: "redpanda-connect.x86_64.rpm"
 redpanda_connect_rpm_dir: "/tmp"
+# optional download source for the RPM when it is not pre-staged:
+# connect_rpm_url: "https://example.com/redpanda-connect.x86_64.rpm"
+# optional checksum for the download:
+# connect_rpm_checksum: "sha256:<hex>"
 
 # networking
 advertise_public_address: true
@@ -75,7 +82,7 @@ admin_ssl_truststore_password: password
 redpanda_keystores_dir: /etc/redpanda/keystores
 keystores_file_name: keystore.p12
 ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
-ssl_keystore_password:  password
+ssl_keystore_password: password
 ssl_keystore_type: PKCS12
 producer_ssl_keystore_location: /etc/redpanda/keystores/keystore.p12
 producer_ssl_keystore_password: password

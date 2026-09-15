@@ -1,4 +1,9 @@
-rpk_base_url: "https://github.com/redpanda-data/redpanda/releases/latest/download"
+# Base of the rpk release area; point at an internal mirror to serve rpk
+# from it. rpk_url (full URL) overrides everything; rpk_version pins a
+# release tag (e.g. v24.3.1) instead of latest; rpk_checksum (e.g.
+# "sha256:<hex>") is passed to the download when set.
+rpk_base_url: "https://github.com/redpanda-data/redpanda/releases"
+rpk_version: latest
 cert_dest_dir: "/opt/rpk/certs"
 cert_src_dir: "{{ playbook_dir }}/tls/ca"
 

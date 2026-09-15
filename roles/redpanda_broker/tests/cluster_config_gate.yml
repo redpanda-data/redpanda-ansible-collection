@@ -1,0 +1,20 @@
+---
+- hosts: redpanda
+  gather_facts: false
+  vars:
+    redpanda_rpk_opts: ""
+    redpanda_broker_no_log: false
+    kafka_enable_authorization: false
+    sasl_superuser_username: admin
+    sasl_superuser_password: test-password
+    configuration:
+      cluster:
+        test_key: test_value
+    # redpanda_data_directory comes from per-host inventory vars so hosts can
+    # present different initialization states.
+  tasks:
+    # The "always" tag ensures this include_tasks directive itself is not
+    # skipped by --tags filtering; only the initialization detection and the
+    # cluster-config application run, with rpk served by a PATH mock.
+    - include_tasks: /app/tasks/start-redpanda.yml
+      tags: [always]

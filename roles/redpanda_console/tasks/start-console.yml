@@ -1,5 +1,7 @@
-# ensure that systemd starts up redpanda console
+# ensure that systemd starts up redpanda console; restarts on change are the
+# job of the "Reload systemd and restart console" handler, not this task
 - name: Start redpanda console
   ansible.builtin.systemd:
     name: redpanda-console
-    state: restarted
+    state: started
+  become: true

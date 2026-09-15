@@ -5,6 +5,9 @@
   when: ansible_system_vendor == 'Google'
 
 - name: Node dependencies - Set APT proxy
+  tags:
+    - node_deps
+    - node_deps_proxy
   ansible.builtin.template:
     src: apt_proxy.j2
     dest: /etc/apt/apt.conf.d/proxy.conf
@@ -12,8 +15,8 @@
   become: true
   when:
     - https_proxy_value is defined and https_proxy_value | length > 0
-    - (create_pkg_mgr_proxy | default(false)) is true
-    - (using_gcp | default(false)) is false
+    - create_pkg_mgr_proxy | default(false) | bool
+    - not (using_gcp | default(false) | bool)
 
 - name: Node dependencies - update packages - debian
   tags:

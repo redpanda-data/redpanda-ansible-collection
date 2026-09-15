@@ -1,17 +1,34 @@
-# Redpanda Connect Role
+# redpanda_connect
 
-Installs Redpanda Connect. Currently in a limited alpha release.
+Installs and configures Kafka Connect for Redpanda on RHEL-family hosts.
+The RPM must either be pre-staged at `connect_rpm_location` or fetched
+via `connect_rpm_url` (optionally verified with `connect_rpm_checksum`);
+Debian hosts are not supported for installation. Configuration files
+(connect-distributed properties, log4j, JMX exporter, systemd unit) are
+generated from templates and can be replaced wholesale via the
+`*_override_content` variables documented in `defaults/main.yml`; config
+changes trigger a safe restart with a REST health check.
 
-## Overriding Config Files
+Use as `redpanda.cluster.redpanda_connect` against the `connect`
+inventory group.
 
-There's a few different ways we're doing this as the files themselves are very different in structure and purpose.
+## Variables
 
-For the connect-distributed file we're providing two default files that can be merged together for TLS. Then we allow the user to merge in whatever they want through an environment variable.
+The load-bearing inputs are validated by `meta/argument_specs.yml` and
+documented below; any further tunables live in `defaults/main.yml`.
 
-For the log4j and logging.properties file we allow straight content replace and only straight content replace as these are text files that do not need per-host modification.
+<!-- BEGIN ROLE VARIABLES (generated from meta/argument_specs.yml; run scripts/generate-role-docs.py) -->
 
-For the jmx exporter file we're able to offer more complex merge and replace functionality as it is json and json dict merging is well supported in ansible.
+| Variable | Type | Default | Choices | Description |
+|---|---|---|---|---|
+| `restart_only` | bool | `False` | — |  |
+| `use_existing_jvm` | bool | `False` | — |  |
+| `copy_keystore` | bool | `False` | — |  |
+| `copy_truststore` | bool | `False` | — |  |
+| `connect_distributed_config_file` | str | `connect-distributed.properties` | — |  |
+| `connect_rpm_url` | str | — | — | O p t i o n a l   U R L   t o   d o w n l o a d   t h e   C o n n e c t   R P M   f r o m . |
+| `connect_rpm_checksum` | str | — | — | O p t i o n a l   c h e c k s u m   ( e . g .   s h a 2 5 6 : < h e x > )   f o r   t h e   R P M   d o w n l o a d . |
 
-For the systemd unit we allow passing in additional options to the kafka system but nothing much else
+Variables not listed here are undeclared in the argument spec; see `defaults/main.yml`.
 
-For the environment file named java-home we're allowing the user to provide additional values that can be appended after the existing ones.
+<!-- END ROLE VARIABLES -->

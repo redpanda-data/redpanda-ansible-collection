@@ -4,7 +4,6 @@
     rp_key_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_key_deb_unstable, rp_key_deb) }}"
     rp_key_path_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_key_path_deb_unstable, rp_key_path_deb) }}"
     rp_repo_signing_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_repo_signing_deb_unstable, rp_repo_signing_deb) }}"
-    rp_repo_signing_src_deb_actual: "{{ is_using_unstable | bool | default(false) | ternary(rp_repo_signing_src_deb_unstable, rp_repo_signing_src_deb) }}"
 
 - name: Debug Redpanda DEB repository URLs
   ansible.builtin.debug:
@@ -60,14 +59,6 @@
     mode: '0644'
 
 - name: Add Redpanda DEB repository
-  ansible.builtin.copy:
-    dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
-    content: "{{ rp_repo_signing_deb_actual }}\n"
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: Add Redpanda DEB repository (source)
   ansible.builtin.copy:
     dest: "/etc/apt/sources.list.d/redpanda-redpanda.list"
     content: "{{ rp_repo_signing_deb_actual }}\n"

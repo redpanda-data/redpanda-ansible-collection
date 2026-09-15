@@ -1,0 +1,29 @@
+---
+# Validates the redpanda_logging role inputs at entry. Undeclared
+# variables are not restricted; this spec is deliberately incremental.
+argument_specs:
+  main:
+    short_description: rsyslog/logrotate/journald configuration for broker logs
+    description:
+      - Configures rsyslog routing, logrotate policy and the redpanda
+        service's journald behavior.
+    options:
+      redpanda_logging_enabled:
+        type: bool
+        default: true
+      redpanda_logging_rsyslog_enabled:
+        type: bool
+        default: true
+      redpanda_logging_logrotate_enabled:
+        type: bool
+        default: true
+      redpanda_logging_systemd_enabled:
+        type: bool
+        default: true
+      redpanda_logging_systemd_max_level:
+        type: str
+        choices: [emerg, alert, crit, err, warning, notice, info, debug]
+        default: info
+        description: Maximum level the redpanda unit stores to the journal (LogLevelMax).
+      redpanda_logging_log_file:
+        type: str

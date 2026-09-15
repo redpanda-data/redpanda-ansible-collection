@@ -27,3 +27,39 @@ steps:
       - docker-compose#v5.2.0:
           config: roles/system_setup/docker-compose.yml
           run: testctr
+  - label: "user_management tests"
+    plugins:
+      - docker-compose#v5.2.0:
+          config: roles/user_management/docker-compose.yml
+          run: testctr
+  - label: "demo_certs tests"
+    plugins:
+      - docker-compose#v5.2.0:
+          config: roles/demo_certs/docker-compose.yml
+          run: testctr
+  - label: "client_config tests"
+    plugins:
+      - docker-compose#v5.2.0:
+          config: roles/client_config/docker-compose.yml
+          run: testctr
+  - label: "binary_bundler tests"
+    plugins:
+      - docker-compose#v5.2.0:
+          config: roles/binary_bundler/docker-compose.yml
+          run: testctr
+  - label: "sysctl_setup tests"
+    plugins:
+      - docker-compose#v5.2.0:
+          config: roles/sysctl_setup/docker-compose.yml
+          run: testctr
+  - label: "lint, packaging and docs checks"
+    command: |
+      # Pinned: a floating ansible-lint means unrelated tool releases can
+      # break the build (new rules land in minor versions). Bump deliberately.
+      pip install --quiet 'ansible-lint==26.8.0' 'antsibull-changelog==0.35.1' pytest pyyaml
+      ansible-lint -c .ansible-lint
+      antsibull-changelog lint
+      python3 -m pytest tests/packaging/ tests/docs/ -q
+    plugins:
+      - docker#v5.8.0:
+          image: "python:3.12"

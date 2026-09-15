@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    redpanda_rpk_opts: ""
+    kafka_enable_authorization: false
+    sasl_superuser_username: admin
+    sasl_superuser_password: test-password
+  tasks:
+    # The "always" tag ensures this include_tasks directive itself is not
+    # skipped by --tags filtering; only the license status check and the
+    # loaded/not-loaded decision run, with rpk served by a PATH mock.
+    - include_tasks: /app/tasks/start-redpanda.yml
+      tags: [always]
+    - debug:
+        var: redpanda_license_loaded
