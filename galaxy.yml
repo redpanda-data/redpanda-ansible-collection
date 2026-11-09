@@ -41,3 +41,16 @@ homepage: https://redpanda.com/
 
 # The URL to the collection issue tracker
 issues: https://github.com/redpanda-data/deployment-automation/issues
+
+# ansible-galaxy packages the whole directory it builds and does not consult
+# .gitignore. Release builds go through `make build`, which builds from a
+# `git archive` of HEAD so only committed files can ship; these patterns are
+# the backstop for a direct `ansible-galaxy collection build`. Patterns match
+# the path relative to the collection root, and `*` also matches `/`.
+build_ignore:
+  - ".*"        # top-level dot-paths: .claude, .venv, .idea, .ansible, .env, ...
+  - "*/.*"      # dot-paths at any depth: roles/*/.pytest_cache, ...
+  - "*.tar.gz"
+  - "*.cld"
+  - "dist"
+  - "tests"
