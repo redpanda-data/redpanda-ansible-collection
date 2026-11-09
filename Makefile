@@ -52,10 +52,40 @@ lint-system_setup:
 	@echo "Running ansible-lint on system_setup role"
 	@ansible-lint -c .ansible-lint roles/system_setup
 
-ANSIBLE_GALAXY_API_KEY ?= $(shell bash -c 'read -p "Enter your API key: " api_key; echo $$api_key')
+SHELL := bash
+DIST_DIR ?= dist
+VERSION := $(shell sed -n 's/^version: *//p' galaxy.yml)
+ARTIFACT = $(DIST_DIR)/redpanda-cluster-$(VERSION).tar.gz
+
+# Build the collection from a git archive of HEAD, so only committed files can
+# ship: ansible-galaxy packages whatever directory it is given and ignores
+# .gitignore, which is how local state (assistant settings, virtualenvs, IDE
+# files, logs) once reached Galaxy.
+.PHONY: build
+build:
+	@set -euo pipefail; \
+	if ! git diff --quiet HEAD --; then \
+		echo "tracked files differ from HEAD; commit or stash before building" >&2; exit 1; \
+	fi; \
+	stage=$$(mktemp -d); trap 'rm -rf "$$stage"' EXIT; \
+	git archive --format=tar HEAD | tar -x -C "$$stage"; \
+	mkdir -p "$(DIST_DIR)"; \
+	ansible-galaxy collection build --force --output-path "$(abspath $(DIST_DIR))" "$$stage"
+
+# Refuse to publish an artifact that carries any dot-path.
+.PHONY: verify-artifact
+verify-artifact: build
+	@set -euo pipefail; \
+	if tar -tzf "$(ARTIFACT)" | grep -E '(^|/)\.'; then \
+		echo "refusing to publish: dot-paths found in $(ARTIFACT)" >&2; exit 1; \
+	fi; \
+	echo "$(ARTIFACT): $$(tar -tzf "$(ARTIFACT)" | wc -l | tr -d ' ') entries, no dot-paths"
+
+.PHONY: test-packaging
+test-packaging:
+	python3 -m pytest tests/packaging -v -p no:cacheprovider
+
+ANSIBLE_GALAXY_API_KEY ?= $(shell bash -c 'read -s -p "Enter your API key: " api_key; echo $$api_key')
 .PHONY: publish
-publish:
-	rm -f redpanda-cluster-*.tar.gz 2>/dev/null && \
-	ansible-galaxy collection build && \
-	ansible-galaxy collection publish redpanda-cluster-*.tar.gz --token $(ANSIBLE_GALAXY_API_KEY) -s https://galaxy.ansible.com/api/ && \
-	rm -f redpanda-cluster-*.tar.gz 2>/dev/null
+publish: verify-artifact
+	ansible-galaxy collection publish "$(ARTIFACT)" --token $(ANSIBLE_GALAXY_API_KEY) -s https://galaxy.ansible.com/api/
