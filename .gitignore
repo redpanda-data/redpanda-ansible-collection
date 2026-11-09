@@ -3,6 +3,7 @@
 .idea/
 *.gz
 *.pyc
+dist/
 
 roles/redpanda_broker/tests/inventory
 roles/redpanda_console/tests/inventory
