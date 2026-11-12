@@ -1,0 +1,57 @@
+---
+# Stop before changing a running cluster when kafka_enable_authorization is
+# set but the SASL superuser can't be used.
+#
+# The bootstrap superuser is created only when a cluster first starts
+# (RP_BOOTSTRAP_USER in start-redpanda.yml), but `superusers` and
+# `admin_api_require_auth` are applied to running clusters on every run. On a
+# cluster that existed before SASL was enabled, continuing would require Admin
+# API authentication for a user that doesn't exist and lock the Admin API.
+#
+# Included by start-redpanda.yml after Redpanda is running and before any
+# cluster or node configuration is changed.
+
+- name: List SASL users on the existing cluster
+  ansible.builtin.command:
+    cmd: "rpk security user list {{ redpanda_rpk_opts }}"
+  environment:
+    RPK_USER: "{{ sasl_superuser_username }}"
+    RPK_PASS: "{{ sasl_superuser_password }}"
+  register: redpanda_broker_sasl_users
+  changed_when: false
+  failed_when: false
+  no_log: "{{ redpanda_broker_no_log }}"
+  when:
+    - is_initialized | bool
+    - kafka_enable_authorization | bool
+  tags: [broker_check_sasl_superuser]
+
+- name: Fail if the cluster rejects the SASL superuser credentials
+  ansible.builtin.fail:
+    msg: >-
+      Couldn't list SASL users as '{{ sasl_superuser_username }}' on the existing
+      cluster (rpk exit {{ redpanda_broker_sasl_users.rc }}): {{ redpanda_broker_sasl_users.stderr | trim }}.
+      Check sasl_superuser_username and sasl_superuser_password. No cluster or
+      node configuration was changed.
+  when:
+    - is_initialized | bool
+    - kafka_enable_authorization | bool
+    - redpanda_broker_sasl_users.rc != 0
+  tags: [broker_check_sasl_superuser]
+
+- name: Fail if the existing cluster has no SASL superuser
+  ansible.builtin.fail:
+    msg: >-
+      kafka_enable_authorization is true, but this cluster already exists and
+      has no SASL user named '{{ sasl_superuser_username }}'. The playbook creates
+      the superuser only when a cluster first starts, so continuing would require
+      Admin API authentication for a user that doesn't exist. Create the user on
+      the running cluster first, for example
+      `rpk security user create {{ sasl_superuser_username }} --mechanism SCRAM-SHA-256 -p <password>`,
+      then rerun the playbook. No cluster or node configuration was changed.
+  when:
+    - is_initialized | bool
+    - kafka_enable_authorization | bool
+    - redpanda_broker_sasl_users.rc == 0
+    - sasl_superuser_username not in (redpanda_broker_sasl_users.stdout_lines | map('trim') | list)
+  tags: [broker_check_sasl_superuser]
