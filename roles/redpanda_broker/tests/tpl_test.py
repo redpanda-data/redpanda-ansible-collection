@@ -15,6 +15,7 @@ SKIP_TAGS = ','.join([
     'broker_start_tuner',
     'broker_start_sasl',
     'broker_start_standard',
+    'broker_check_sasl_superuser',
     'broker_node_id',
     'broker_set_node_id',
     'broker_config_version',
