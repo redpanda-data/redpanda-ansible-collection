@@ -10,6 +10,9 @@ maintenance mode. Every other rpk call in the role passes RPK_USER/RPK_PASS in
 its environment; the maintenance-mode tasks must too, and must leave them unset
 when SASL is off, because rpk rejects empty credential variables.
 
+The disable call also has to wait for the restarted broker: right after
+`systemctl restart` its Admin API may not answer yet.
+
 These tests run the real maintenance-mode tasks from safe-restart.yml with
 ansible-playbook against two local hosts. A stand-in `rpk` on PATH records each
 call and the credentials it received.
@@ -28,6 +31,16 @@ SAFE_RESTART = os.path.join(ROLE_DIR, 'tasks', 'safe-restart.yml')
 
 FAKE_RPK = """#!/bin/sh
 printf 'args=%s RPK_USER=%s RPK_PASS=%s\\n' "$*" "${RPK_USER-<unset>}" "${RPK_PASS-<unset>}" >> "$FAKE_RPK_LOG"
+# A broker that has just restarted isn't serving the Admin API yet: fail the
+# first FAKE_RPK_DISABLE_FAILURES disable calls the way rpk does.
+case "$*" in *"maintenance disable"*)
+  n=$(cat "$FAKE_RPK_LOG.disables" 2>/dev/null || echo 0)
+  echo $((n + 1)) > "$FAKE_RPK_LOG.disables"
+  if [ "$n" -lt "${FAKE_RPK_DISABLE_FAILURES:-0}" ]; then
+    echo "error retrieving broker status; the node 0 is likely dead: connection refused" >&2
+    exit 1
+  fi;;
+esac
 """
 
 
@@ -39,7 +52,7 @@ def maintenance_tasks():
     return found
 
 
-def run_maintenance(tmp_path, *, kafka_enable_authorization):
+def run_maintenance(tmp_path, *, kafka_enable_authorization, disable_failures=0):
     bindir = tmp_path / 'bin'
     bindir.mkdir()
     rpk = bindir / 'rpk'
@@ -71,6 +84,7 @@ def run_maintenance(tmp_path, *, kafka_enable_authorization):
     env = dict(os.environ,
                PATH=f"{bindir}{os.pathsep}{os.environ['PATH']}",
                FAKE_RPK_LOG=str(log),
+               FAKE_RPK_DISABLE_FAILURES=str(disable_failures),
                ANSIBLE_NOCOLOR='True')
     proc = subprocess.run(
         ['ansible-playbook', '-i', str(inventory), str(playbook), '-e', json.dumps(extra_vars)],
@@ -97,6 +111,12 @@ def test_cluster_without_sasl_leaves_the_credentials_unset(tmp_path):
         'args=cluster maintenance disable 0 --config /etc/redpanda/redpanda.yaml '
         'RPK_USER=<unset> RPK_PASS=<unset>',
     ]
+
+
+def test_disable_waits_for_the_restarted_broker(tmp_path):
+    calls = run_maintenance(tmp_path, kafka_enable_authorization=True, disable_failures=1)
+    disables = [c for c in calls if 'maintenance disable' in c]
+    assert len(disables) == 2, calls
 
 
 if __name__ == '__main__':
