@@ -6,6 +6,9 @@
 - name: Enable Maintenance Mode
   ansible.builtin.command:
     cmd: rpk cluster maintenance enable {{ node_id }} --wait {{ redpanda_rpk_opts }}
+  # rpk can't authenticate to the Admin API from the credentials in redpanda.yaml once
+  # admin_api_require_auth is on; pass them the way the role's other rpk calls do.
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   no_log: "{{ redpanda_broker_no_log }}"
   when:
     - restart_required
@@ -37,6 +40,9 @@
 - name: Disable Maintenance Mode
   ansible.builtin.command:
     cmd: rpk cluster maintenance disable {{ node_id }} {{ redpanda_rpk_opts }}
+  # rpk can't authenticate to the Admin API from the credentials in redpanda.yaml once
+  # admin_api_require_auth is on; pass them the way the role's other rpk calls do.
+  environment: "{{ {'RPK_USER': sasl_superuser_username, 'RPK_PASS': sasl_superuser_password} if (kafka_enable_authorization | default(false) | bool) else {} }}"
   no_log: "{{ redpanda_broker_no_log }}"
   when:
     - restart_required
