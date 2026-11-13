@@ -21,6 +21,11 @@
   ansible.builtin.set_fact:
     redpanda_package_list_versioned: "{{ redpanda_package_list | product([redpanda_version_suffix]) | map('join') | list }}"
 
+- name: Check for cluster data before installing
+  ansible.builtin.stat:
+    path: "{{ redpanda_data_directory }}/redpanda/controller"
+  register: redpanda_broker_preinstall_controller
+
 - name: Install redpanda (pre 24.2)
   dnf:
     name: "redpanda{{ redpanda_version_suffix }}"
@@ -52,8 +57,9 @@
   when: needs_split_packages
   loop: "{{ redpanda_package_list_versioned }}"
 
-# Stop redpanda if it auto-started after package installation
-# This prevents it from initializing before we can configure SASL
+# A fresh node can't start before SASL is configured, so stop it if the package started it.
+# A broker that already had cluster data keeps running: an upgrade restarts it through the
+# rolling restart (safe-restart.yml), one broker at a time.
 - name: Stop redpanda after installation (for SASL bootstrap)
   ansible.builtin.systemd:
     name: redpanda
@@ -61,6 +67,11 @@
   when:
     - kafka_enable_authorization | default(false) | bool
     - package_result.changed | default(false)
+    - not redpanda_broker_preinstall_controller.stat.exists or (sasl_force_clear_data_directory | default(false) | bool)
+
+- name: Note whether the packages of a broker with cluster data changed
+  ansible.builtin.set_fact:
+    redpanda_broker_package_upgraded: "{{ redpanda_broker_preinstall_controller.stat.exists and (package_result.changed | default(false)) }}"
 
 - name: Clear data directory for SASL bootstrap if needed
   ansible.builtin.include_tasks: clear-data-for-sasl.yml
