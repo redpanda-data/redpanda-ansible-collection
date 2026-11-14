@@ -185,6 +185,10 @@
   when: is_initialized or not (kafka_enable_authorization | bool)
   tags: [broker_start_standard]
 
+- name: Check that SASL can be enabled on an existing cluster
+  ansible.builtin.include_tasks: check-sasl-superuser.yml
+  tags: [broker_check_sasl_superuser]
+
 # every node must have a unique node id. we extract it for use elsewhere
 #
 - name: Establish node id
@@ -439,8 +443,8 @@
 #
 - name: Establish whether restart required
   ansible.builtin.set_fact:
-    restart_required: '{{ ("true" in (restart_required_rc.stdout | default("")) or (is_initialized and (nodeconfig_result.changed or package_result.results is defined and ("Removed"
-      in package_result.results or "1 upgraded" in package_result.results)))) and (restart_node | default("true") | bool) }}'
+    restart_required: '{{ ("true" in (restart_required_rc.stdout | default("")) or (is_initialized and (nodeconfig_result.changed
+      or (redpanda_broker_package_upgraded | default(false) | bool)))) and (restart_node | default("true") | bool) }}'
   tags: [broker_restart_required]
 
 # serial: 1 would be the proper solution here, but that can only be set on play level

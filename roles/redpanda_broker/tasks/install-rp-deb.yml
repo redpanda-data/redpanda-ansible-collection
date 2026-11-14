@@ -12,41 +12,78 @@
          (redpanda_version is version('24.2.0', '>=')) or
       development_build | default(false) | bool }}
 
-- name: Install redpanda (pre 24.2)
-  ansible.builtin.apt:
-    name: "redpanda{{ redpanda_version_suffix }}"
-    state: "{{ redpanda_install_status }}"
-    update_cache: true
-    allow_unauthenticated: "{{ using_gcp | default(false) }}"
-    allow_downgrade: "{{ allow_downgrade | default(false) }}"
-    install_recommends: "{{ install_recommends | default(false) }}"
-    force: yes
-  environment:
-    https_proxy: "{{ https_proxy_value | default('') }}"
-    http_proxy: "{{ https_proxy_value | default('') }}"
-  register: package_result
-  when: not needs_split_packages
+- name: Check for cluster data before installing
+  ansible.builtin.stat:
+    path: "{{ redpanda_data_directory }}/redpanda/controller"
+  register: redpanda_broker_preinstall_controller
 
-- name: Install redpanda (post 24.2)
-  ansible.builtin.apt:
-    name:
-      - "redpanda{{ redpanda_version_suffix }}"
-      - "redpanda-rpk{{ redpanda_version_suffix }}"
-      - "redpanda-tuner{{ redpanda_version_suffix }}"
-    state: "{{ redpanda_install_status }}"
-    update_cache: true
-    allow_unauthenticated: "{{ using_gcp | default(false) }}"
-    allow_downgrade: "{{ allow_downgrade | default(false) }}"
-    install_recommends: "{{ install_recommends | default(false) }}"
-    force: yes
-  environment:
-    https_proxy: "{{ https_proxy_value | default('') }}"
-    http_proxy: "{{ https_proxy_value | default('') }}"
-  register: package_result
-  when: needs_split_packages
+# The deb's postinst restarts redpanda on upgrade, and Ansible upgrades every broker at once.
+# On a broker that already has cluster data, hold that restart for the rolling restart.
+# A policy-rc.d the host already has is left as it is.
+- name: Check for an existing policy-rc.d
+  ansible.builtin.stat:
+    path: /usr/sbin/policy-rc.d
+  register: redpanda_broker_policy_rc
 
-# Stop redpanda if it auto-started after package installation
-# This prevents it from initializing before we can configure SASL
+- name: Install redpanda packages
+  block:
+    - name: Hold the package's redpanda restart
+      ansible.builtin.copy:
+        dest: /usr/sbin/policy-rc.d
+        mode: "0755"
+        content: |
+          #!/bin/sh
+          # redpanda.cluster: holds the redpanda package's restart during an upgrade; removed after it
+          case "$1" in redpanda|redpanda.service) exit 101;; esac
+          exit 0
+      when:
+        - redpanda_broker_preinstall_controller.stat.exists
+        - not redpanda_broker_policy_rc.stat.exists
+
+    - name: Install redpanda (pre 24.2)
+      ansible.builtin.apt:
+        name: "redpanda{{ redpanda_version_suffix }}"
+        state: "{{ redpanda_install_status }}"
+        update_cache: true
+        allow_unauthenticated: "{{ using_gcp | default(false) }}"
+        allow_downgrade: "{{ allow_downgrade | default(false) }}"
+        install_recommends: "{{ install_recommends | default(false) }}"
+        force: yes
+      environment:
+        https_proxy: "{{ https_proxy_value | default('') }}"
+        http_proxy: "{{ https_proxy_value | default('') }}"
+      register: package_result
+      when: not needs_split_packages
+
+    - name: Install redpanda (post 24.2)
+      ansible.builtin.apt:
+        name:
+          - "redpanda{{ redpanda_version_suffix }}"
+          - "redpanda-rpk{{ redpanda_version_suffix }}"
+          - "redpanda-tuner{{ redpanda_version_suffix }}"
+        state: "{{ redpanda_install_status }}"
+        update_cache: true
+        allow_unauthenticated: "{{ using_gcp | default(false) }}"
+        allow_downgrade: "{{ allow_downgrade | default(false) }}"
+        install_recommends: "{{ install_recommends | default(false) }}"
+        force: yes
+      environment:
+        https_proxy: "{{ https_proxy_value | default('') }}"
+        http_proxy: "{{ https_proxy_value | default('') }}"
+      register: package_result
+      when: needs_split_packages
+  always:
+    - name: Release the package's redpanda restart
+      ansible.builtin.file:
+        path: /usr/sbin/policy-rc.d
+        state: absent
+      when:
+        - redpanda_broker_preinstall_controller.stat.exists
+        - not redpanda_broker_policy_rc.stat.exists
+
+# A fresh node can't start before SASL is configured, so stop it if the package started it.
+# A broker that already had cluster data keeps running: an upgrade restarts it through the
+# rolling restart (safe-restart.yml), one broker at a time.
 - name: Stop redpanda after installation (for SASL bootstrap)
   ansible.builtin.systemd:
     name: redpanda
@@ -54,6 +91,11 @@
   when:
     - kafka_enable_authorization | default(false) | bool
     - package_result.changed | default(false)
+    - not redpanda_broker_preinstall_controller.stat.exists or (sasl_force_clear_data_directory | default(false) | bool)
+
+- name: Note whether the packages of a broker with cluster data changed
+  ansible.builtin.set_fact:
+    redpanda_broker_package_upgraded: "{{ redpanda_broker_preinstall_controller.stat.exists and (package_result.changed | default(false)) }}"
 
 - name: Clear data directory for SASL bootstrap if needed
   ansible.builtin.include_tasks: clear-data-for-sasl.yml
