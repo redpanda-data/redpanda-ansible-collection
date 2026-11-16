@@ -8,6 +8,11 @@
 # cluster that existed before SASL was enabled, continuing would require Admin
 # API authentication for a user that doesn't exist and lock the Admin API.
 #
+# Listing users doesn't prove the password: while admin_api_require_auth is
+# off, Redpanda treats a request with a wrong password as anonymous and answers
+# it. Enabling admin_api_require_auth is accepted only from an authenticated
+# superuser, so a dry run of that change is used to check the password.
+#
 # Included by start-redpanda.yml after Redpanda is running and before any
 # cluster or node configuration is changed.
 
@@ -54,4 +59,72 @@
     - kafka_enable_authorization | bool
     - redpanda_broker_sasl_users.rc == 0
     - sasl_superuser_username not in (redpanda_broker_sasl_users.stdout_lines | map('trim') | list)
+  tags: [broker_check_sasl_superuser]
+
+# The Admin API address and TLS settings come from the node config on disk, the
+# one the running broker and rpk use; this run hasn't rewritten it yet.
+- name: Read the running broker's node config
+  ansible.builtin.slurp:
+    src: "{{ redpanda_broker_node_config_file | default('/etc/redpanda/redpanda.yaml') }}"
+  register: redpanda_broker_node_config_raw
+  when:
+    - is_initialized | bool
+    - kafka_enable_authorization | bool
+  tags: [broker_check_sasl_superuser]
+
+- name: Check the SASL superuser's password with a dry-run config request
+  vars:
+    node_config: "{{ redpanda_broker_node_config_raw.content | b64decode | from_yaml }}"
+    admin_listener: "{{ [node_config.redpanda.admin] | flatten | first }}"
+    admin_tls: "{{ node_config.rpk.admin_api.tls | default({}) }}"
+  ansible.builtin.uri:
+    url: "{{ 'https' if admin_tls else 'http' }}://{{ admin_listener.address }}:{{ admin_listener.port }}/v1/cluster_config?dry_run=true"
+    method: PUT
+    url_username: "{{ sasl_superuser_username }}"
+    url_password: "{{ sasl_superuser_password }}"
+    force_basic_auth: true
+    ca_path: "{{ admin_tls.ca_file | default(admin_tls.truststore_file) | default(omit) }}"
+    body_format: json
+    body:
+      upsert:
+        superusers: ["{{ sasl_superuser_username }}"]
+        admin_api_require_auth: true
+      remove: []
+    return_content: true
+  register: redpanda_broker_sasl_password_check
+  changed_when: false
+  failed_when: false
+  no_log: "{{ redpanda_broker_no_log }}"
+  when:
+    - is_initialized | bool
+    - kafka_enable_authorization | bool
+  tags: [broker_check_sasl_superuser]
+
+- name: Fail if the cluster doesn't accept the SASL superuser's password
+  ansible.builtin.fail:
+    msg: >-
+      The existing cluster has a SASL user named '{{ sasl_superuser_username }}'
+      but didn't accept the password for '{{ sasl_superuser_username }}': a dry
+      run of enabling admin_api_require_auth as that user was refused
+      ({{ redpanda_broker_sasl_password_check.content | default('') | trim }}).
+      Check sasl_superuser_password, or reset the user's password on the cluster
+      with `rpk security user update`. No cluster or node configuration was changed.
+  when:
+    - is_initialized | bool
+    - kafka_enable_authorization | bool
+    - redpanda_broker_sasl_password_check.status == 400
+  tags: [broker_check_sasl_superuser]
+
+- name: Fail if the SASL superuser's password couldn't be checked
+  ansible.builtin.fail:
+    msg: >-
+      Couldn't check the password for '{{ sasl_superuser_username }}' against the
+      Admin API at {{ redpanda_broker_sasl_password_check.url | default('') }}
+      (HTTP status {{ redpanda_broker_sasl_password_check.status }}):
+      {{ redpanda_broker_sasl_password_check.content | default(redpanda_broker_sasl_password_check.msg, true) | default('') | trim }}.
+      No cluster or node configuration was changed.
+  when:
+    - is_initialized | bool
+    - kafka_enable_authorization | bool
+    - redpanda_broker_sasl_password_check.status not in [200, 400]
   tags: [broker_check_sasl_superuser]

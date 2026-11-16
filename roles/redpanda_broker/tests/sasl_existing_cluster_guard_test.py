@@ -11,13 +11,19 @@ exist, and the run fails partway with the Admin API locked.
 These tests run the real tasks/check-sasl-superuser.yml with ansible-playbook
 against localhost. A stand-in `rpk` on PATH returns the output that
 `rpk security user list` produces on a real cluster and records how it was
-called.
+called. A stand-in Admin API answers the dry-run cluster config request the
+way Redpanda does (observed on v26.2.6): while admin_api_require_auth is off,
+a request with a wrong password is treated as anonymous, and enabling
+admin_api_require_auth is accepted only from an authenticated superuser.
 """
+import base64
+import http.server
 import json
 import os
 import stat
 import subprocess
 import sys
+import threading
 
 import pytest
 import yaml
@@ -43,8 +49,53 @@ WRONG_PASSWORD_STDERR = ('unable to list users: request GET '
                          'Unauthorized, invalid credentials\\n')
 
 
+SUPERUSER_REJECTED = {'admin_api_require_auth': 'May only be set by a superuser'}
+
+
+class FakeAdminAPI(http.server.BaseHTTPRequestHandler):
+    """An Admin API with admin_api_require_auth off and one SASL user."""
+
+    def do_PUT(self):
+        body = json.loads(self.rfile.read(int(self.headers.get('Content-Length', 0))) or '{}')
+        self.server.requests.append({'path': self.path, 'body': body})
+        # A wrong password isn't rejected; the request just becomes anonymous.
+        user = None
+        auth = self.headers.get('Authorization', '')
+        if auth.startswith('Basic '):
+            name, _, password = base64.b64decode(auth[6:]).decode().partition(':')
+            if self.server.users.get(name) == password:
+                user = name
+        upsert = body.get('upsert', {})
+        if upsert.get('admin_api_require_auth') and user not in upsert.get('superusers', []):
+            status, reply = 400, SUPERUSER_REJECTED
+        else:
+            status, reply = 200, {'config_version': 2}
+        payload = json.dumps(reply).encode()
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def log_message(self, *args):
+        pass
+
+
+@pytest.fixture
+def admin_api():
+    server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), FakeAdminAPI)
+    server.users = {'admin': 'the-real-password'}
+    server.requests = []
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    yield server
+    server.shutdown()
+    server.server_close()
+
+
 def run_guard(tmp_path, *, is_initialized, kafka_enable_authorization,
-              rpk_stdout='', rpk_stderr='', rpk_rc=0):
+              rpk_stdout='', rpk_stderr='', rpk_rc=0, admin_api=None,
+              password='not-the-real-password'):
     bindir = tmp_path / 'bin'
     bindir.mkdir()
     rpk = bindir / 'rpk'
@@ -52,6 +103,14 @@ def run_guard(tmp_path, *, is_initialized, kafka_enable_authorization,
     rpk.chmod(rpk.stat().st_mode | stat.S_IEXEC)
     log = tmp_path / 'rpk.log'
     log.write_text('')
+
+    # The node config of the running broker, as the role's templates write it.
+    node_config = tmp_path / 'redpanda.yaml'
+    admin_port = admin_api.server_address[1] if admin_api else 9644
+    node_config.write_text(yaml.safe_dump({
+        'redpanda': {'admin': [{'address': '127.0.0.1', 'port': admin_port}]},
+        'rpk': {'admin_api': {'addresses': [f'127.0.0.1:{admin_port}']}},
+    }))
 
     playbook = tmp_path / 'play.yml'
     playbook.write_text(yaml.safe_dump([{
@@ -63,8 +122,9 @@ def run_guard(tmp_path, *, is_initialized, kafka_enable_authorization,
         'is_initialized': is_initialized,
         'kafka_enable_authorization': kafka_enable_authorization,
         'sasl_superuser_username': 'admin',
-        'sasl_superuser_password': 'not-the-real-password',
-        'redpanda_rpk_opts': '--config /etc/redpanda/redpanda.yaml',
+        'sasl_superuser_password': password,
+        'redpanda_rpk_opts': f'--config {node_config}',
+        'redpanda_broker_node_config_file': str(node_config),
         'redpanda_broker_no_log': False,
     }
     env = dict(os.environ,
@@ -87,14 +147,43 @@ def test_existing_cluster_without_superuser_fails_before_changing_anything(tmp_p
     assert proc.returncode != 0, proc.stdout
     assert "has no SASL user named 'admin'" in proc.stdout, proc.stdout
     assert 'rpk security user create admin' in proc.stdout, proc.stdout
-    assert 'args=security user list --config /etc/redpanda/redpanda.yaml' in rpk_log
+    assert f"args=security user list --config {tmp_path / 'redpanda.yaml'}" in rpk_log
 
 
-def test_existing_cluster_with_superuser_continues(tmp_path):
+def test_existing_cluster_with_superuser_continues(tmp_path, admin_api):
     proc, rpk_log = run_guard(tmp_path, is_initialized=True, kafka_enable_authorization=True,
-                              rpk_stdout=USERS_WITH_SUPERUSER)
+                              rpk_stdout=USERS_WITH_SUPERUSER, admin_api=admin_api,
+                              password='the-real-password')
     assert proc.returncode == 0, proc.stdout
     assert 'RPK_USER=admin' in rpk_log
+    assert admin_api.requests, 'the password was never checked'
+
+
+def test_existing_cluster_with_a_wrong_superuser_password_fails(tmp_path, admin_api):
+    # With Admin API authentication still off, listing users succeeds whatever the password is.
+    proc, _ = run_guard(tmp_path, is_initialized=True, kafka_enable_authorization=True,
+                        rpk_stdout=USERS_WITH_SUPERUSER, admin_api=admin_api,
+                        password='not-the-real-password')
+    assert proc.returncode != 0, proc.stdout
+    assert "didn't accept the password for 'admin'" in proc.stdout, proc.stdout
+    assert 'No cluster or node configuration was changed' in proc.stdout, proc.stdout
+    assert 'not-the-real-password' not in proc.stdout
+
+
+def test_the_password_check_only_sends_dry_run_requests(tmp_path, admin_api):
+    run_guard(tmp_path, is_initialized=True, kafka_enable_authorization=True,
+              rpk_stdout=USERS_WITH_SUPERUSER, admin_api=admin_api, password='the-real-password')
+    assert admin_api.requests
+    for request in admin_api.requests:
+        assert request['path'] == '/v1/cluster_config?dry_run=true', request
+
+
+def test_unreachable_admin_api_fails(tmp_path):
+    # Nothing listens on the Admin API port of the node config.
+    proc, _ = run_guard(tmp_path, is_initialized=True, kafka_enable_authorization=True,
+                        rpk_stdout=USERS_WITH_SUPERUSER, password='the-real-password')
+    assert proc.returncode != 0, proc.stdout
+    assert "Couldn't check the password for 'admin'" in proc.stdout, proc.stdout
 
 
 def test_existing_cluster_rejecting_the_credentials_fails(tmp_path):

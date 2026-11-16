@@ -12,6 +12,9 @@ Three things used to restart every broker at once instead:
 * restart_required only recognised dnf's per-package strings, so an apt (or
   looped dnf) upgrade never asked for the rolling restart.
 
+Versions below 24.2 install one `redpanda` package and later ones install three,
+through two separate tasks of which one is always skipped. Both paths are covered.
+
 These tests run the real install-rp-deb.yml / install-rp-rpm.yml tasks and the
 real "Establish whether restart required" task with ansible-playbook against
 localhost. The package-manager and systemd tasks are replaced by stand-ins that
@@ -63,7 +66,8 @@ def stand_in(task, tmp_path):
     return task
 
 
-def converge(tmp_path, install_file, *, sasl, cluster_data, package_changed=True):
+def converge(tmp_path, install_file, *, sasl, cluster_data, package_changed=True,
+             redpanda_version='latest'):
     data_dir = tmp_path / 'data'
     if cluster_data:
         (data_dir / 'redpanda' / 'controller').mkdir(parents=True)
@@ -83,7 +87,7 @@ def converge(tmp_path, install_file, *, sasl, cluster_data, package_changed=True
     extra_vars = {
         'ansible_os_family': 'Debian' if 'deb' in install_file else 'RedHat',
         'ansible_system_vendor': 'Amazon EC2',
-        'redpanda_version': 'latest',
+        'redpanda_version': redpanda_version,
         'redpanda_install_status': 'latest',
         'redpanda_data_directory': str(data_dir),
         'kafka_enable_authorization': sasl,
@@ -126,10 +130,24 @@ def no_policy_rc(tmp_path_factory):
         shutil.move(saved, POLICY_RC)
 
 
+# One version that installs the single pre-24.2 package and one that installs the split packages.
+VERSIONS = ['24.1.21-1', 'latest']
+
+# What the role writes to policy-rc.d while it upgrades a broker.
+ROLE_POLICY_RC = (
+    '#!/bin/sh\n'
+    "# redpanda.cluster: holds the redpanda package's restart during an upgrade; removed after it\n"
+    'case "$1" in redpanda|redpanda.service) exit 101;; esac\n'
+    'exit 0\n')
+
+
 @pytest.mark.parametrize('install_file', ['install-rp-deb.yml', 'install-rp-rpm.yml'])
 @pytest.mark.parametrize('sasl', [True, False])
-def test_upgrade_of_a_running_broker_waits_for_the_rolling_restart(tmp_path, install_file, sasl):
-    result = converge(tmp_path, install_file, sasl=sasl, cluster_data=True)
+@pytest.mark.parametrize('redpanda_version', VERSIONS)
+def test_upgrade_of_a_running_broker_waits_for_the_rolling_restart(tmp_path, install_file, sasl,
+                                                                   redpanda_version):
+    result = converge(tmp_path, install_file, sasl=sasl, cluster_data=True,
+                      redpanda_version=redpanda_version)
     assert not result['stopped'], 'the upgrade stopped redpanda outside the rolling restart'
     assert result['cluster_data_kept']
     assert result['restart_required'], 'the upgraded broker was not queued for the rolling restart'
@@ -139,6 +157,16 @@ def test_deb_upgrade_blocks_the_package_restart_and_cleans_up(tmp_path):
     result = converge(tmp_path, 'install-rp-deb.yml', sasl=True, cluster_data=True)
     assert result['install_policy'] and set(result['install_policy']) == {'101'}, result
     assert not os.path.exists(POLICY_RC), 'the restart block was left installed'
+
+
+def test_policy_rc_left_by_an_interrupted_run_is_reused_and_removed(tmp_path):
+    # A run that died between writing the hold and removing it leaves the role's own file behind.
+    with open(POLICY_RC, 'w') as f:
+        f.write(ROLE_POLICY_RC)
+    os.chmod(POLICY_RC, 0o755)
+    result = converge(tmp_path, 'install-rp-deb.yml', sasl=False, cluster_data=True)
+    assert set(result['install_policy']) == {'101'}, result
+    assert not os.path.exists(POLICY_RC), "the role's leftover restart block was never removed"
 
 
 def test_existing_policy_rc_is_left_alone(tmp_path):
@@ -151,8 +179,10 @@ def test_existing_policy_rc_is_left_alone(tmp_path):
 
 
 @pytest.mark.parametrize('install_file', ['install-rp-deb.yml', 'install-rp-rpm.yml'])
-def test_fresh_sasl_node_is_still_stopped_for_bootstrap(tmp_path, install_file):
-    result = converge(tmp_path, install_file, sasl=True, cluster_data=False)
+@pytest.mark.parametrize('redpanda_version', VERSIONS)
+def test_fresh_sasl_node_is_still_stopped_for_bootstrap(tmp_path, install_file, redpanda_version):
+    result = converge(tmp_path, install_file, sasl=True, cluster_data=False,
+                      redpanda_version=redpanda_version)
     assert result['stopped']
     assert not result['restart_required']
 
