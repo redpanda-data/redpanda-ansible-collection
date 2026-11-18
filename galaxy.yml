@@ -54,3 +54,4 @@ build_ignore:
   - "*.cld"
   - "dist"
   - "tests"
+  - "roles/*/tests/inventory"   # name real hosts and their connection secrets

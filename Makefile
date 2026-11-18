@@ -72,14 +72,20 @@ build:
 	mkdir -p "$(DIST_DIR)"; \
 	ansible-galaxy collection build --force --output-path "$(abspath $(DIST_DIR))" "$$stage"
 
-# Refuse to publish an artifact that carries any dot-path.
+# Refuse to publish an artifact that carries any dot-path. The artifact is
+# listed once, outside any condition, so a missing or unreadable artifact
+# stops the release instead of reading as "nothing found".
 .PHONY: verify-artifact
 verify-artifact: build
 	@set -euo pipefail; \
-	if tar -tzf "$(ARTIFACT)" | grep -E '(^|/)\.'; then \
+	entries=$$(tar -tzf "$(ARTIFACT)"); \
+	if [ -z "$$entries" ]; then \
+		echo "refusing to publish: $(ARTIFACT) is empty" >&2; exit 1; \
+	fi; \
+	if grep -E '(^|/)\.' <<<"$$entries"; then \
 		echo "refusing to publish: dot-paths found in $(ARTIFACT)" >&2; exit 1; \
 	fi; \
-	echo "$(ARTIFACT): $$(tar -tzf "$(ARTIFACT)" | wc -l | tr -d ' ') entries, no dot-paths"
+	echo "$(ARTIFACT): $$(wc -l <<<"$$entries" | tr -d ' ') entries, no dot-paths"
 
 .PHONY: test-packaging
 test-packaging:
@@ -88,4 +94,4 @@ test-packaging:
 ANSIBLE_GALAXY_API_KEY ?= $(shell bash -c 'read -s -p "Enter your API key: " api_key; echo $$api_key')
 .PHONY: publish
 publish: verify-artifact
-	ansible-galaxy collection publish "$(ARTIFACT)" --token $(ANSIBLE_GALAXY_API_KEY) -s https://galaxy.ansible.com/api/
+	@ansible-galaxy collection publish "$(ARTIFACT)" --token $(ANSIBLE_GALAXY_API_KEY) -s https://galaxy.ansible.com/api/

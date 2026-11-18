@@ -13,8 +13,11 @@ trivially on a clean checkout.
 
 Run from the collection root: python3 -m pytest tests/packaging -v
 """
+import fnmatch
 import os
+import re
 import shutil
+import stat
 import subprocess
 import tarfile
 
@@ -47,16 +50,25 @@ PLANTED_FILES = {
 # Written by ansible-galaxy into every artifact.
 GENERATED_MEMBERS = {'MANIFEST.json', 'FILES.json'}
 
+# Role test inventories name real hosts and their connection secrets, so most
+# are gitignored; none of them, committed or not, belongs in the artifact.
+ROLE_TEST_INVENTORY = 'roles/*/tests/inventory'
+
+# A stand-in Galaxy API key; no make output may contain it.
+PLANTED_TOKEN = 'planted-galaxy-token-0f3a9c'
+
 
 def _ships(tracked_path):
     """Committed files that belong in the artifact.
 
-    galaxy.yml is folded into MANIFEST.json rather than shipped, and the
-    repository's own tests/ tree is development tooling.
+    galaxy.yml is folded into MANIFEST.json rather than shipped, the
+    repository's own tests/ tree is development tooling, and role test
+    inventories are kept out whether or not they are committed.
     """
     return not (_is_dot_path(tracked_path)
                 or tracked_path == 'galaxy.yml'
-                or tracked_path.startswith('tests/'))
+                or tracked_path.startswith('tests/')
+                or fnmatch.fnmatch(tracked_path, ROLE_TEST_INVENTORY))
 
 
 def _git(repo, *args):
@@ -135,7 +147,8 @@ def test_direct_build_of_a_dirty_tree_ships_no_dot_paths(dirty_checkout, tmp_pat
     """Backstop for anyone who runs ansible-galaxy directly instead of make build.
 
     Only make build fences off untracked files that are not dot-paths; a
-    direct build is held to the weaker guarantee of shipping no dot-paths.
+    direct build is held to the weaker guarantee of shipping no dot-paths
+    and no role test inventories.
     """
     repo, _ = dirty_checkout
     outdir = tmp_path / 'dist'
@@ -148,3 +161,63 @@ def test_direct_build_of_a_dirty_tree_ships_no_dot_paths(dirty_checkout, tmp_pat
     for planted in PLANTED_FILES:
         if _is_dot_path(planted):
             assert planted not in members
+
+    inventories = sorted(n for n in members if fnmatch.fnmatch(n, ROLE_TEST_INVENTORY))
+    assert not inventories, f"role test inventories shipped in the artifact: {inventories}"
+
+
+def _commit_all(repo, message):
+    _git(str(repo), 'add', '-u')
+    _git(str(repo), '-c', 'user.name=test', '-c', 'user.email=test@example.invalid',
+         'commit', '-q', '-m', message)
+
+
+def test_verify_artifact_fails_when_the_artifact_cannot_be_read(dirty_checkout, tmp_path):
+    """A trailing comment on the version line is valid YAML, but the Makefile
+    then derives an artifact name ansible-galaxy never wrote. The check must
+    stop the release rather than report an unread artifact as clean.
+    """
+    repo, _ = dirty_checkout
+    galaxy_yml = repo / 'galaxy.yml'
+    commented, count = re.subn(r'(?m)^(version: *\S+)[ \t]*$', r'\1  # pinned', galaxy_yml.read_text())
+    assert count == 1, "galaxy.yml no longer has a bare 'version: X' line to annotate"
+    galaxy_yml.write_text(commented)
+    _commit_all(repo, 'annotate version')
+
+    result = subprocess.run(['make', '-C', str(repo), 'verify-artifact', f'DIST_DIR={tmp_path / "dist"}'],
+                            capture_output=True, text=True)
+
+    assert result.returncode != 0, (
+        f"verify-artifact passed an artifact it could not list:\n{result.stdout}{result.stderr}"
+    )
+    assert 'no dot-paths' not in result.stdout
+
+
+def test_publish_does_not_print_the_api_key(dirty_checkout, tmp_path):
+    """make echoes each recipe line before running it, expanded variables
+    included, so the upload line must be silenced or the key reaches the
+    terminal scrollback and any CI log.
+    """
+    repo, _ = dirty_checkout
+    real_galaxy = shutil.which('ansible-galaxy')
+    assert real_galaxy, "ansible-galaxy must be on PATH to build the artifact"
+    # Builds for real; the upload itself is swallowed so nothing leaves the machine.
+    shim_dir = tmp_path / 'bin'
+    shim_dir.mkdir()
+    shim = shim_dir / 'ansible-galaxy'
+    shim.write_text(
+        '#!/bin/sh\n'
+        'if [ "$1" = collection ] && [ "$2" = publish ]; then exit 0; fi\n'
+        f'exec "{real_galaxy}" "$@"\n'
+    )
+    shim.chmod(shim.stat().st_mode | stat.S_IXUSR)
+    env = dict(os.environ, PATH=f"{shim_dir}{os.pathsep}{os.environ['PATH']}")
+
+    result = subprocess.run(
+        ['make', '-C', str(repo), 'publish', f'DIST_DIR={tmp_path / "dist"}',
+         f'ANSIBLE_GALAXY_API_KEY={PLANTED_TOKEN}'],
+        capture_output=True, text=True, env=env,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert PLANTED_TOKEN not in result.stdout + result.stderr
