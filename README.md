@@ -12,20 +12,22 @@ You can also see some example playbooks in our [deployment-automation](https://g
 
 ### Creating and Publishing the Collection
 
-To build the collection you first need to bump the version number listed in ansible/redpanda/cluster/galaxy.yml
-
-You will probably
-need [appropriate permissions](https://galaxy.ansible.com/docs/contributing/namespaces.html#adding-administrators-to-a-namespace)
-on the namespace for this to work.
-
-Once that's all sorted, run the following shell script with
-an [API key from Ansible Galaxy](https://galaxy.ansible.com/me/preferences)
-
+Bump `version` in `galaxy.yml`, commit it, and publish from that commit:
 
 ```shell
-ansible-galaxy collection build
-ansible-galaxy collection publish redpanda-cluster-*.tar.gz --token <YOUR_API_KEY> -s https://galaxy.ansible.com/api/
+make publish
 ```
+
+`make publish` is the only supported way to release. It builds the artifact from a `git archive` of `HEAD`, so only
+committed files can ship, refuses an artifact that carries any dot-path, and uploads that verified artifact. It
+prompts for an [API key from Ansible Galaxy](https://galaxy.ansible.com/me/preferences) without echoing it; set
+`ANSIBLE_GALAXY_API_KEY` to skip the prompt. You need
+[appropriate permissions](https://galaxy.ansible.com/docs/contributing/namespaces.html#adding-administrators-to-a-namespace)
+on the namespace.
+
+Do not run `ansible-galaxy collection build` in a working tree and publish the result: it packages the whole
+directory, including untracked and gitignored local state. To inspect an artifact without publishing it, run
+`make verify-artifact`; the result lands in `dist/`.
 
 ## SASL Authentication
 
