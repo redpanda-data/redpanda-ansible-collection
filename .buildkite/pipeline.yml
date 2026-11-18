@@ -27,3 +27,8 @@ steps:
       - docker-compose#v5.2.0:
           config: roles/system_setup/docker-compose.yml
           run: testctr
+  - label: "packaging tests"
+    plugins:
+      - docker-compose#v5.2.0:
+          config: tests/packaging/docker-compose.yml
+          run: testctr
