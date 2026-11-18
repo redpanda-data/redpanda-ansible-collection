@@ -37,9 +37,13 @@
     force: true
   when: logging_config_override_content is not defined
 
+# lookup('template') returns a string; ansible-core 2.19 and later no longer turn it
+# into a dict, so parse it the way the broker and console roles do.
 - name: Load template contents
+  vars:
+    _tpl_result: "{{ lookup('template', 'jmx-exporter-config.json.j2') }}"
   ansible.builtin.set_fact:
-    jmx_exporter_config: "{{ lookup('template', 'jmx-exporter-config.json.j2') }}"
+    jmx_exporter_config: "{{ _tpl_result if (_tpl_result is mapping) else (_tpl_result | from_json) }}"
 
 - name: Merge with user-provided overrides
   ansible.builtin.set_fact:

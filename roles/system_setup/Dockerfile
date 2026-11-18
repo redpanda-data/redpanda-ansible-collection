@@ -1,5 +1,5 @@
 # Used for testing System Setup Role
-FROM python:latest
+FROM python:3.14
 
 WORKDIR /app
 
